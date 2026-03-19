@@ -30,7 +30,7 @@ Este extra presenta **45 situaciones reales** — 15 por nivel — organizadas d
 | 01 | [Situaciones básicas](./01_situaciones_basicas.md) | 🟡 Básico | Tips 01 – 15 |
 | 02 | [Situaciones intermedias](./02_situaciones_intermedias.md) | 🟠 Intermedio | Tips 16 – 30 |
 | 03 | [Situaciones en REST API](./03_situaciones_api.md) | 🔴 Avanzado | Tips 31 – 45 |
-| 04 | [Cheat Sheet — los 45 tips de un vistazo](./04_situaciones_adicionales.md) | 🟢 Todos | Referencia rápida |
+| 04 | [Cheat Sheet — los 45 tips de un vistazo](./04_cheat_sheet.md) | 🟢 Todos | Referencia rápida |
 
 ---
 
@@ -105,7 +105,7 @@ Este extra presenta **45 situaciones reales** — 15 por nivel — organizadas d
 3. **Antes de ver la solución**, intenta escribir el pseudocódigo tú mismo.
 4. **Si ya dominas un nivel**, avanza al siguiente — las situaciones son acumulativas.
 5. Los tips del [módulo 03](./03_situaciones_api.md) asumen que ya manejas los dos anteriores.
-6. Usa el [módulo 04](./04_situaciones_adicionales.md) como referencia rápida cuando necesites recordar la regla de un tip.
+6. Usa el [módulo 04](./04_cheat_sheet.md) como referencia rápida cuando necesites recordar la regla de un tip.
 
 ---
 
