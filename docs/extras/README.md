@@ -4,6 +4,8 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 
 > 📌 Se espera que el alumno estudie y practique estos contenidos de forma autónoma. Cada tema tiene su propia carpeta con documentación detallada.
 
+> 🗺️ **¿No sabes por dónde empezar?** Consulta el [Roadmap de Estudio](../roadmap.md) — te indica qué leer según el tiempo que tienes disponible.
+
 ---
 
 ## Índice de temas
@@ -23,7 +25,8 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 11 | [Lógica Proposicional](#11-lógica-proposicional) | [`logica-proposicional/`](./logica-proposicional/README.md) |
 | 12 | [🏋️ Ejercicios Prácticos](#12-️-ejercicios-prácticos) | [`ejercicios/`](./ejercicios/README.md) |
 | 13 | [Terminal — Bash y Windows](#13-terminal--bash-y-windows) | [`terminal/`](./terminal/README.md) |
-| 14 | [Próximos temas](#14-próximos-temas) | — |
+| 14 | [YAML](#14-yaml) | [`yaml/`](./yaml/README.md) |
+| 15 | [Próximos temas](#15-próximos-temas) | — |
 
 ---
 
@@ -211,7 +214,19 @@ Este extra cubre los mismos conceptos en **dos guías paralelas** según el sist
 
 ---
 
-## 14. Próximos temas
+## 14. YAML
+
+**YAML** (*YAML Ain't Markup Language*) es el formato estándar para configurar aplicaciones Spring Boot. El archivo `application.yml` reemplaza (o convive) con `application.properties` y escala mucho mejor gracias a su estructura jerárquica por indentación, eliminando la repetición de prefijos en cada línea.
+
+**Conceptos clave:** indentación obligatoria · tipos de datos (string, número, booleano, null) · strings con comillas · multilínea (`|` y `>`) · listas · objetos anidados · comentarios · variables de entorno (`${VAR:default}`) · perfiles de Spring Boot (`application-dev.yml`, `application-prod.yml`, separador `---`) · `@ConfigurationProperties` · errores comunes (tabs, espacios, claves duplicadas).
+
+**¿Por qué importa?** Toda la configuración de Spring Boot — puerto, base de datos, JPA, logging, perfiles, seguridad — vive en `application.yml`. No entender YAML significa no entender cómo se configura la aplicación.
+
+→ [Ver documentación completa de YAML](./yaml/README.md)
+
+---
+
+## 15. Próximos temas
 
 Los siguientes contenidos se irán incorporando a medida que avance el curso:
 

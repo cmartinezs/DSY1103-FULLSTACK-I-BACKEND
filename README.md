@@ -51,6 +51,8 @@ cd Tickets
 
 Toda la documentación del curso está centralizada en [`docs/`](./docs/README.md), incluyendo lecciones y material complementario.
 
+> 🗺️ ¿No sabes qué estudiar primero? Revisa el **[Roadmap de estudio](./docs/roadmap.md)** — organiza todos los extras según el tiempo disponible.
+
 ## Estado del repositorio
 
 Este repositorio se usa con foco académico para practicar y evaluar avances por clase.

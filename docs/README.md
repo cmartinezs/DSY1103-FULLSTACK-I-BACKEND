@@ -61,6 +61,7 @@ Se estudian de forma **autónoma** en paralelo al curso.
 | 10 | Variables de Entorno | Configuración segura con `.env`, Spring Boot (`@Value`, perfiles) e IntelliJ IDEA | [→ Ver](./extras/env-variables/README.md) |
 
 > 📋 Ver índice completo de extras: [`extras/README.md`](./extras/README.md)
+> 🗺️ Ver roadmap de estudio recomendado: [`roadmap.md`](./roadmap.md)
 
 ---
 
@@ -70,6 +71,7 @@ Se estudian de forma **autónoma** en paralelo al curso.
 |---------|--------|
 | README principal | [`../README.md`](../README.md) |
 | Proyecto Tickets (API) | [`../Tickets/README.md`](../Tickets/README.md) |
+| 🗺️ Roadmap de estudio | [`roadmap.md`](./roadmap.md) |
 
 ---
 
