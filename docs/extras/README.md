@@ -20,7 +20,8 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 8 | [Niveles de Madurez de Richardson](#8-niveles-de-madurez-de-richardson) | [`richardson-maturity-model/`](./richardson-maturity-model/README.md) |
 | 9 | [Principios SOLID](#9-principios-solid) | [`solid/`](./solid/README.md) |
 | 10 | [Variables de Entorno](#10-variables-de-entorno) | [`env-variables/`](./env-variables/README.md) |
-| 11 | [Próximos temas](#11-próximos-temas) | — |
+| 11 | [Mini Curso: Java para Spring Boot](#11-mini-curso-java-para-spring-boot) | [`java-para-spring-boot/`](./java-para-spring-boot/README.md) |
+| 12 | [Próximos temas](#12-próximos-temas) | — |
 
 ---
 
@@ -155,7 +156,19 @@ Las **variables de entorno** permiten configurar la aplicación de forma diferen
 
 ---
 
-## 11. Próximos temas
+## 11. Mini Curso: Java para Spring Boot
+
+Curso progresivo de **11 módulos** que lleva al alumno desde la sintaxis esencial de Java hasta los conceptos mínimos necesarios para escribir y entender código Spring Boot con soltura. Pensado para quien ya vio POO el año pasado y quiere reforzar y modernizar su base antes de las lecciones.
+
+**Temas cubiertos:** sintaxis y tipos · control de flujo moderno · métodos y sobrecarga · clases, objetos y records · los 4 pilares POO · interfaces y abstracción · colecciones y genéricos · manejo de excepciones · lambdas y Streams · novedades Java 21 · arquitectura de Spring Boot.
+
+**Java:** 21 LTS — incluye `var`, text blocks, `record`, sealed classes, pattern matching, virtual threads y Sequenced Collections.
+
+→ [Ir al Mini Curso: Java para Spring Boot](./java-para-spring-boot/README.md)
+
+---
+
+## 12. Próximos temas
 
 Los siguientes contenidos se irán incorporando a medida que avance el curso:
 
