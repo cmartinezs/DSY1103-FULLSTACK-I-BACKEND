@@ -22,7 +22,8 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 10 | [Variables de Entorno](#10-variables-de-entorno) | [`env-variables/`](./env-variables/README.md) |
 | 11 | [Lógica Proposicional](#11-lógica-proposicional) | [`logica-proposicional/`](./logica-proposicional/README.md) |
 | 12 | [🏋️ Ejercicios Prácticos](#12-️-ejercicios-prácticos) | [`ejercicios/`](./ejercicios/README.md) |
-| 13 | [Próximos temas](#13-próximos-temas) | — |
+| 13 | [Terminal — Bash y Windows](#13-terminal--bash-y-windows) | [`terminal/`](./terminal/README.md) |
+| 14 | [Próximos temas](#14-próximos-temas) | — |
 
 ---
 
@@ -191,7 +192,26 @@ La **lógica proposicional** es la rama de la lógica matemática que estudia la
 
 ---
 
-## 13. Próximos temas
+## 13. Terminal — Bash y Windows
+
+La **terminal** (o línea de comandos) es la herramienta fundamental de cualquier desarrollador backend. Todo servidor de producción corre Linux sin interfaz gráfica; saber moverse en una terminal es la diferencia entre poder deployar una aplicación o depender de otra persona.
+
+Este extra cubre los mismos conceptos en **dos guías paralelas** según el sistema operativo:
+
+| Guía | Shell | Archivo |
+|------|-------|---------|
+| 🐧 Linux / macOS | `bash` / `zsh` | [`bash.md`](./terminal/bash.md) |
+| 🪟 Windows | CMD y PowerShell | [`windows.md`](./terminal/windows.md) |
+
+**Conceptos clave:** navegación de directorios · listar, crear, mover, copiar y eliminar archivos · leer archivos · variables de entorno · redirección y pipes · búsqueda de texto (`grep` / `Select-String`) · permisos de ejecución · comandos de red (`ping`, `curl`) · atajos de productividad · cheat sheet completo.
+
+**Conexión con el curso:** ejecutar `./mvnw spring-boot:run`, leer variables de entorno, hacer peticiones con `curl` a la API, leer logs en tiempo real.
+
+→ [Ver índice completo de Terminal](./terminal/README.md)
+
+---
+
+## 14. Próximos temas
 
 Los siguientes contenidos se irán incorporando a medida que avance el curso:
 
