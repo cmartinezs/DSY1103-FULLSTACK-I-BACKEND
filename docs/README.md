@@ -15,12 +15,16 @@ docs/
 │   ├── 03-first-api/
 │   └── 04-responsabilities/
 └── extras/         # Material de apoyo autónomo
+    ├── env-variables/
     ├── git-github/
     ├── gitflow/
     ├── java-poo/
+    ├── json/
     ├── lombok/
     ├── markdown/
-    └── richardson-maturity-model/
+    ├── maven/
+    ├── richardson-maturity-model/
+    └── solid/
 ```
 
 ---
@@ -48,9 +52,13 @@ Se estudian de forma **autónoma** en paralelo al curso.
 | 1 | Git y GitHub | Control de versiones distribuido y flujo de trabajo colaborativo | [→ Ver](./extras/git-github/README.md) |
 | 2 | GitFlow | Modelo de ramificación con ramas `main`, `develop`, `feature/*`, `release/*` y `hotfix/*` | [→ Ver](./extras/gitflow/README.md) |
 | 3 | Java y POO | Lenguaje base del stack y los cuatro pilares de la orientación a objetos | [→ Ver](./extras/java-poo/README.md) |
-| 4 | Lombok | Librería Java para eliminar código boilerplate mediante anotaciones | [→ Ver](./extras/lombok/README.md) |
-| 5 | Markdown | Lenguaje de marcado para documentación técnica | [→ Ver](./extras/markdown/README.md) |
-| 6 | Modelo de Madurez de Richardson | Niveles 0–3 para clasificar la calidad de una API REST | [→ Ver](./extras/richardson-maturity-model/README.md) |
+| 4 | JSON | Formato de intercambio de datos en APIs REST y su manejo con Jackson en Spring Boot | [→ Ver](./extras/json/README.md) |
+| 5 | Lombok | Librería Java para eliminar código boilerplate mediante anotaciones | [→ Ver](./extras/lombok/README.md) |
+| 6 | Markdown | Lenguaje de marcado para documentación técnica | [→ Ver](./extras/markdown/README.md) |
+| 7 | Maven | Gestión de dependencias, ciclo de vida de build y estructura estándar de proyectos Java | [→ Ver](./extras/maven/README.md) |
+| 8 | Modelo de Madurez de Richardson | Niveles 0–3 para clasificar la calidad de una API REST | [→ Ver](./extras/richardson-maturity-model/README.md) |
+| 9 | Principios SOLID | Cinco principios de diseño OO para código mantenible y extensible | [→ Ver](./extras/solid/README.md) |
+| 10 | Variables de Entorno | Configuración segura con `.env`, Spring Boot (`@Value`, perfiles) e IntelliJ IDEA | [→ Ver](./extras/env-variables/README.md) |
 
 > 📋 Ver índice completo de extras: [`extras/README.md`](./extras/README.md)
 

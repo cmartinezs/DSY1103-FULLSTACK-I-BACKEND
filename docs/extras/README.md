@@ -13,10 +13,14 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 1 | [Git y GitHub](#1-git-y-github) | [`git-github/`](./git-github/README.md) |
 | 2 | [GitFlow](#2-gitflow) | [`gitflow/`](./gitflow/README.md) |
 | 3 | [Java y POO](#3-java-y-programación-orientada-a-objetos-poo) | [`java-poo/`](./java-poo/README.md) |
-| 4 | [Markdown](#4-markdown) | [`markdown/`](./markdown/README.md) |
-| 5 | [Niveles de Madurez de Richardson](#5-niveles-de-madurez-de-richardson) | [`richardson-maturity-model/`](./richardson-maturity-model/README.md) |
-| 6 | [Lombok](#6-lombok) | [`lombok/`](./lombok/README.md) |
-| 7 | [Próximos temas](#7-próximos-temas) | — |
+| 4 | [JSON](#4-json) | [`json/`](./json/README.md) |
+| 5 | [Lombok](#5-lombok) | [`lombok/`](./lombok/README.md) |
+| 6 | [Markdown](#6-markdown) | [`markdown/`](./markdown/README.md) |
+| 7 | [Maven](#7-maven) | [`maven/`](./maven/README.md) |
+| 8 | [Niveles de Madurez de Richardson](#8-niveles-de-madurez-de-richardson) | [`richardson-maturity-model/`](./richardson-maturity-model/README.md) |
+| 9 | [Principios SOLID](#9-principios-solid) | [`solid/`](./solid/README.md) |
+| 10 | [Variables de Entorno](#10-variables-de-entorno) | [`env-variables/`](./env-variables/README.md) |
+| 11 | [Próximos temas](#11-próximos-temas) | — |
 
 ---
 
@@ -56,7 +60,31 @@ Java es el lenguaje del ecosistema **Spring Boot**. La POO organiza el código e
 
 ---
 
-## 4. Markdown
+## 4. JSON
+
+**JSON** (JavaScript Object Notation) es el formato estándar de intercambio de datos en APIs REST. Spring Boot lo gestiona automáticamente con **Jackson**, serializando objetos Java a JSON y viceversa.
+
+**Tipos de datos:** `string` · `number` · `boolean` · `null` · `object` · `array`
+
+**¿Por qué importa?** Es el lenguaje universal de comunicación entre cliente y servidor en APIs REST modernas.
+
+→ [Ver documentación completa de JSON](./json/README.md)
+
+---
+
+## 5. Lombok
+
+**Lombok** es una librería Java que usa **procesamiento de anotaciones** para generar automáticamente código repetitivo (*boilerplate*): getters, setters, constructores, `toString`, `equals`, loggers y más.
+
+**Anotaciones clave:** `@Getter` · `@Setter` · `@AllArgsConstructor` · `@NoArgsConstructor` · `@RequiredArgsConstructor` · `@Data` · `@Builder` · `@Slf4j`
+
+**¿Por qué importa?** Reduce drásticamente el tamaño de las clases Java, evita errores humanos en código repetitivo y mejora la legibilidad. Es estándar en proyectos Spring Boot.
+
+→ [Ver documentación completa de Lombok](./lombok/README.md)
+
+---
+
+## 6. Markdown
 
 Markdown es el **lenguaje de marcado estándar** para documentación técnica. Se usa en `README.md`, issues, pull requests, wikis y más.
 
@@ -68,7 +96,19 @@ Markdown es el **lenguaje de marcado estándar** para documentación técnica. S
 
 ---
 
-## 5. Niveles de Madurez de Richardson
+## 7. Maven
+
+**Apache Maven** es la herramienta de **gestión de proyectos y automatización de builds** estándar en el ecosistema Java/Spring Boot. Gestiona dependencias, compila, testea y empaqueta la aplicación.
+
+**Conceptos clave:** `pom.xml` · coordenadas GAV · ciclo de vida (`compile`, `test`, `package`) · Maven Wrapper (`mvnw`) · scopes de dependencias.
+
+**¿Por qué importa?** Es la herramienta que une todas las piezas del proyecto: descarga librerías, compila el código y produce el JAR ejecutable.
+
+→ [Ver documentación completa de Maven](./maven/README.md)
+
+---
+
+## 8. Niveles de Madurez de Richardson
 
 El **Richardson Maturity Model (RMM)** clasifica las APIs REST en 4 niveles según qué tan bien aplican los principios REST.
 
@@ -85,34 +125,47 @@ El **Richardson Maturity Model (RMM)** clasifica las APIs REST en 4 niveles seg�
 
 ---
 
-## 6. Lombok
+## 9. Principios SOLID
 
-**Lombok** es una librería Java que usa **procesamiento de anotaciones** para generar automáticamente código repetitivo (*boilerplate*): getters, setters, constructores, `toString`, `equals`, loggers y más.
+**SOLID** es un acrónimo de cinco principios de diseño orientado a objetos que producen código mantenible, extensible y testeable.
 
-**Anotaciones clave:** `@Getter` · `@Setter` · `@AllArgsConstructor` · `@NoArgsConstructor` · `@RequiredArgsConstructor` · `@Data` · `@Builder` · `@Slf4j`
+| Letra | Principio | Idea central |
+|-------|-----------|--------------|
+| **S** | Single Responsibility | Una clase = una razón para cambiar |
+| **O** | Open/Closed | Abierta para extensión, cerrada para modificación |
+| **L** | Liskov Substitution | Las subclases reemplazan a su base sin sorpresas |
+| **I** | Interface Segregation | Interfaces pequeñas y específicas |
+| **D** | Dependency Inversion | Depender de abstracciones, no de implementaciones |
 
-**¿Por qué importa?** Reduce drásticamente el tamaño de las clases Java, evita errores humanos en código repetitivo y mejora la legibilidad. Es estándar en proyectos Spring Boot.
+**¿Por qué importa?** Spring Boot aplica SOLID de forma natural: las capas Controller/Service/Repository separan responsabilidades y la inyección de dependencias aplica el principio D.
 
-→ [Ver documentación completa de Lombok](./lombok/README.md)
+→ [Ver documentación completa de Principios SOLID](./solid/README.md)
 
 ---
 
-## 7. Próximos temas
+## 10. Variables de Entorno
+
+Las **variables de entorno** permiten configurar la aplicación de forma diferente según el entorno (desarrollo, staging, producción) sin modificar el código fuente. Incluye uso de archivos `.env`, integración con Spring Boot y configuración en IntelliJ IDEA.
+
+**Conceptos clave:** archivo `.env` · `.env.example` · `application.properties` con `${VAR}` · `@Value` · `@ConfigurationProperties` · perfiles de Spring Boot · plugin EnvFile para IntelliJ.
+
+**¿Por qué importa?** Ningún valor sensible (contraseñas, tokens, claves de API) debe estar en el código fuente ni en el repositorio.
+
+→ [Ver documentación completa de Variables de Entorno](./env-variables/README.md)
+
+---
+
+## 11. Próximos temas
 
 Los siguientes contenidos se irán incorporando a medida que avance el curso:
 
 | Tema | Descripción |
 |------|-------------|
-| **HTTP y Status Codes** | Verbos, cabeceras y códigos de respuesta |
-| **JSON** | Formato de intercambio, validación y serialización |
-| **Maven** | Gestión de dependencias y ciclo de vida en Java |
-| **Spring Boot** | Framework para backend en Java |
-| **Inyección de Dependencias** | Principio DI e Inversión de Control (IoC) |
-| **JPA e Hibernate** | Persistencia de datos con ORM |
-| **Postman / curl** | Herramientas para probar APIs REST |
-| **Variables de Entorno** | Configuración segura de aplicaciones |
-| **Principios SOLID** | Principios de diseño orientado a objetos |
-| **Docker (básico)** | Contenedorización de aplicaciones |
+| **HTTP y Status Codes** | Verbos, cabeceras y códigos de respuesta en profundidad |
+| **Inyección de Dependencias** | Principio DI e Inversión de Control (IoC) en Spring |
+| **JPA e Hibernate** | Persistencia de datos con ORM y anotaciones `@Entity` |
+| **Postman / curl** | Herramientas para probar y documentar APIs REST |
+| **Docker (básico)** | Contenedorización de aplicaciones Spring Boot |
 
 ---
 
