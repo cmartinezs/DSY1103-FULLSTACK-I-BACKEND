@@ -250,12 +250,18 @@ public class TicketService extends ServicioBase<Ticket, Long> {
 
 ## 5.5 Override vs. Overload — diferencias clave
 
+Estos dos términos suenan parecidos pero son conceptos completamente distintos que se confunden frecuentemente:
+
+- **Override (sobreescritura)** es redefinir en una subclase un método que ya existe en la superclase, cambiando su **comportamiento** pero manteniendo la misma firma. Es el mecanismo del polimorfismo. Java lo resuelve en **tiempo de ejecución** según el tipo real del objeto. La anotación `@Override` es opcional pero muy recomendable porque le pide al compilador que verifique que sí estás sobreescribiendo algo.
+
+- **Overload (sobrecarga)** es declarar múltiples métodos en la **misma clase** con el mismo nombre pero diferente firma (tipo o número de parámetros). No requiere herencia. Java elige cuál invocar en **tiempo de compilación** según los argumentos que le pasas.
+
 | | **Override** (Polimorfismo) | **Overload** (Sobrecarga) |
 |---|---|---|
-| ¿Qué es? | Redefinir método heredado | Múltiples métodos mismo nombre |
-| Anotación | `@Override` | Ninguna |
-| Firma | Debe ser idéntica | Debe ser diferente |
-| Resuelto en | Tiempo de ejecución | Tiempo de compilación |
+| ¿Qué es? | Redefinir método heredado en subclase | Múltiples métodos con mismo nombre |
+| Anotación | `@Override` (recomendada) | Ninguna |
+| Firma | Debe ser **idéntica** | Debe ser **diferente** |
+| Resuelto en | Tiempo de **ejecución** | Tiempo de **compilación** |
 | Requiere herencia | Sí | No |
 
 ```java
@@ -264,13 +270,19 @@ public class Animal {
 }
 
 public class Perro extends Animal {
-    @Override                              // Override: redefine sonido()
+    @Override                              // Override: MISMA firma, DISTINTO comportamiento
     public String sonido() { return "Guau"; }
+    // Sin @Override compilaría igual, pero es buena práctica tenerlo:
+    // el compilador te avisa si cometes un error en el nombre o los parámetros
 
-    public String sonido(int veces) {      // Overload: misma clase, distinta firma
-        return "Guau".repeat(veces);
+    public String sonido(int veces) {      // Overload: DISTINTA firma (diferente parámetro)
+        return "Guau".repeat(veces);       // el compilador elige este cuando llamas sonido(3)
     }
 }
+
+Animal a = new Perro();      // referencia Animal, objeto Perro
+a.sonido();                  // → "Guau" (Override: usa el método del tipo REAL en ejecución)
+// a.sonido(3);              // ❌ Animal no tiene sonido(int), solo Perro tiene Overload
 ```
 
 ---

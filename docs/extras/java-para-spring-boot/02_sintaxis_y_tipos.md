@@ -6,15 +6,19 @@
 
 ## 1.1 Estructura mínima de un programa Java
 
+En Java, **todo el código debe vivir dentro de una clase**. No existen funciones sueltas ni código ejecutable fuera de una clase, como en otros lenguajes. El punto de entrada de cualquier programa es el método `main`, cuya firma exacta (`public static void main(String[] args)`) debe respetarse para que la JVM lo reconozca.
+
+Para mostrar texto en consola, Java ofrece tres variantes: `println` (imprime y añade salto de línea), `print` (imprime sin salto) y `printf` (permite formatear la salida con marcadores de posición como `%s` para texto o `%d` para enteros, similar al `printf` de C).
+
 ```java
 // Nombre del archivo debe coincidir EXACTAMENTE con el nombre de la clase pública
 public class HolaMundo {
 
     // Punto de entrada: el método main
     public static void main(String[] args) {
-        System.out.println("Hola, mundo!"); // imprime en consola con salto de línea
+        System.out.println("Hola, mundo!"); // imprime con salto de línea al final
         System.out.print("Sin salto ");     // imprime sin salto de línea
-        System.out.printf("Nombre: %s, Edad: %d%n", "Ana", 25); // formato estilo C
+        System.out.printf("Nombre: %s, Edad: %d%n", "Ana", 25); // formato: %s=texto, %d=entero
     }
 }
 ```
@@ -25,7 +29,9 @@ public class HolaMundo {
 
 ## 1.2 Tipos primitivos
 
-Java tiene 8 tipos primitivos que viven en la pila (stack), no en el heap. Son los bloques de construcción más básicos.
+Java tiene 8 tipos primitivos que viven en la pila (stack), no en el heap. Son los bloques de construcción más básicos y representan valores simples, no objetos. Conocerlos evita errores de desbordamiento (overflow) y pérdida de precisión en cálculos.
+
+Para el día a día, usarás principalmente: `int` para números enteros, `double` para decimales, `boolean` para condiciones y `char` para caracteres individuales. Los otros tipos (`byte`, `short`, `long`, `float`) se usan en contextos específicos donde el tamaño del dato importa.
 
 | Tipo | Tamaño | Rango | Ejemplo |
 |------|--------|-------|---------|
@@ -39,20 +45,26 @@ Java tiene 8 tipos primitivos que viven en la pila (stack), no en el heap. Son l
 | `char` | 16 bits | carácter Unicode | `char c = 'A';` |
 
 ```java
-// Los guiones bajos en números (Java 7+) mejoran la legibilidad
-long poblacionMundial = 8_100_000_000L;
+// Los guiones bajos en números (Java 7+) mejoran la legibilidad sin afectar el valor
+long poblacionMundial = 8_100_000_000L;  // la L indica que es long, no int
 int hexadecimal       = 0xFF_EC_D1_12;
 
-// Casting: convertir entre tipos numéricos
+// Casting: convierte un tipo en otro compatible
+// De mayor a menor precisión debes hacer el cast explícito (puedes perder datos)
 double precio = 9.99;
-int precioEntero = (int) precio;   // 9 — se trunca, NO redondea
+int precioEntero = (int) precio;   // 9 — trunca los decimales, NO redondea
+// De menor a mayor precisión el casting es automático (widening)
+int entero = 5;
+double exacto = entero;  // 5.0 — no necesitas cast
 ```
 
 ---
 
 ## 1.3 Tipos de referencia y `String`
 
-Los tipos de referencia viven en el heap. `String` es el más usado.
+Los tipos de referencia viven en el heap. A diferencia de los primitivos, una variable de referencia **no contiene el dato en sí**, sino la dirección de memoria donde está el objeto. Esto tiene una consecuencia importante: comparar dos referencias con `==` compara las direcciones, no los contenidos.
+
+`String` es el tipo de referencia más usado. Es **inmutable**: ningún método modifica el String original, siempre retorna uno nuevo. Esto hace que sea seguro compartirlo y que Java pueda optimizar su almacenamiento en un pool interno.
 
 ```java
 String nombre  = "Spring Boot";  // literal (internado en pool de strings)
@@ -155,7 +167,9 @@ String html = """
 
 ## 1.6 Constantes
 
-Las constantes se declaran con `static final` y por convención se escriben en `MAYUSCULAS_CON_GUIONES`.
+Una constante es un valor que **no cambia** durante la ejecución del programa. En Java se declaran con `static final`: `static` porque pertenece a la clase (no a cada instancia) y `final` porque no puede reasignarse una vez asignada. Por convención, se escriben en `MAYUSCULAS_CON_GUIONES_BAJOS` para que sean fácilmente identificables en el código.
+
+Agrupar constantes relacionadas en una clase dedicada (como `EstadoTicket`) centraliza los valores y evita el uso de "magic strings" dispersas por el código.
 
 ```java
 public class EstadoTicket {
@@ -165,7 +179,8 @@ public class EstadoTicket {
     public static final int    MAXIMO_TICKETS = 100;
 }
 
-// Uso:
+// Uso: accedes al valor por el nombre de la constante, no por el valor literal
+// Si el valor cambia, solo lo cambias en un lugar
 String estado = EstadoTicket.ABIERTO;
 ```
 
@@ -173,26 +188,28 @@ String estado = EstadoTicket.ABIERTO;
 
 ## 1.7 Arrays
 
-Los arrays son colecciones de tamaño fijo del mismo tipo. En Spring Boot casi siempre usarás `List` en cambio, pero es bueno conocerlos.
+Un array es una **colección de tamaño fijo** del mismo tipo. Una vez creado, no puedes cambiar su capacidad. Los índices empiezan en `0` y el último elemento está en la posición `length - 1`. Acceder a un índice fuera de rango lanza `ArrayIndexOutOfBoundsException` en tiempo de ejecución.
+
+En Spring Boot casi siempre usarás `List<T>` en lugar de arrays porque las listas son dinámicas y ofrecen muchos más métodos de utilidad. Sin embargo, los arrays aparecen frecuentemente en el código del framework (como el parámetro `String[] args` de `main`) y en algunas APIs de bajo nivel.
 
 ```java
 // Declaración e inicialización
 int[]    numeros = {1, 2, 3, 4, 5};
-String[] nombres = new String[3];   // [null, null, null]
+String[] nombres = new String[3];   // crea un array de 3 elementos, todos null
 nombres[0] = "Ana";
 nombres[1] = "Luis";
 nombres[2] = "María";
 
 // Acceso y longitud
-System.out.println(numeros[0]);     // 1
-System.out.println(numeros.length); // 5
+System.out.println(numeros[0]);     // 1 — primer elemento
+System.out.println(numeros.length); // 5 — propiedad, sin paréntesis (no es método)
 
-// Array bidimensional
+// Array bidimensional: array de arrays
 int[][] matriz = {
     {1, 2, 3},
     {4, 5, 6}
 };
-System.out.println(matriz[1][2]);   // 6
+System.out.println(matriz[1][2]);   // 6 — fila 1, columna 2
 ```
 
 ---

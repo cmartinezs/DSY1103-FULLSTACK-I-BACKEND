@@ -144,53 +144,53 @@ email.enviarConAsunto("ana@duoc.cl", "ALERTA", "Tu ticket fue cerrado"); // usa 
 
 ## 6.4 Interfaces funcionales — la base de las lambdas ⭐
 
-Una **interfaz funcional** tiene exactamente **un método abstracto**. La anotación `@FunctionalInterface` lo verifica en compilación.
+Una **interfaz funcional** es una interfaz con exactamente **un método abstracto** (puede tener métodos `default` y `static`, pero solo un abstracto). La anotación `@FunctionalInterface` le pide al compilador que verifique esto y falle si alguien agrega un segundo método abstracto accidentalmente.
 
-```java
-@FunctionalInterface
-public interface Transformador<T, R> {
-    R transformar(T entrada);  // único método abstracto
-}
-```
+Son la base de las lambdas: cuando asignas una lambda a una variable o pasas una lambda como argumento, Java la está convirtiendo implícitamente en una implementación de la interfaz funcional correspondiente.
 
-El paquete `java.util.function` define las interfaces funcionales más comunes:
+El paquete `java.util.function` define las interfaces funcionales más comunes para no tener que crearlas desde cero cada vez:
 
-| Interfaz | Firma | Descripción |
-|----------|-------|-------------|
-| `Predicate<T>` | `boolean test(T t)` | Evalúa condición |
-| `Function<T, R>` | `R apply(T t)` | Transforma T en R |
-| `Consumer<T>` | `void accept(T t)` | Consume sin retornar |
-| `Supplier<T>` | `T get()` | Produce sin recibir |
-| `BiFunction<T,U,R>` | `R apply(T t, U u)` | Transforma dos entradas |
-| `UnaryOperator<T>` | `T apply(T t)` | Transforma del mismo tipo |
+| Interfaz | Firma | Descripción | Cuándo usarla |
+|----------|-------|-------------|---------------|
+| `Predicate<T>` | `boolean test(T t)` | Evalúa una condición | Filtrar elementos |
+| `Function<T, R>` | `R apply(T t)` | Transforma T en R | Convertir/mapear |
+| `Consumer<T>` | `void accept(T t)` | Consume sin retornar | Imprimir, guardar |
+| `Supplier<T>` | `T get()` | Produce sin recibir | Crear objetos bajo demanda |
+| `BiFunction<T,U,R>` | `R apply(T t, U u)` | Transforma dos entradas | Combinar dos valores |
+| `UnaryOperator<T>` | `T apply(T t)` | Transforma del mismo tipo | Modificar sin cambiar tipo |
 
 ```java
 import java.util.function.*;
 
-// Predicate: ¿el ticket está abierto?
+// Predicate: evalúa una condición y retorna true o false
+// Útil en stream.filter() y para validaciones
 Predicate<Ticket> estaAbierto = ticket -> "ABIERTO".equals(ticket.getEstado());
 
-// Function: convierte Ticket a String resumen
+// Function: transforma un tipo en otro
+// Útil en stream.map() y para convertir entidades a DTOs
 Function<Ticket, String> resumir = ticket ->
     "#" + ticket.getId() + " — " + ticket.getTitulo();
 
-// Consumer: imprime el ticket
+// Consumer: realiza una acción con el elemento sin retornar nada
+// Útil en stream.forEach() y para side effects controlados
 Consumer<Ticket> imprimir = ticket ->
     System.out.println(ticket.getTitulo() + " [" + ticket.getEstado() + "]");
 
-// Supplier: genera ticket de prueba
+// Supplier: produce un valor sin recibir ningún argumento
+// Útil para crear objetos de forma diferida (lazy) o en orElseGet()
 Supplier<Ticket> ticketDePrueba = () -> new Ticket("Test", "Descripción de prueba");
 
-// Composición de funciones
-Predicate<Ticket> estaCerrado = estaAbierto.negate();
-Predicate<Ticket> tienetitulo = t -> t.getTitulo() != null && !t.getTitulo().isBlank();
-Predicate<Ticket> esValido    = estaAbierto.and(tieneTitle);
+// Los Predicate tienen métodos de composición que los hacen muy potentes
+Predicate<Ticket> estaCerrado  = estaAbierto.negate();          // invierte
+Predicate<Ticket> tieneTitulo  = t -> t.getTitulo() != null && !t.getTitulo().isBlank();
+Predicate<Ticket> esValido     = estaAbierto.and(tieneTitulo);  // ambas condiciones
+Predicate<Ticket> cualquiera   = estaAbierto.or(tieneTitulo);   // al menos una
 
-// Uso con colecciones:
+// Uso con colecciones — aquí se ve por qué son tan útiles:
 List<Ticket> tickets = obtenerTickets();
 tickets.stream()
-       .filter(estaAbierto)
-       .map(resumir)
+       .filter(estaAbierto)   // reutilizas el mismo Predicate en distintos streams
+       .map(resumir)          // reutilizas la misma Function
        .forEach(System.out::println);
 ```
 
@@ -261,27 +261,30 @@ public class TicketRepositorioMemoria extends RepositorioEnMemoria<Ticket, Long>
 
 ## 6.6 Clases anónimas y lambdas
 
-Antes de las lambdas (Java 8), se usaban clases anónimas para implementar interfaces funcionales al vuelo:
+Antes de Java 8, la única forma de implementar una interfaz funcional "al vuelo" era con una **clase anónima**: una clase sin nombre declarada e instanciada en el mismo lugar. Su sintaxis es verbosa porque debes declarar la clase completa con `@Override` aunque solo tenga una función.
+
+Java 8 introdujo las lambdas precisamente para reemplazar las clases anónimas en este caso. Son semánticamente equivalentes — el compilador convierte internamente la lambda en una implementación de la interfaz — pero con una fracción del código. Cuando la lambda se reduce a llamar un único método existente, las referencias a método son aún más concisas.
 
 ```java
-// Estilo antiguo: clase anónima
+// Estilo antiguo: clase anónima — funcional pero muy verboso
 Comparator<String> comparadorAntiguo = new Comparator<String>() {
     @Override
     public int compare(String a, String b) {
-        return a.length() - b.length();
+        return a.length() - b.length();   // compara por longitud
     }
 };
 
-// Estilo moderno: lambda (igual comportamiento, mucho menos código)
-Comparator<String> comparadorModerno = (a, b) -> a.length() - b.length();
+// Estilo moderno: lambda — mismo comportamiento, 90% menos código
+Comparator<String> comparadorLambda = (a, b) -> a.length() - b.length();
 
-// Aún más conciso con método de referencia
+// Aún más conciso con referencia a método estático de la clase Comparator
+// Cuando existe un método que ya hace exactamente lo que necesitas, úsalo
 Comparator<String> comparadorMetodo = Comparator.comparingInt(String::length);
 
-// Uso:
+// Uso — los tres comparadores se comportan de forma idéntica:
 List<String> nombres = new ArrayList<>(List.of("Ana", "Carlos", "Bo", "Valentina"));
-nombres.sort(comparadorModerno);
-System.out.println(nombres); // [Bo, Ana, Carlos, Valentina]
+nombres.sort(comparadorLambda);
+System.out.println(nombres); // [Bo, Ana, Carlos, Valentina] — orden por longitud
 ```
 
 ---

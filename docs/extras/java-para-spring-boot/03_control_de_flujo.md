@@ -6,6 +6,10 @@
 
 ## 3.1 `if / else if / else`
 
+La sentencia `if` le dice a Java: *"ejecuta este bloque solo si esta condición es verdadera"*. La condición entre paréntesis debe resultar en un `boolean`; si es `true`, entra al bloque `{}`; si es `false`, lo salta.
+
+Cuando necesitas evaluar más de una posibilidad exclusiva, encadenas `else if`. Java evalúa las condiciones **de arriba hacia abajo** y ejecuta el **primer** bloque cuya condición sea `true`, ignorando el resto. El `else` final actúa como "en cualquier otro caso".
+
 ```java
 int codigo = 404;
 
@@ -20,9 +24,11 @@ if (codigo == 200) {
 }
 ```
 
+> 💡 Ordena los `else if` de la condición más específica a la más general. Si inviertes el orden puedes capturar casos de forma incorrecta.
+
 ### Operador ternario
 
-Para asignaciones condicionales simples, el operador ternario es más expresivo:
+Para asignaciones condicionales simples de una línea, el operador ternario `? :` es más expresivo que un bloque `if/else` completo. Funciona así: `condición ? valorSiTrue : valorSiFalse`. Solo úsalo cuando ambas ramas sean cortas y legibles; si necesitas lógica compleja, prefiere el `if/else` clásico.
 
 ```java
 // if/else verboso
@@ -43,6 +49,12 @@ String rol = esAdmin ? "ADMIN" : esEditor ? "EDITOR" : "LECTOR";
 ---
 
 ## 3.2 `switch` — la versión clásica
+
+El `switch` clásico sirve para comparar **una sola variable** contra múltiples valores posibles. Es equivalente a una cadena de `if/else if`, pero más legible cuando hay muchos casos discretos (como un estado, un día de la semana o un código de operación).
+
+Cada `case` define el valor que se compara; el compilador salta directamente al `case` que coincida. El `default` se ejecuta si ningún `case` coincide, y es opcional (aunque muy recomendable para manejar valores inesperados).
+
+El detalle más importante del switch clásico es el **`break`**: sin él, la ejecución "cae" al siguiente case y lo ejecuta también, aunque su valor no coincida. Esto se llama *fall-through* y casi siempre es un bug.
 
 ```java
 String dia = "LUNES";
@@ -168,7 +180,11 @@ public String clasificarPrecio(Object valor) {
 
 ## 3.6 Bucles
 
+Los bucles permiten **repetir un bloque de código** mientras se cumpla una condición. Java ofrece cuatro tipos, cada uno con un propósito diferente. Elegir el adecuado hace el código más claro y menos propenso a errores.
+
 ### `for` clásico
+
+Úsalo cuando sabes **exactamente cuántas veces** quieres iterar, o cuando necesitas el índice de la posición actual. Tiene tres partes en su cabecera separadas por `;`: la inicialización (se ejecuta una sola vez al inicio), la condición (se evalúa antes de cada vuelta) y el paso (se ejecuta al final de cada vuelta).
 
 ```java
 for (int i = 0; i < 5; i++) {
@@ -188,6 +204,8 @@ for (int i = 0; i <= 100; i += 10) {
 
 ### `for-each` (enhanced for) — el más usado en Java
 
+Cuando no necesitas el índice y solo quieres recorrer todos los elementos de una colección o array, el `for-each` es la opción más limpia. Es más conciso, más legible y elimina el riesgo de cometer errores de índice. Java lo llama internamente usando el `Iterator` de la colección.
+
 ```java
 List<String> nombres = List.of("Ana", "Luis", "María");
 
@@ -205,6 +223,8 @@ for (int n : numeros) {
 
 ### `while` y `do-while`
 
+Usa `while` cuando **no sabes de antemano cuántas iteraciones** necesitarás — la condición determina si el bucle sigue. La diferencia clave entre ambos es el momento en que se evalúa la condición: `while` la evalúa **antes** de cada vuelta (puede no ejecutarse nunca si la condición inicia en `false`), mientras que `do-while` la evalúa **después** de cada vuelta, garantizando que el cuerpo se ejecuta **al menos una vez**.
+
 ```java
 // while: verifica ANTES de ejecutar (puede no ejecutarse nunca)
 int intentos = 0;
@@ -221,6 +241,8 @@ do {
 ```
 
 ### `break` y `continue`
+
+Dentro de un bucle puedes alterar su flujo con dos palabras clave: `break` **termina** el bucle inmediatamente y continúa con el código que viene después, mientras que `continue` **salta** el resto del cuerpo de la iteración actual y pasa a la siguiente evaluación de la condición.
 
 ```java
 // break: sale del bucle completo
@@ -249,35 +271,39 @@ for (int i = 0; i < 3; i++) {
 
 ## 3.7 Operadores útiles
 
+Los operadores son los símbolos que realizan cálculos o comparaciones entre valores. Java los agrupa según su función: aritméticos para matemática, compuestos para abreviar asignaciones, lógicos para combinar condiciones booleanas.
+
+Un detalle importante es el **cortocircuito** en los operadores lógicos: con `&&` (AND), si el primer operando es `false`, Java **no evalúa el segundo** (porque el resultado ya no puede ser `true`). Con `||` (OR), si el primero es `true`, el segundo tampoco se evalúa. Esto es muy útil para evitar `NullPointerException` al encadenar condiciones.
+
 ```java
 // Aritméticos
 int suma  = 10 + 3;   // 13
 int resta = 10 - 3;   // 7
 int mult  = 10 * 3;   // 30
-int div   = 10 / 3;   // 3 (entero)
-int mod   = 10 % 3;   // 1 (resto)
+int div   = 10 / 3;   // 3  ← división entera: descarta los decimales
+int mod   = 10 % 3;   // 1  ← módulo: el resto de la división entera
 
-// Compuestos
+// Compuestos: forma abreviada de operar y reasignar en la misma variable
 int n = 5;
-n += 3;  // n = 8
-n -= 2;  // n = 6
-n *= 4;  // n = 24
-n /= 6;  // n = 4
-n++;     // n = 5 (post-incremento)
-++n;     // n = 6 (pre-incremento)
+n += 3;  // equivale a n = n + 3 → n = 8
+n -= 2;  // equivale a n = n - 2 → n = 6
+n *= 4;  // equivale a n = n * 4 → n = 24
+n /= 6;  // equivale a n = n / 6 → n = 4
+n++;     // post-incremento: n = 5 (usa el valor actual y luego incrementa)
+++n;     // pre-incremento:  n = 6 (incrementa primero y luego usa el valor)
 
-// Lógicos
+// Lógicos: combinan expresiones booleanas
 boolean a = true, b = false;
-System.out.println(a && b);  // false (AND)
-System.out.println(a || b);  // true  (OR)
-System.out.println(!a);      // false (NOT)
+System.out.println(a && b);  // false — AND: verdadero solo si los dos son true
+System.out.println(a || b);  // true  — OR:  verdadero si al menos uno es true
+System.out.println(!a);      // false — NOT: invierte el valor booleano
 
-// Cortocircuito: en &&, si el primero es false, el segundo no se evalúa
-// Útil para evitar NullPointerException
+// Cortocircuito en acción: evita NullPointerException sin necesidad de try-catch
 String s = null;
-if (s != null && s.length() > 0) { // safe — s.length() solo se llama si s != null
+if (s != null && s.length() > 0) { // s.length() solo se llama si s != null
     System.out.println("No vacío");
 }
+// Si s fuera null y no hubiera cortocircuito, s.length() lanzaría NullPointerException
 ```
 
 ---

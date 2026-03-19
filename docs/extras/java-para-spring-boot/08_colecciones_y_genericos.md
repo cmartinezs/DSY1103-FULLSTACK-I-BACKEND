@@ -6,6 +6,10 @@
 
 ## 7.1 El framework de colecciones de Java
 
+Java incluye un conjunto de clases e interfaces listas para usar que resuelven el problema de agrupar y manipular múltiples objetos. En lugar de trabajar con arrays de tamaño fijo, las colecciones crecen y se reducen dinámicamente, ofrecen métodos de búsqueda, ordenamiento y manipulación, y están diseñadas para diferentes casos de uso.
+
+La jerarquía principal tiene dos ramas independientes: `Collection` (para agrupaciones de elementos individuales) y `Map` (para asociaciones clave-valor). Conocer qué interfaz usar en cada situación es una de las habilidades más importantes en Java:
+
 ```
 Iterable
 └── Collection
@@ -22,9 +26,15 @@ Map          → Pares clave-valor (no es Collection)
     └── LinkedHashMap (mantiene orden de inserción)
 ```
 
+> 💡 **Regla general de elección:** si necesitas mantener el orden de inserción y acceder por posición → `List`. Si necesitas garantizar unicidad → `Set`. Si necesitas asociar una clave con un valor → `Map`.
+
 ---
 
 ## 7.2 `List` — la más usada
+
+`List` es la colección más común en Java y en Spring Boot. Representa una **secuencia ordenada** de elementos donde cada uno tiene un índice (empezando en 0) y se permiten duplicados. Su implementación más habitual es `ArrayList`, que internamente usa un array que se redimensiona automáticamente.
+
+Siempre declara el tipo como la **interfaz** `List<T>` (no `ArrayList<T>`) en el lado izquierdo — esto te permite cambiar la implementación en el futuro sin tocar el código que usa la variable.
 
 ```java
 import java.util.ArrayList;
@@ -72,6 +82,10 @@ List<String> deArreglo = List.of(arreglo);
 ---
 
 ## 7.3 `Map` — pares clave-valor
+
+Un `Map` almacena asociaciones entre una **clave** y un **valor**, como un diccionario. Cada clave es única dentro del mapa (agregar un valor con una clave ya existente **reemplaza** el anterior). Los valores sí pueden repetirse.
+
+La implementación más común es `HashMap`, que ofrece operaciones `get` y `put` en tiempo constante O(1) pero no garantiza ningún orden. Cuando el orden de inserción importa, usa `LinkedHashMap`. En Spring Boot verás `Map` frecuentemente para construir respuestas JSON dinámicas o para agrupar datos.
 
 ```java
 import java.util.HashMap;
@@ -121,6 +135,10 @@ edades.putIfAbsent("Carlos", 22);
 
 ## 7.4 `Set` — sin duplicados
 
+Un `Set` es una colección que **no permite elementos duplicados**. Al intentar agregar un elemento que ya existe (según `equals` y `hashCode`), el `Set` simplemente lo ignora sin lanzar error. Esta propiedad lo hace ideal para representar grupos donde la unicidad es una regla de negocio: roles de usuario, etiquetas, permisos.
+
+`HashSet` no garantiza ningún orden. Si necesitas el orden de inserción usa `LinkedHashSet`; si necesitas orden alfabético o natural usa `TreeSet`.
+
 ```java
 import java.util.HashSet;
 import java.util.Set;
@@ -151,6 +169,10 @@ rolesA.removeAll(rolesB);
 ---
 
 ## 7.5 Colecciones inmutables — fábricas modernas (Java 9+)
+
+A partir de Java 9, puedes crear colecciones **inmutables** (que no se pueden modificar después de su creación) de forma muy concisa con los métodos de fábrica `List.of()`, `Set.of()` y `Map.of()`. Cualquier intento de añadir, eliminar o modificar un elemento lanzará `UnsupportedOperationException`.
+
+¿Por qué querrías esto? Porque las colecciones inmutables son más seguras (nadie puede modificarlas por accidente), son más eficientes en memoria y facilitan el razonamiento sobre el código. Úsalas siempre que el contenido no vaya a cambiar. Si después necesitas modificar la colección, envuélvela en una implementación mutable como `ArrayList`.
 
 ```java
 // Java 9+: List.of, Set.of, Map.of — inmutables y sin nulls
@@ -238,8 +260,13 @@ List<Integer> enteros  = repetir(0, 5);       // [0, 0, 0, 0, 0]
 
 ### Bounded type parameters (límites)
 
+A veces no quieres que `T` pueda ser absolutamente cualquier tipo, sino solo tipos que cumplan cierta condición. Los **bounded type parameters** te permiten restringir `T` con `extends`: `<T extends Comparable<T>>` significa "T puede ser cualquier tipo, pero ese tipo debe implementar `Comparable<T>`". Esto te permite llamar a los métodos de `Comparable` dentro del método genérico con seguridad.
+
+El **wildcard** (`?`) va un paso más allá: lo usas cuando no necesitas referenciar el tipo genérico en el cuerpo del método, solo indicar una restricción de herencia. `List<? extends Number>` significa "una lista de algún tipo que sea Number o lo extienda" — puede ser `List<Integer>`, `List<Double>` o `List<Float>`, y el método los acepta a todos.
+
 ```java
-// T debe ser Comparable (puede compararse con otros T)
+// <T extends Comparable<T>>: T puede ser cualquier tipo que se pueda comparar consigo mismo
+// Esto nos permite llamar elemento.compareTo(max) con seguridad dentro del método
 public static <T extends Comparable<T>> T maximo(List<T> lista) {
     if (lista.isEmpty()) throw new NoSuchElementException("Lista vacía");
     T max = lista.get(0);
@@ -249,15 +276,17 @@ public static <T extends Comparable<T>> T maximo(List<T> lista) {
     return max;
 }
 
-// Funciona con cualquier tipo que implemente Comparable
+// El mismo método funciona con cualquier tipo que implemente Comparable:
 System.out.println(maximo(List.of(3, 1, 4, 1, 5, 9, 2))); // 9
 System.out.println(maximo(List.of("banana", "apple", "cherry"))); // cherry
 
-// Wildcard (?): cuando no necesitas referenciar el tipo
+// Wildcard (?): acepta List<Integer>, List<Double>, List<Float>...
+// Usas ? cuando dentro del método no necesitas saber el tipo exacto,
+// solo trabajar con la interfaz Number (doubleValue(), intValue(), etc.)
 public static double sumarNumeros(List<? extends Number> numeros) {
     double suma = 0;
     for (Number n : numeros) {
-        suma += n.doubleValue();
+        suma += n.doubleValue();  // Number tiene doubleValue(), no necesitamos saber el tipo exacto
     }
     return suma;
 }
@@ -270,24 +299,30 @@ sumarNumeros(List.of(1.5, 2.5));    // acepta List<Double>
 
 ## 7.7 `Optional<T>` como colección de 0 o 1 elemento
 
+`Optional<T>` puede verse como una colección especial que contiene **cero o exactamente un elemento**. Lo introdujo Java 8 como alternativa segura a retornar `null` cuando un método puede no encontrar un resultado. En lugar de que el código que llama tenga que recordar verificar `if (resultado != null)`, el `Optional` hace explícita esa posibilidad y obliga a manejarla.
+
+En Spring Boot lo verás constantemente: todos los métodos `findById()` de los repositorios JPA retornan `Optional<T>`. Aprender a componerlo con `map`, `filter` y `orElseThrow` es esencial.
+
 ```java
 // Optional como alternativa a null (revisado en módulo 03, ampliado aquí)
 Optional<Ticket> opt = repositorio.buscarPorId(99L);
 
-// Transformaciones encadenadas (igual que Stream)
+// Transformaciones encadenadas: si el Optional tiene valor, aplica las operaciones;
+// si está vacío, todo el pipeline devuelve Optional.empty() directamente.
 String titulo = opt
-    .filter(t -> "ABIERTO".equals(t.getEstado()))
-    .map(Ticket::getTitulo)
-    .map(String::toUpperCase)
-    .orElse("SIN TÍTULO");
+    .filter(t -> "ABIERTO".equals(t.getEstado()))  // descarta si no está abierto
+    .map(Ticket::getTitulo)                          // extrae el título (String)
+    .map(String::toUpperCase)                        // lo convierte a mayúsculas
+    .orElse("SIN TÍTULO");                           // valor por defecto si vacío
 
-// ifPresentOrElse (Java 9+)
+// ifPresentOrElse (Java 9+): maneja ambos casos en una sola llamada
 opt.ifPresentOrElse(
     t -> System.out.println("Encontrado: " + t.getTitulo()),
     () -> System.out.println("No encontrado")
 );
 
-// or: alternativa opcional (Java 9+)
+// or (Java 9+): si está vacío, proporciona un Optional alternativo
+// Útil para encadenar búsquedas en múltiples fuentes
 Optional<Ticket> resultado = opt.or(() -> Optional.of(ticketPorDefecto));
 ```
 
