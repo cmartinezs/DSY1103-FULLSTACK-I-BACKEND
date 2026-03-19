@@ -30,7 +30,8 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 16 | [💡 Tips de Programación](#16-tips-de-programación) | [`tips-de-programacion/`](./tips-de-programacion/README.md) |
 | 17 | [🧠 Conceptos de Programación — Vocabulario Universal](#17-conceptos-de-programación--vocabulario-universal) | [`conceptos-de-programacion/`](./conceptos-de-programacion/README.md) |
 | 18 | [🛠️ Herramientas para Desarrolladores](#18-️-herramientas-para-desarrolladores) | [`herramientas-para-desarrolladores/`](./herramientas-para-desarrolladores/README.md) |
-| 19 | [Próximos temas](#19-próximos-temas) | — |
+| 19 | [🖥️ Uso de PC para Programadores](#19-️-uso-de-pc-para-programadores) | [`uso-de-pc/`](./uso-de-pc/README.md) |
+| 20 | [Próximos temas](#20-próximos-temas) | — |
 
 ---
 
@@ -276,7 +277,26 @@ Las **herramientas para desarrolladores** cubren el ecosistema de software que u
 
 ---
 
-## 19. Próximos temas
+## 19. 🖥️ Uso de PC para Programadores
+
+Muchos estudiantes abren IntelliJ, escriben código y no saben dónde está ese código en su computador. Este extra cubre los conceptos básicos del sistema de archivos que todo desarrollador debe dominar: cómo funciona el árbol de carpetas, dónde se guardan los proyectos por defecto, cómo encontrarlos, moverlos, organizarlos y evitar los errores más comunes.
+
+Cubre exactamente los mismos conceptos en **dos guías paralelas** según el sistema operativo:
+
+| Guía | Sistema | Archivo |
+|------|---------|---------|
+| 🪟 [Windows 10 / 11](./uso-de-pc/windows.md) | File Explorer, rutas con `\`, disco `C:\` | `windows.md` |
+| 🐧 [Linux (Ubuntu / Mint)](./uso-de-pc/linux.md) | Administrador de archivos, rutas con `/`, carpeta `home` | `linux.md` |
+
+**Conceptos clave:** sistema de archivos · rutas absolutas y relativas · carpeta home · dónde se guardan los proyectos de IntelliJ · cómo abrirlos desde el explorador · crear / renombrar / mover / eliminar · archivos ocultos y extensiones · buscar archivos · organización recomendada · descomprimir un proyecto de start.spring.io · atajos de teclado · cheat sheet.
+
+**¿Por qué importa?** No entender el sistema de archivos propio es una de las causas más frecuentes de proyectos perdidos, errores al clonar repositorios y confusión al trabajar en equipo. Este extra lo resuelve desde cero.
+
+→ [Ver índice completo de Uso de PC](./uso-de-pc/README.md)
+
+---
+
+## 20. Próximos temas
 
 Los siguientes contenidos se irán incorporando a medida que avance el curso:
 
