@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/tickets")
 public class TicketController {
+
   private TicketService service;
+
   public TicketController(TicketService service) {
     this.service = service;
   }

@@ -7,16 +7,16 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class TicketRepository {
+
   List<Ticket> tickets;
 
-  public TicketRepository(){
+  public TicketRepository() {
     tickets = new ArrayList<>();
     tickets.add(new Ticket(1L, "Ticket 1", "Ticket 1", "NEW"));
     tickets.add(new Ticket(2L, "Ticket 2", "Ticket 2", "NEW"));
   }
 
-  public List<Ticket> getAll(){
+  public List<Ticket> getAll() {
     return tickets;
   }
-
 }
