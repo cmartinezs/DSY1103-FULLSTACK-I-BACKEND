@@ -4,7 +4,7 @@
 
 ---
 
-## 4.1 ¿Qué es una clase?
+## 5.1 ¿Qué es una clase?
 
 Una **clase** es un molde o plantilla. Un **objeto** es una instancia de esa clase. La clase define qué datos (campos) y comportamientos (métodos) tienen los objetos.
 
@@ -30,7 +30,7 @@ Ticket t2 = new Ticket();  // crea OTRO objeto independiente
 
 ---
 
-## 4.2 Constructores
+## 5.2 Constructores
 
 Un constructor inicializa el objeto en el momento de su creación. Si no defines ninguno, Java genera uno vacío por defecto.
 
@@ -65,7 +65,7 @@ Usuario u2 = new Usuario("luis@duoc.cl", "Luis", "ADMIN");
 
 ---
 
-## 4.3 Getters, Setters y encapsulamiento
+## 5.3 Getters, Setters y encapsulamiento
 
 Los campos `private` se exponen controladamente a través de getters y setters:
 
@@ -100,7 +100,7 @@ public class Ticket {
 
 ---
 
-## 4.4 `toString`, `equals` y `hashCode`
+## 5.4 `toString`, `equals` y `hashCode`
 
 Estos tres métodos heredados de `Object` son fundamentales:
 
@@ -148,7 +148,7 @@ System.out.println(t1.equals(t2)); // true — mismo id
 
 ---
 
-## 4.5 Clases inmutables
+## 5.5 Clases inmutables
 
 Una clase inmutable es aquella cuyo estado **no puede cambiar** después de crearse. Son thread-safe por naturaleza y más fáciles de razonar.
 
@@ -183,7 +183,7 @@ public final class Coordenada {
 
 ---
 
-## 4.6 `record` — clases de datos modernas (Java 16+) ⭐
+## 5.6 `record` — clases de datos modernas (Java 16+) ⭐
 
 Un `record` es una forma concisa de declarar una clase **inmutable de datos**. Java genera automáticamente:
 - Constructor canónico (con todos los campos)
@@ -238,7 +238,7 @@ public record Punto(double x, double y) {
 
 ---
 
-## 4.7 `this` y `static`
+## 5.7 `this` y `static`
 
 ```java
 public class Contador {
@@ -277,7 +277,7 @@ System.out.println(Contador.getTotalInstancias()); // 2
 
 ## 🏋️ Ejercicios de práctica
 
-### Ejercicio 4.1 — Diseño de clase
+### Ejercicio 5.1 — Diseño de clase
 Diseña una clase `Producto` con los campos: `id` (Long), `nombre` (String), `precio` (double), `stock` (int). Agrega:
 - Constructor que recibe nombre y precio (id y stock tienen valores por defecto)
 - Método `aplicarDescuento(double porcentaje)` que valide que el porcentaje esté entre 0 y 100
@@ -332,7 +332,7 @@ public class Producto {
 
 ---
 
-### Ejercicio 4.2 — Record con validación
+### Ejercicio 5.2 — Record con validación
 Crea un `record` `Coordenada(double lat, double lon)` que valide en el constructor compacto que `lat` esté entre −90 y 90, y `lon` entre −180 y 180. Agrega un método `distanciaA(Coordenada otra)` usando la fórmula euclidiana simple.
 
 <details>

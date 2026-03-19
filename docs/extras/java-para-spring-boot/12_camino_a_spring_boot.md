@@ -4,7 +4,7 @@
 
 ---
 
-## 11.1 Mapa conceptual: Java → Spring Boot
+## 12.1 Mapa conceptual: Java → Spring Boot
 
 ```
 Java puro                          Spring Boot
@@ -22,7 +22,7 @@ Genéricos              →    ResponseEntity<T>, List<T>
 
 ---
 
-## 11.2 La arquitectura en capas y qué Java usa cada capa
+## 12.2 La arquitectura en capas y qué Java usa cada capa
 
 ```
 HTTP Request
@@ -57,7 +57,7 @@ HTTP Request
 
 ---
 
-## 11.3 El modelo: de clase Java a @Entity
+## 12.3 El modelo: de clase Java a @Entity
 
 ```java
 // Java puro (lo que ya sabes)
@@ -105,7 +105,7 @@ public class Ticket {
 
 ---
 
-## 11.4 El DTO: record en Spring Boot
+## 12.4 El DTO: record en Spring Boot
 
 Los DTOs (Data Transfer Objects) aíslan la API de la entidad interna. Los `record` son perfectos para esto:
 
@@ -137,7 +137,7 @@ public record TicketResponse(
 
 ---
 
-## 11.5 El repositorio: interfaz + genéricos
+## 12.5 El repositorio: interfaz + genéricos
 
 ```java
 // Lo que sabes: una interfaz genérica
@@ -167,7 +167,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
 ---
 
-## 11.6 El servicio: lógica de negocio con Java puro
+## 12.6 El servicio: lógica de negocio con Java puro
 
 ```java
 import org.springframework.stereotype.Service;
@@ -226,7 +226,7 @@ public class TicketService {
 
 ---
 
-## 11.7 El controlador: HTTP + Java
+## 12.7 El controlador: HTTP + Java
 
 ```java
 import org.springframework.http.ResponseEntity;
@@ -286,7 +286,7 @@ public class TicketController {
 
 ---
 
-## 11.8 Manejo global de excepciones
+## 12.8 Manejo global de excepciones
 
 ```java
 import org.springframework.http.ResponseEntity;
@@ -320,7 +320,7 @@ public class ManejadorExcepciones {
 
 ---
 
-## 11.9 Conexión completa: dónde vive cada concepto Java
+## 12.9 Conexión completa: dónde vive cada concepto Java
 
 | Módulo | Concepto Java | Dónde lo ves en Spring Boot |
 |--------|--------------|----------------------------|
@@ -337,7 +337,7 @@ public class ManejadorExcepciones {
 
 ---
 
-## 11.10 Tu próximo paso
+## 12.10 Tu próximo paso
 
 Has completado el mini curso. Ahora estás listo para:
 

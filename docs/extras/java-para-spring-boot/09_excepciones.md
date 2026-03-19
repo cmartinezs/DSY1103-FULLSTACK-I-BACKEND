@@ -4,7 +4,7 @@
 
 ---
 
-## 8.1 ¿Qué es una excepción?
+## 9.1 ¿Qué es una excepción?
 
 Una excepción es un **evento anormal** que interrumpe el flujo normal del programa. En Java las excepciones son **objetos** que representan ese evento; no son códigos de error numéricos ni mensajes de texto: son instancias de clases que cargan información sobre qué salió mal, dónde y por qué.
 
@@ -30,7 +30,7 @@ Throwable
 
 ---
 
-## 8.2 Checked vs. Unchecked
+## 9.2 Checked vs. Unchecked
 
 | | Checked | Unchecked (RuntimeException) |
 |---|---|---|
@@ -57,7 +57,7 @@ public int dividir(int a, int b) {
 
 ---
 
-## 8.3 `try-catch-finally`
+## 9.3 `try-catch-finally`
 
 El bloque `try` envuelve el código que puede lanzar excepciones. Si ocurre una excepción dentro, Java busca el primer `catch` cuyo tipo sea compatible con la excepción lanzada y ejecuta ese bloque. Si ningún `catch` coincide, la excepción sigue subiendo por la pila de llamadas.
 
@@ -107,7 +107,7 @@ try {
 
 ---
 
-## 8.4 `try-with-resources` (Java 7+)
+## 9.4 `try-with-resources` (Java 7+)
 
 Muchos recursos en Java (archivos, conexiones de red, streams de datos) necesitan cerrarse explícitamente después de usarlos para liberar los recursos del sistema. Sin `try-with-resources`, debes hacerlo en el `finally`, lo que produce código verboso y propenso a errores (especialmente cuando el `close()` en sí puede lanzar una excepción).
 
@@ -147,7 +147,7 @@ try (var in  = new FileInputStream("entrada.txt");
 
 ---
 
-## 8.5 Lanzar excepciones
+## 9.5 Lanzar excepciones
 
 Para lanzar una excepción usas `throw` seguido de una instancia del tipo de excepción. Es importante incluir un mensaje descriptivo que ayude a entender qué salió mal y con qué valores — ese mensaje es lo que verás en los logs y en los mensajes de error de la API.
 
@@ -180,7 +180,7 @@ try {
 
 ---
 
-## 8.6 Excepciones personalizadas ⭐
+## 9.6 Excepciones personalizadas ⭐
 
 En Spring Boot es fundamental crear excepciones propias para representar errores de dominio:
 
@@ -239,7 +239,7 @@ public class TicketService {
 
 ---
 
-## 8.7 Patrón de manejo global en Spring Boot (preview)
+## 9.7 Patrón de manejo global en Spring Boot (preview)
 
 En Spring Boot verás este patrón para manejar excepciones de forma centralizada:
 
@@ -279,7 +279,7 @@ public class ManejadorGlobalExcepciones {
 
 ## 🏋️ Ejercicios de práctica
 
-### Ejercicio 8.1 — Try-catch
+### Ejercicio 9.1 — Try-catch
 Escribe un método `Optional<Integer> parsearEntero(String texto)` que retorne `Optional.empty()` si el texto no es un entero válido, en lugar de lanzar una excepción al exterior.
 
 <details>
@@ -305,7 +305,7 @@ parsearEntero("abc").ifPresentOrElse(
 
 ---
 
-### Ejercicio 8.2 — Excepciones personalizadas
+### Ejercicio 9.2 — Excepciones personalizadas
 Crea una jerarquía de excepciones para un sistema de biblioteca:
 - `BibliotecaException` (base, unchecked)
 - `LibroNoDisponibleException`: cuando el libro está prestado

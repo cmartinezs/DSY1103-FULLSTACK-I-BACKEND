@@ -4,7 +4,7 @@
 
 ---
 
-## 7.1 El framework de colecciones de Java
+## 8.1 El framework de colecciones de Java
 
 Java incluye un conjunto de clases e interfaces listas para usar que resuelven el problema de agrupar y manipular múltiples objetos. En lugar de trabajar con arrays de tamaño fijo, las colecciones crecen y se reducen dinámicamente, ofrecen métodos de búsqueda, ordenamiento y manipulación, y están diseñadas para diferentes casos de uso.
 
@@ -30,7 +30,7 @@ Map          → Pares clave-valor (no es Collection)
 
 ---
 
-## 7.2 `List` — la más usada
+## 8.2 `List` — la más usada
 
 `List` es la colección más común en Java y en Spring Boot. Representa una **secuencia ordenada** de elementos donde cada uno tiene un índice (empezando en 0) y se permiten duplicados. Su implementación más habitual es `ArrayList`, que internamente usa un array que se redimensiona automáticamente.
 
@@ -81,7 +81,7 @@ List<String> deArreglo = List.of(arreglo);
 
 ---
 
-## 7.3 `Map` — pares clave-valor
+## 8.3 `Map` — pares clave-valor
 
 Un `Map` almacena asociaciones entre una **clave** y un **valor**, como un diccionario. Cada clave es única dentro del mapa (agregar un valor con una clave ya existente **reemplaza** el anterior). Los valores sí pueden repetirse.
 
@@ -133,7 +133,7 @@ edades.putIfAbsent("Carlos", 22);
 
 ---
 
-## 7.4 `Set` — sin duplicados
+## 8.4 `Set` — sin duplicados
 
 Un `Set` es una colección que **no permite elementos duplicados**. Al intentar agregar un elemento que ya existe (según `equals` y `hashCode`), el `Set` simplemente lo ignora sin lanzar error. Esta propiedad lo hace ideal para representar grupos donde la unicidad es una regla de negocio: roles de usuario, etiquetas, permisos.
 
@@ -168,7 +168,7 @@ rolesA.removeAll(rolesB);
 
 ---
 
-## 7.5 Colecciones inmutables — fábricas modernas (Java 9+)
+## 8.5 Colecciones inmutables — fábricas modernas (Java 9+)
 
 A partir de Java 9, puedes crear colecciones **inmutables** (que no se pueden modificar después de su creación) de forma muy concisa con los métodos de fábrica `List.of()`, `Set.of()` y `Map.of()`. Cualquier intento de añadir, eliminar o modificar un elemento lanzará `UnsupportedOperationException`.
 
@@ -190,7 +190,7 @@ List<String> copia = List.copyOf(mutableLista);
 
 ---
 
-## 7.6 Genéricos — escribir código tipo-seguro y reutilizable
+## 8.6 Genéricos — escribir código tipo-seguro y reutilizable
 
 Los genéricos permiten crear clases y métodos que trabajan con **cualquier tipo**, con verificación en tiempo de compilación.
 
@@ -297,7 +297,7 @@ sumarNumeros(List.of(1.5, 2.5));    // acepta List<Double>
 
 ---
 
-## 7.7 `Optional<T>` como colección de 0 o 1 elemento
+## 8.7 `Optional<T>` como colección de 0 o 1 elemento
 
 `Optional<T>` puede verse como una colección especial que contiene **cero o exactamente un elemento**. Lo introdujo Java 8 como alternativa segura a retornar `null` cuando un método puede no encontrar un resultado. En lugar de que el código que llama tenga que recordar verificar `if (resultado != null)`, el `Optional` hace explícita esa posibilidad y obliga a manejarla.
 
@@ -330,7 +330,7 @@ Optional<Ticket> resultado = opt.or(() -> Optional.of(ticketPorDefecto));
 
 ## 🏋️ Ejercicios de práctica
 
-### Ejercicio 7.1 — List y Map
+### Ejercicio 8.1 — List y Map
 Dado una lista de palabras, crea un `Map<String, Integer>` que cuente cuántas veces aparece cada palabra (frecuencia de palabras):
 
 ```java
@@ -360,7 +360,7 @@ for (String palabra : palabras) {
 
 ---
 
-### Ejercicio 7.2 — Genéricos
+### Ejercicio 8.2 — Genéricos
 Crea una clase genérica `Par<A, B>` (similar a un Tuple) con dos campos de tipos diferentes, sus getters, `toString`, `equals` y `hashCode`. Luego crea un método estático `List<Par<String, Integer>> contarPalabras(List<String> palabras)` que retorne pares (palabra, frecuencia).
 
 <details>
@@ -389,7 +389,7 @@ pares.forEach(p -> System.out.println(p.primero() + ": " + p.segundo()));
 
 ---
 
-### Ejercicio 7.3 — Colecciones inmutables
+### Ejercicio 8.3 — Colecciones inmutables
 ¿Por qué el siguiente código lanza una excepción? ¿Cómo lo corriges?
 
 ```java

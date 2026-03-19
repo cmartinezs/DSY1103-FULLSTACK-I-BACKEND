@@ -4,7 +4,7 @@
 
 ---
 
-## 3.1 Anatomía de un método
+## 4.1 Anatomía de un método
 
 ```
 [modificador de acceso] [static] [tipo de retorno] nombreMétodo([parámetros]) {
@@ -41,7 +41,7 @@ double iva = Calculadora.calcularIva(1000); // método estático
 
 ---
 
-## 3.2 Modificadores de acceso
+## 4.2 Modificadores de acceso
 
 | Modificador | Visible desde |
 |------------|---------------|
@@ -66,7 +66,7 @@ public class CuentaBancaria {
 
 ---
 
-## 3.3 Sobrecarga de métodos (Overloading)
+## 4.3 Sobrecarga de métodos (Overloading)
 
 Múltiples métodos con el **mismo nombre** pero **diferente firma** (tipo o número de parámetros).
 
@@ -104,7 +104,7 @@ f.formatearTodos("a", "b", "c"); // → "a | b | c"
 
 ---
 
-## 3.4 Paso por valor vs. paso por referencia
+## 4.4 Paso por valor vs. paso por referencia
 
 En Java **todo se pasa por valor**, pero el "valor" de un objeto es su **referencia** (dirección de memoria).
 
@@ -138,7 +138,7 @@ System.out.println(sb); // "Spring Boot" — la reasignación no tuvo efecto ext
 
 ---
 
-## 3.5 Métodos con `Optional` como retorno (Java 8+)
+## 4.5 Métodos con `Optional` como retorno (Java 8+)
 
 Cuando un método **puede no encontrar** un resultado, retornar `Optional<T>` en lugar de `null` es mucho más seguro y expresivo.
 
@@ -189,7 +189,7 @@ Optional<String> emailMayusculas = resultado.map(String::toUpperCase);
 
 ---
 
-## 3.6 Métodos de fábrica estáticos (Static Factory Methods)
+## 4.6 Métodos de fábrica estáticos (Static Factory Methods)
 
 Patrón muy común en Spring Boot y en la API estándar de Java:
 
@@ -229,7 +229,7 @@ Respuesta<Ticket> r3 = Respuesta.noEncontrado("Ticket no existe");
 
 ## 🏋️ Ejercicios de práctica
 
-### Ejercicio 3.1 — Sobrecarga
+### Ejercicio 4.1 — Sobrecarga
 Diseña una clase `Calculadora` con métodos sobrecargados `calcularArea` para:
 - Círculo: recibe `double radio`
 - Rectángulo: recibe `double ancho, double alto`
@@ -264,7 +264,7 @@ public class Calculadora {
 
 ---
 
-### Ejercicio 3.2 — Optional
+### Ejercicio 4.2 — Optional
 Escribe un método `Optional<Integer> dividir(int a, int b)` que retorne `Optional.empty()` si `b == 0`, o el resultado envuelto en `Optional` si `b != 0`. Luego usa el resultado imprimiendo el valor o el mensaje "División por cero no permitida".
 
 <details>
@@ -293,7 +293,7 @@ dividir(10, 0)
 
 ---
 
-### Ejercicio 3.3 — Paso por valor
+### Ejercicio 4.3 — Paso por valor
 Sin ejecutar el código, predice la salida:
 
 ```java

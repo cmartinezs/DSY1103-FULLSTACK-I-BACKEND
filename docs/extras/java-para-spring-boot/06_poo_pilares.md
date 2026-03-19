@@ -15,7 +15,7 @@
 
 ---
 
-## 5.1 🔒 Encapsulamiento
+## 6.1 🔒 Encapsulamiento
 
 **Principio:** oculta el estado interno. Solo expón lo necesario mediante una API controlada.
 
@@ -62,7 +62,7 @@ public class CuentaBancaria {
 
 ---
 
-## 5.2 🧬 Herencia
+## 6.2 🧬 Herencia
 
 **Principio:** una clase hija (`extends`) hereda campos y métodos de la clase padre y puede especializarlos.
 
@@ -144,7 +144,7 @@ registrarAuditoria(new Usuario("ana@duoc.cl", "ADMIN"));
 
 ---
 
-## 5.3 🎭 Polimorfismo
+## 6.3 🎭 Polimorfismo
 
 **Principio:** un objeto puede comportarse de distintas formas según su tipo real en tiempo de ejecución.
 
@@ -198,7 +198,7 @@ sms.alertar("+56912345678", "Tu ticket fue cerrado");  // 📱 SMS a +569...
 
 ---
 
-## 5.4 🧩 Abstracción
+## 6.4 🧩 Abstracción
 
 **Principio:** expón solo lo esencial; oculta los detalles de implementación.
 
@@ -248,7 +248,7 @@ public class TicketService extends ServicioBase<Ticket, Long> {
 
 ---
 
-## 5.5 Override vs. Overload — diferencias clave
+## 6.5 Override vs. Overload — diferencias clave
 
 Estos dos términos suenan parecidos pero son conceptos completamente distintos que se confunden frecuentemente:
 
@@ -289,7 +289,7 @@ a.sonido();                  // → "Guau" (Override: usa el método del tipo RE
 
 ## 🏋️ Ejercicios de práctica
 
-### Ejercicio 5.1 — Encapsulamiento
+### Ejercicio 6.1 — Encapsulamiento
 Diseña una clase `Semaforo` con un estado interno `String color` que solo puede ser `"ROJO"`, `"AMARILLO"` o `"VERDE"`. El color inicial es `"ROJO"`. Agrega un método `siguiente()` que avance al siguiente color en ciclo (ROJO → VERDE → AMARILLO → ROJO...).
 
 <details>
@@ -322,7 +322,7 @@ public class Semaforo {
 
 ---
 
-### Ejercicio 5.2 — Herencia y polimorfismo
+### Ejercicio 6.2 — Herencia y polimorfismo
 Crea una jerarquía: clase base `Figura` con un método abstracto `calcularArea()` y un método concreto `describir()` que imprima `"Figura: [nombre] — Área: [area]"`. Implementa `Circulo(double radio)`, `Rectangulo(double ancho, double alto)` y `Triangulo(double base, double altura)`. Crea una lista de figuras mixta y llama `describir()` en cada una.
 
 <details>

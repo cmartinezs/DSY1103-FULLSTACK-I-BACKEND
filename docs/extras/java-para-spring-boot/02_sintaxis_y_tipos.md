@@ -4,7 +4,7 @@
 
 ---
 
-## 1.1 Estructura mínima de un programa Java
+## 2.1 Estructura mínima de un programa Java
 
 En Java, **todo el código debe vivir dentro de una clase**. No existen funciones sueltas ni código ejecutable fuera de una clase, como en otros lenguajes. El punto de entrada de cualquier programa es el método `main`, cuya firma exacta (`public static void main(String[] args)`) debe respetarse para que la JVM lo reconozca.
 
@@ -27,7 +27,7 @@ public class HolaMundo {
 
 ---
 
-## 1.2 Tipos primitivos
+## 2.2 Tipos primitivos
 
 Java tiene 8 tipos primitivos que viven en la pila (stack), no en el heap. Son los bloques de construcción más básicos y representan valores simples, no objetos. Conocerlos evita errores de desbordamiento (overflow) y pérdida de precisión en cálculos.
 
@@ -60,7 +60,7 @@ double exacto = entero;  // 5.0 — no necesitas cast
 
 ---
 
-## 1.3 Tipos de referencia y `String`
+## 2.3 Tipos de referencia y `String`
 
 Los tipos de referencia viven en el heap. A diferencia de los primitivos, una variable de referencia **no contiene el dato en sí**, sino la dirección de memoria donde está el objeto. Esto tiene una consecuencia importante: comparar dos referencias con `==` compara las direcciones, no los contenidos.
 
@@ -98,7 +98,7 @@ System.out.println(a.equals(b));  // true — siempre correcto
 
 ---
 
-## 1.4 `var` — inferencia de tipo local (Java 10+)
+## 2.4 `var` — inferencia de tipo local (Java 10+)
 
 `var` permite que el compilador **infiera el tipo** en variables locales. El tipo sigue siendo estático (no es como JavaScript); solo evitas escribirlo.
 
@@ -124,7 +124,7 @@ var x = null; // ❌ Error de compilación
 
 ---
 
-## 1.5 Text Blocks (Java 15+)
+## 2.5 Text Blocks (Java 15+)
 
 Los text blocks permiten escribir strings multilínea de forma limpia, sin concatenaciones ni `\n`.
 
@@ -165,7 +165,7 @@ String html = """
 
 ---
 
-## 1.6 Constantes
+## 2.6 Constantes
 
 Una constante es un valor que **no cambia** durante la ejecución del programa. En Java se declaran con `static final`: `static` porque pertenece a la clase (no a cada instancia) y `final` porque no puede reasignarse una vez asignada. Por convención, se escriben en `MAYUSCULAS_CON_GUIONES_BAJOS` para que sean fácilmente identificables en el código.
 
@@ -186,7 +186,7 @@ String estado = EstadoTicket.ABIERTO;
 
 ---
 
-## 1.7 Arrays
+## 2.7 Arrays
 
 Un array es una **colección de tamaño fijo** del mismo tipo. Una vez creado, no puedes cambiar su capacidad. Los índices empiezan en `0` y el último elemento está en la posición `length - 1`. Acceder a un índice fuera de rango lanza `ArrayIndexOutOfBoundsException` en tiempo de ejecución.
 
@@ -216,7 +216,7 @@ System.out.println(matriz[1][2]);   // 6 — fila 1, columna 2
 
 ## 🏋️ Ejercicios de práctica
 
-### Ejercicio 1.1 — Tipos y conversión
+### Ejercicio 2.1 — Tipos y conversión
 Dado el siguiente código, predice el resultado **antes** de ejecutarlo:
 
 ```java
@@ -241,7 +241,7 @@ El casting `(double)` se aplica **antes** de la división, cambiando la aritmét
 
 ---
 
-### Ejercicio 1.2 — Manipulación de Strings
+### Ejercicio 2.2 — Manipulación de Strings
 Escribe un método que reciba un email como `String` y retorne `true` si el email contiene exactamente un `@` y termina en `.cl` o `.com`.
 
 ```java
@@ -273,7 +273,7 @@ public static boolean esEmailValido(String email) {
 
 ---
 
-### Ejercicio 1.3 — Text Block
+### Ejercicio 2.3 — Text Block
 Reescribe el siguiente string usando un text block:
 
 ```java
@@ -295,7 +295,7 @@ String xml = """
 
 ---
 
-### Ejercicio 1.4 — var y legibilidad
+### Ejercicio 2.4 — var y legibilidad
 Decide en cuáles líneas es apropiado usar `var` y en cuáles no. Justifica:
 
 ```java

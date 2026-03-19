@@ -4,7 +4,7 @@
 
 ---
 
-## 6.1 ¿Qué es una interfaz?
+## 7.1 ¿Qué es una interfaz?
 
 Una interfaz define **qué** puede hacer algo, sin especificar **cómo**. Es un contrato que las clases se comprometen a cumplir al implementarla.
 
@@ -45,7 +45,7 @@ public class TicketRepositorio implements Almacenable<Ticket, Long> {
 
 ---
 
-## 6.2 Herencia múltiple con interfaces
+## 7.2 Herencia múltiple con interfaces
 
 Una clase puede implementar **múltiples interfaces** (algo imposible con `extends`):
 
@@ -105,7 +105,7 @@ public class Ticket implements Exportable, Auditable, Validable {
 
 ---
 
-## 6.3 Métodos `default` en interfaces (Java 8+)
+## 7.3 Métodos `default` en interfaces (Java 8+)
 
 Las interfaces pueden tener métodos con implementación usando `default`. Esto permite agregar comportamiento sin romper las clases que ya implementan la interfaz.
 
@@ -142,7 +142,7 @@ email.enviarConAsunto("ana@duoc.cl", "ALERTA", "Tu ticket fue cerrado"); // usa 
 
 ---
 
-## 6.4 Interfaces funcionales — la base de las lambdas ⭐
+## 7.4 Interfaces funcionales — la base de las lambdas ⭐
 
 Una **interfaz funcional** es una interfaz con exactamente **un método abstracto** (puede tener métodos `default` y `static`, pero solo un abstracto). La anotación `@FunctionalInterface` le pide al compilador que verifique esto y falle si alguien agrega un segundo método abstracto accidentalmente.
 
@@ -196,7 +196,7 @@ tickets.stream()
 
 ---
 
-## 6.5 Interface vs. Clase abstracta — ¿cuándo usar cada una?
+## 7.5 Interface vs. Clase abstracta — ¿cuándo usar cada una?
 
 ```
 ¿Comparten SOLO un contrato de comportamiento?
@@ -259,7 +259,7 @@ public class TicketRepositorioMemoria extends RepositorioEnMemoria<Ticket, Long>
 
 ---
 
-## 6.6 Clases anónimas y lambdas
+## 7.6 Clases anónimas y lambdas
 
 Antes de Java 8, la única forma de implementar una interfaz funcional "al vuelo" era con una **clase anónima**: una clase sin nombre declarada e instanciada en el mismo lugar. Su sintaxis es verbosa porque debes declarar la clase completa con `@Override` aunque solo tenga una función.
 
@@ -291,7 +291,7 @@ System.out.println(nombres); // [Bo, Ana, Carlos, Valentina] — orden por longi
 
 ## 🏋️ Ejercicios de práctica
 
-### Ejercicio 6.1 — Diseño con interfaz
+### Ejercicio 7.1 — Diseño con interfaz
 Define una interfaz `Calculable` con el método `double calcular()`. Implementa tres clases: `Suma(double a, double b)`, `Producto(double a, double b)` y `Potencia(double base, double exponente)`. Crea una lista `List<Calculable>` con instancias de cada tipo y usa un bucle para imprimir el resultado de cada una.
 
 <details>
@@ -329,7 +329,7 @@ operaciones.forEach(op -> System.out.printf("%.2f%n", op.calcular()));
 
 ---
 
-### Ejercicio 6.2 — Interfaces funcionales
+### Ejercicio 7.2 — Interfaces funcionales
 Sin usar Stream, aplica manualmente una `Function<String, String>` que convierta un email a `"usuario"` (todo lo que está antes del `@`). Luego usa un `Predicate<String>` para filtrar solo los emails que terminen en `.cl` de una lista.
 
 <details>

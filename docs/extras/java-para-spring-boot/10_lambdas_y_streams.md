@@ -4,7 +4,7 @@
 
 ---
 
-## 9.1 Lambdas — funciones como valores
+## 10.1 Lambdas — funciones como valores
 
 Una lambda es una **función anónima** (sin nombre ni clase) que puedes escribir directamente donde se espera una interfaz funcional. En lugar de crear una clase que implemente la interfaz y luego instanciarla, simplemente describes qué hace la función.
 
@@ -39,7 +39,7 @@ Supplier<String>   s  = () -> "Spring Boot";                  // sin parámetros
 
 ---
 
-## 9.2 Referencias a métodos
+## 10.2 Referencias a métodos
 
 Una referencia a método (`Clase::metodo`) es una sintaxis aún más concisa que una lambda cuando el único trabajo de la lambda es llamar a un método ya existente. Son equivalentes en comportamiento pero más legibles, especialmente al encadenar operaciones de Stream.
 
@@ -87,7 +87,7 @@ nombres.stream()
 
 ---
 
-## 9.3 Stream API — pipeline de datos
+## 10.3 Stream API — pipeline de datos
 
 Un `Stream` es una secuencia de elementos sobre la que aplicas operaciones encadenadas. A diferencia de las colecciones, un stream **no almacena datos**: es un canal por el que fluyen los elementos desde una fuente hasta un resultado final. Tampoco modifica la colección original.
 
@@ -134,7 +134,7 @@ IntStream.rangeClosed(1, 5).forEach(System.out::println); // 1,2,3,4,5 (incluye 
 
 ---
 
-## 9.4 Operaciones intermedias (lazy — se ejecutan solo cuando hay terminal)
+## 10.4 Operaciones intermedias (lazy — se ejecutan solo cuando hay terminal)
 
 Las operaciones intermedias **transforman o filtran** el stream y devuelven un nuevo stream. Son *lazy*: no se ejecutan hasta que se encuentre una operación terminal al final del pipeline. Puedes encadenar todas las que quieras sin que Java haga ningún trabajo aún.
 
@@ -198,7 +198,7 @@ nombres.stream()
 
 ---
 
-## 9.5 Operaciones terminales (eager — disparan la ejecución)
+## 10.5 Operaciones terminales (eager — disparan la ejecución)
 
 Las operaciones terminales **consumen el stream** y producen un resultado final: una colección, un valor, un booleano o ningún valor (side-effect). Una vez que se llama a una operación terminal, el stream no puede volver a usarse.
 
@@ -282,7 +282,7 @@ double promedioId = tickets.stream()
 
 ---
 
-## 9.6 Streams paralelos
+## 10.6 Streams paralelos
 
 Por defecto, un stream procesa los elementos **secuencialmente** en un solo hilo. Con `parallelStream()` (o `.parallel()` en un stream ya creado), Java distribuye el trabajo entre varios hilos del pool común del ForkJoinPool, lo que puede acelerar operaciones sobre colecciones muy grandes.
 
@@ -307,7 +307,7 @@ long count = archivosGrandes.parallelStream()
 
 ---
 
-## 9.7 Ejemplo completo: procesar tickets como en Spring Boot
+## 10.7 Ejemplo completo: procesar tickets como en Spring Boot
 
 ```java
 public class TicketService {
@@ -347,7 +347,7 @@ public class TicketService {
 
 ## 🏋️ Ejercicios de práctica
 
-### Ejercicio 9.1 — Pipeline básico
+### Ejercicio 10.1 — Pipeline básico
 Dada la lista de números `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]`, usa Stream para:
 1. Filtrar los números pares
 2. Elevar cada uno al cubo
@@ -370,7 +370,7 @@ System.out.println(resultado); // [64, 216, 512, 1000]
 
 ---
 
-### Ejercicio 9.2 — Agrupación
+### Ejercicio 10.2 — Agrupación
 Dada una lista de nombres `["Ana", "Luis", "María", "Carlos", "Alejandra", "Miguel"]`, agrúpalos por la primera letra y muestra cuántos hay en cada grupo.
 
 <details>
@@ -393,7 +393,7 @@ porLetra.forEach((letra, cantidad) ->
 
 ---
 
-### Ejercicio 9.3 — Stream completo
+### Ejercicio 10.3 — Stream completo
 Tienes una lista de `Producto(String nombre, double precio, String categoria)`. Usando Stream:
 1. Filtra los productos de categoría `"ELECTRONICA"`
 2. Aplica un descuento del 10% a cada precio
