@@ -129,6 +129,21 @@ public class TicketRepository {
 > **¿Por qué `existsByTitle()` usa `equalsIgnoreCase()`?**
 > Para que `"login falla"`, `"Login Falla"` y `"LOGIN FALLA"` sean considerados el mismo título. Un usuario que comete un error de capitalización no debería poder crear un ticket duplicado. La comparación sin distinción de mayúsculas es más robusta y más amigable.
 
+**Código equivalente sin expresiones lambda:**
+
+```java
+public boolean existsByTitle(String title) {
+    for (Ticket ticket : tickets) {
+        if (ticket.getTitle().equalsIgnoreCase(title)) {
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+El `for` recorre cada ticket y retorna `true` en cuanto encuentra un título coincidente. Si termina el recorrido sin encontrar ninguno, retorna `false`. El stream con `anyMatch` hace exactamente lo mismo con menos líneas.
+
 > **¿Por qué esta validación vive en el `Repository` y no en el `Service`?**
 > La consulta de si algo existe en el almacenamiento es responsabilidad del `Repository`: es quien sabe dónde y cómo están guardados los datos. Pero la *decisión* de qué hacer si existe un duplicado (lanzar una excepción, ignorar, etc.) es responsabilidad del `Service`. El `Repository` solo responde la pregunta; el `Service` toma la acción.
 
