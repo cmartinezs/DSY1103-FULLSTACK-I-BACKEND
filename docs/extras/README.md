@@ -21,7 +21,8 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 9 | [Principios SOLID](#9-principios-solid) | [`solid/`](./solid/README.md) |
 | 10 | [Variables de Entorno](#10-variables-de-entorno) | [`env-variables/`](./env-variables/README.md) |
 | 11 | [Lógica Proposicional](#11-lógica-proposicional) | [`logica-proposicional/`](./logica-proposicional/README.md) |
-| 12 | [Próximos temas](#12-próximos-temas) | — |
+| 12 | [🏋️ Ejercicios Prácticos](#12-️-ejercicios-prácticos) | [`ejercicios/`](./ejercicios/README.md) |
+| 13 | [Próximos temas](#13-próximos-temas) | — |
 
 ---
 
@@ -168,7 +169,29 @@ La **lógica proposicional** es la rama de la lógica matemática que estudia la
 
 ---
 
-## 12. Próximos temas
+## 12. 🏋️ Ejercicios Prácticos
+
+**20 ejercicios progresivos** organizados en dos series que integran todos los conceptos del Mini Curso de Java, los 4 pilares de la POO y Lógica Proposicional mediante **casos de uso reales**.
+
+**Serie I — Con ejemplos de código (ejercicios 01 al 15):** cada enunciado incluye snippets de referencia, ejemplos de entrada y salidas esperadas formateadas.
+
+**Serie II — Enunciado abierto (ejercicios 16 al 20):** el sistema a construir se describe de forma funcional. El alumno decide el diseño y la implementación de forma autónoma.
+
+| Nivel | Serie I | Serie II |
+|-------|---------|----------|
+| ⭐ Básico | 01 – 03 | 16 |
+| ⭐⭐ Básico-Medio | 04 – 06 | 17 |
+| ⭐⭐⭐ Medio | 07 – 10 | 18 |
+| ⭐⭐⭐⭐ Medio-Avanzado | 11 – 13 | 19 |
+| ⭐⭐⭐⭐⭐ Avanzado | 14 – 15 | 20 |
+
+**Contextos reales:** acceso a sistemas · descuentos en retail · sensores de temperatura · gestión universitaria · parking · RRHH · tienda de mascotas · restaurante · biblioteca · farmacia · aerolínea · e-learning · e-commerce · red social · banco digital · supermercado · clínica · hospital · concesionaria · logística.
+
+→ [Ver todos los ejercicios](./ejercicios/README.md)
+
+---
+
+## 13. Próximos temas
 
 Los siguientes contenidos se irán incorporando a medida que avance el curso:
 
