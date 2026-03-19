@@ -31,7 +31,8 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 17 | [🧠 Conceptos de Programación — Vocabulario Universal](#17-conceptos-de-programación--vocabulario-universal) | [`conceptos-de-programacion/`](./conceptos-de-programacion/README.md) |
 | 18 | [🛠️ Herramientas para Desarrolladores](#18-️-herramientas-para-desarrolladores) | [`herramientas-para-desarrolladores/`](./herramientas-para-desarrolladores/README.md) |
 | 19 | [🖥️ Uso de PC para Programadores](#19-️-uso-de-pc-para-programadores) | [`uso-de-pc/`](./uso-de-pc/README.md) |
-| 20 | [Próximos temas](#20-próximos-temas) | — |
+| 20 | [🕰️ Historia de la Computación e Informática](#20-️-historia-de-la-computación-e-informática) | [`historia-de-la-computacion/`](./historia-de-la-computacion/README.md) |
+| 21 | [Próximos temas](#21-próximos-temas) | — |
 
 ---
 
@@ -296,7 +297,33 @@ Cubre exactamente los mismos conceptos en **dos guías paralelas** según el sis
 
 ---
 
-## 20. Próximos temas
+## 20. 🕰️ Historia de la Computación e Informática
+
+Desde el ábaco mesopotámico del 3000 a.C. hasta los agentes de IA de 2026 — la historia completa de cómo la humanidad construyó la era digital. Cubre los hitos técnicos, los cambios de paradigma, el hardware, el software, los lenguajes de programación, el nacimiento de Internet y la Web, la revolución móvil, la nube, y la inteligencia artificial. Incluye perfiles de las personas que hicieron posible todo lo que usamos hoy.
+
+**9 capítulos:**
+
+| Cap. | Título | Período |
+|------|--------|---------|
+| 1 | Antes de las máquinas — Los precursores | ~3000 a.C. – 1935 |
+| 2 | El nacimiento de la computación | 1936 – 1951 |
+| 3 | La era del mainframe | 1952 – 1974 |
+| 4 | La revolución personal — La PC llega al hogar | 1975 – 1994 |
+| 5 | Internet y la Web — El mundo conectado | 1969 – 2003 |
+| 6 | La era móvil y la nube | 2000 – 2015 |
+| 7 | Inteligencia Artificial y el presente | 1950 – hoy |
+| 8 | Historia de los lenguajes de programación | 1843 – hoy |
+| 9 | Pioneros y visionarios — Las personas detrás de todo | Todos |
+
+**Personas clave:** Ada Lovelace · Alan Turing · John von Neumann · Claude Shannon · Grace Hopper · Dennis Ritchie · Linus Torvalds · Tim Berners-Lee · Bill Gates · Steve Jobs · Larry Page · Sergey Brin y muchos más.
+
+**¿Por qué importa?** Cada línea de código que escribes hoy se apoya en décadas de trabajo de personas reales. Entender la historia da contexto, perspectiva y una intuición profunda sobre por qué las tecnologías son como son.
+
+→ [Ver índice completo de Historia de la Computación](./historia-de-la-computacion/README.md)
+
+---
+
+## 21. Próximos temas
 
 Los siguientes contenidos se irán incorporando a medida que avance el curso:
 
