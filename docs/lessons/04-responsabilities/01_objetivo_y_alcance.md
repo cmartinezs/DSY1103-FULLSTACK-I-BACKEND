@@ -1,59 +1,72 @@
-# 01 - Objetivo y alcance de la clase
+# Lección 04 - Separación de responsabilidades: ¿qué vas a aprender?
 
-## Objetivo pedagógico (2 horas)
+## ¿De dónde venimos?
 
-Construir un microservicio inicial bien estructurado, aplicando separación de responsabilidades desde el primer endpoint.
+En la lección anterior construiste tu primer endpoint con Spring Boot: algo como `GET /greetings` que devolvía un texto plano. Funcionaba, pero todo el código estaba en un solo lugar: el controlador hacía absolutamente todo.
 
-Al terminar, el estudiante debe poder explicar y demostrar:
+Eso está bien para empezar, pero en la práctica real ese enfoque genera problemas muy rápido. Imagina que mañana tu jefe te pide cambiar cómo se buscan los datos, o agregar una regla de negocio, o hacer pruebas automáticas. Con todo en un solo archivo, cualquier cambio pequeño puede romper todo lo demás.
 
-- Qué hace cada capa en CSR (`Controller`, `Service`, `Repository`, `Model`)
-- Por qué no conviene concentrar lógica en el controlador
-- Cómo retornar JSON con control explícito de estado HTTP usando `ResponseEntity`
-- Cómo definir una URL REST base con versionado y recurso en plural
+Esta lección existe para resolver ese problema desde el principio.
 
-## Contexto de continuidad del curso
+---
 
-Punto de partida real del grupo:
+## ¿Qué vas a construir?
 
-- Ya hicieron `@RestController` + `@RequestMapping` + `@GetMapping`
-- Ya probaron un endpoint simple (`/greetings`) que devuelve texto plano
+Al terminar esta lección tendrás un microservicio real y ejecutable que:
 
-Evolución de esta clase:
+- Expone el endpoint `GET /tickets` y devuelve una lista de tickets en formato JSON
+- Está organizado en **cuatro capas separadas**, cada una con una responsabilidad clara
+- Usa datos en memoria (sin base de datos aún) para que podamos concentrarnos en la arquitectura
 
-- Pasamos de string simple a objeto serializado JSON
-- Pasamos de controlador único a arquitectura por capas
-- Mantenemos complejidad baja usando persistencia en memoria
+### Lo que vas a ser capaz de explicar
 
-## Límites de esta clase (no adelantar)
+Más importante que el código es que entiendas el **por qué** detrás de cada decisión. Al terminar deberías poder responder:
 
-Para respetar la progresión de la unidad:
+- ¿Qué hace el `Controller` y qué NO debería hacer?
+- ¿Por qué existe el `Service` como capa separada?
+- ¿Por qué el `Repository` no debería tener lógica de negocio?
+- ¿Qué ventaja tiene retornar `ResponseEntity` en lugar de un objeto directo?
+- ¿Por qué las URLs REST usan sustantivos en plural en lugar de verbos?
 
-- No se exige CRUD completo
-- No se exige `@Valid`, `@NotNull`, `@NotBlank` aún
-- No se exige `@ControllerAdvice`
-- No se usa base de datos real
+---
 
-Si hay tiempo, solo se permite una mejora opcional: filtro por estado o una validación de negocio mínima en `Service`.
+## ¿Qué NO cubre esta lección? (y por qué)
 
-## Configuración mínima y personalización base
+Es importante que sepas lo que intencionalmente dejamos para más adelante, para que no te preocupes si no lo ves aquí:
 
-También se deja instalada una capa mínima de configuración para reforzar operación y orden del proyecto:
+| Tema | ¿Por qué lo dejamos después? |
+|---|---|
+| CRUD completo (crear, editar, eliminar) | Primero necesitas dominar la estructura antes de multiplicar endpoints |
+| Validaciones (`@Valid`, `@NotNull`) | Agregamos complejidad solo cuando la base esté sólida |
+| Manejo de errores global (`@ControllerAdvice`) | Es el paso siguiente natural después de tener un endpoint funcionando |
+| Base de datos real (JPA, PostgreSQL) | Usamos memoria para que el foco sea la arquitectura, no la infraestructura |
 
-- Archivo `application.properties` con parámetros visibles del entorno
-- Personalización de arranque con `src/main/resources/banner.txt`
-- Cambio de puerto con `server.port`
-- Ajuste de prefijo global de rutas con `server.servlet.context-path`
+El objetivo de esta lección no es hacer mucho: es hacer **una cosa bien hecha y con forma profesional**.
 
-Esta personalización no cambia el foco CSR, pero ayuda a que estudiantes entiendan cómo adaptar una API a distintos ambientes.
+---
 
-## Entregable mínimo de la sesión
+## Configuración del proyecto
 
-Microservicio ejecutable con:
+El proyecto ya tiene una configuración mínima en `src/main/resources/application.properties`:
 
-- Estructura por capas y paquetes
-- `GET /api/v1/tickets` con `ResponseEntity<List<Ticket>>`
-- Datos seed en memoria con `List`
+```properties
+spring.application.name=Tickets
+```
 
-## Mensaje clave para estudiantes
+Esto le dice a Spring Boot cómo se llama tu aplicación. Es el único parámetro configurado hasta ahora.
 
-"Hoy no buscamos cantidad de endpoints; buscamos escribir un endpoint pequeño, pero con forma profesional desde el inicio."
+En el futuro vas a aprender a personalizar más cosas desde ahí, como:
+
+- **Cambiar el puerto** donde corre la aplicación (`server.port`)
+- **Agregar un prefijo global** a todas tus rutas (`server.servlet.context-path`)
+- **Personalizar el banner** que aparece en consola al iniciar (`banner.txt`)
+
+Por ahora esos temas están pendientes. Lo importante es que entiendas que esa personalización **vive en el archivo de configuración**, no dentro del código Java de tus capas.
+
+---
+
+## La idea central de esta lección
+
+> "No buscamos cantidad de endpoints. Buscamos escribir un endpoint pequeño, pero con forma profesional desde el inicio."
+
+Un código bien estructurado hoy te ahorra horas de depuración mañana. La separación de responsabilidades no es un trámite burocrático: es la diferencia entre un proyecto que escala y uno que se convierte en un problema.
