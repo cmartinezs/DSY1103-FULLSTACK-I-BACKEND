@@ -209,6 +209,45 @@ System.out.println(dto.titulo()); // "Error en login"
 
 ---
 
+## Operadores lógicos y buenas prácticas en condiciones
+
+Cheat sheet rápido para escribir condiciones correctas y legibles. Ver detalle completo en [Módulo 03 — sección 3.8](./03_control_de_flujo.md#38-operadores-lógicos-y-buenas-prácticas-en-condiciones-compuestas).
+
+```java
+// Operadores principales (con cortocircuito)
+&&   // AND: true solo si ambos son true
+||   // OR:  true si al menos uno es true
+!    // NOT: invierte el booleano
+^    // XOR: true si exactamente uno es true (no ambos)
+
+// Cortocircuito — null check siempre a la izquierda
+if (obj != null && obj.metodo())   { ... }  // ✅ seguro
+if (obj != null & obj.metodo())    { ... }  // ❌ & evalúa ambos: NPE si obj es null
+
+// De Morgan — simplificar negaciones
+!(A && B)  →  !A || !B
+!(A || B)  →  !A && !B
+
+// Guard clauses — retorna temprano en lugar de anidar
+public String proceso(Ticket t) {
+    if (t == null)       return "nulo";
+    if (!t.isActivo())   return "inactivo";
+    if (t.isBloqueado()) return "bloqueado";
+    return "ok: " + t.getTitulo();  // camino feliz sin anidamiento
+}
+
+// Comparar objetos: equals(), nunca ==
+"ABIERTO".equals(estado)           // ✅ seguro ante null
+Objects.equals(estado, "ABIERTO")  // ✅ seguro ante null
+
+// Antipatrones a evitar
+if (activo == true)  { }  // ❌ → if (activo)
+if (activo == false) { }  // ❌ → if (!activo)
+if (estado = "X")    { }  // ❌ asignación, no comparación
+```
+
+---
+
 ## Principios SOLID (resumen)
 
 | Principio | Nombre | Idea central |

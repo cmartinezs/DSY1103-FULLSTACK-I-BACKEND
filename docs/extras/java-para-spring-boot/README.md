@@ -23,7 +23,7 @@
 | 00 | Repaso rápido / Cheat Sheet (ya recuerdas Java) | [`00_repaso_rapido.md`](./00_repaso_rapido.md) |
 | 01 | Conceptos base: variables, operadores, bucles, parámetros | [`01_conceptos_base.md`](./01_conceptos_base.md) |
 | 02 | Sintaxis esencial y tipos de datos | [`02_sintaxis_y_tipos.md`](./02_sintaxis_y_tipos.md) |
-| 03 | Control de flujo moderno | [`03_control_de_flujo.md`](./03_control_de_flujo.md) |
+| 03 | Control de flujo moderno + operadores lógicos y buenas prácticas en condiciones | [`03_control_de_flujo.md`](./03_control_de_flujo.md) |
 | 04 | Métodos: diseño y sobrecarga | [`04_metodos.md`](./04_metodos.md) |
 | 05 | Clases, objetos y constructores | [`05_clases_y_objetos.md`](./05_clases_y_objetos.md) |
 | 06 | Los 4 pilares de la POO aplicados | [`06_poo_pilares.md`](./06_poo_pilares.md) |
@@ -50,7 +50,8 @@ Java 21
 │                                                 ┘
 ├── 02 Sintaxis básica ──────────────────────────┐
 ├── 03 Control de flujo (switch expr., sealed)    │
-├── 04 Métodos y sobrecarga                       │  Base del lenguaje
+│   + operadores lógicos y buenas prácticas       │  Base del lenguaje
+├── 04 Métodos y sobrecarga                       │
 ├── 05 Clases, objetos, records                  │
 │                                                 ┘
 ├── 06 POO: Encapsulamiento, Herencia,

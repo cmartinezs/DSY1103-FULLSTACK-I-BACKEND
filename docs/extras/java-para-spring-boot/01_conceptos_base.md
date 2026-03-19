@@ -228,6 +228,8 @@ if (activo && !admin) {
 }
 ```
 
+> 💡 En el **Módulo 03 (sección 3.8)** encontrarás la guía completa: tabla de verdad, cortocircuito, leyes de De Morgan y las seis buenas prácticas para escribir condiciones compuestas legibles y sin bugs.
+
 ---
 
 ## 1.6 Sentencias — por qué termina todo con `;`

@@ -1,6 +1,6 @@
 # Módulo 03 — Control de flujo moderno
 
-> **Objetivo:** dominar todas las estructuras de control de Java: condicionales (`if/else`, `switch` clásico y expression), bucles (`for`, `for-each`, `while`, `do-while`, `break`, `continue`) y pattern matching moderno con `instanceof` y `switch` (Java 16-21).
+> **Objetivo:** dominar todas las estructuras de control de Java: condicionales (`if/else`, `switch` clásico y expression), bucles (`for`, `for-each`, `while`, `do-while`, `break`, `continue`), pattern matching moderno con `instanceof` y `switch` (Java 16-21), y buenas prácticas al escribir condiciones compuestas con operadores lógicos.
 
 ---
 
@@ -306,6 +306,292 @@ if (s != null && s.length() > 0) { // s.length() solo se llama si s != null
 // Si s fuera null y no hubiera cortocircuito, s.length() lanzaría NullPointerException
 ```
 
+> 💡 La **sección 3.8** profundiza en operadores lógicos, tabla de verdad, leyes de De Morgan y seis buenas prácticas concretas para escribir condiciones compuestas correctas y mantenibles.
+
+---
+
+## 3.8 Operadores lógicos y buenas prácticas en condiciones compuestas
+
+Saber usar `if` es fácil; saber escribir condiciones **claras, seguras y mantenibles** es lo que separa el código amateur del profesional. Esta sección profundiza en los operadores lógicos y en las reglas que hacen tus condiciones legibles y sin bugs.
+
+### Tabla de operadores lógicos
+
+| Operador | Nombre | Descripción | Cortocircuito |
+|----------|--------|-------------|:---:|
+| `&&` | AND lógico | `true` solo si **ambos** son `true` | ✅ Sí |
+| `\|\|` | OR lógico | `true` si **al menos uno** es `true` | ✅ Sí |
+| `!` | NOT lógico | Invierte el valor booleano | — |
+| `&` | AND sin cortocircuito | `true` si ambos son `true`, evalúa **siempre** ambos | ❌ No |
+| `\|` | OR sin cortocircuito | `true` si al menos uno es `true`, evalúa **siempre** ambos | ❌ No |
+| `^` | XOR exclusivo | `true` si **exactamente uno** es `true` (no ambos) | — |
+
+**Tabla de verdad:**
+
+| A | B | `A && B` | `A \|\| B` | `!A` | `A ^ B` |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| `true`  | `true`  | `true`  | `true`  | `false` | `false` |
+| `true`  | `false` | `false` | `true`  | `false` | `true`  |
+| `false` | `true`  | `false` | `true`  | `true`  | `true`  |
+| `false` | `false` | `false` | `false` | `true`  | `false` |
+
+```java
+boolean activo = true;
+boolean admin  = false;
+
+System.out.println(activo && admin);   // false — AND: ambos deben ser true
+System.out.println(activo || admin);   // true  — OR: al menos uno es true
+System.out.println(!activo);           // false — NOT: invierte
+System.out.println(activo ^ admin);    // true  — XOR: exactamente uno es true
+```
+
+---
+
+### Cortocircuito: tu primera línea de defensa
+
+Con `&&`, si el primer operando es `false`, Java **no evalúa el segundo**; el resultado ya no puede ser `true`. Con `||`, si el primero es `true`, el segundo tampoco se evalúa. Esta propiedad no es solo una optimización: es la herramienta principal para evitar `NullPointerException` sin try-catch.
+
+```java
+// ✅ Null check antes de usar el objeto — si nombre es null, length() nunca se llama
+String nombre = null;
+if (nombre != null && nombre.length() > 0) {
+    System.out.println("Nombre válido: " + nombre);
+}
+
+// ❌ Con & (sin cortocircuito) — evalúa SIEMPRE los dos lados: NullPointerException
+if (nombre != null & nombre.length() > 0) {  // 💥 lanza NPE si nombre es null
+    System.out.println("Nombre válido");
+}
+
+// ✅ Con || — si la caché es válida, ni siquiera llama a la base de datos
+boolean cacheValida = true;
+if (cacheValida || cargarDesdeBD(id) != null) {  // cargarDesdeBD() NO se llama
+    // usa la caché
+}
+```
+
+> 💡 **Regla de oro del cortocircuito:** pon siempre la condición más barata (o el null check) a la **izquierda** del `&&` o `||`.
+
+---
+
+### Leyes de De Morgan — simplificar negaciones
+
+Las leyes de De Morgan te permiten transformar negaciones compuestas en formas más legibles:
+
+| Original | Equivalente |
+|----------|-------------|
+| `!(A && B)` | `!A \|\| !B` |
+| `!(A \|\| B)` | `!A && !B` |
+
+```java
+// ❌ Negación de una expresión compuesta — difícil de razonar de un vistazo
+if (!(estado.equals("CERRADO") || estado.equals("CANCELADO"))) {
+    procesarTicket(ticket);
+}
+
+// ✅ Aplicando De Morgan: !(A || B) → !A && !B — más directo
+if (!estado.equals("CERRADO") && !estado.equals("CANCELADO")) {
+    procesarTicket(ticket);
+}
+
+// ✅ Mejor aún: extraer la intención a un método con nombre positivo
+if (estaActivo(estado)) {
+    procesarTicket(ticket);
+}
+
+private boolean estaActivo(String estado) {
+    return !estado.equals("CERRADO") && !estado.equals("CANCELADO");
+}
+```
+
+---
+
+### Buenas prácticas al escribir condiciones compuestas
+
+#### ✅ BP-1: Nombra las condiciones complejas con variables booleanas
+
+Cuando una condición tiene más de dos partes, extráela a variables con nombres que expliquen **qué significa** la condición, no cómo se calcula. El código se lee como prosa.
+
+```java
+// ❌ Una sola línea con cinco condiciones: hay que analizar todo antes de entender
+if (usuario != null && usuario.isActivo() && usuario.getRol().equals("ADMIN") && !usuario.isBloqueado()) {
+    accederPanel();
+}
+
+// ✅ Variables con nombres descriptivos: se lee de un vistazo
+boolean usuarioValido = usuario != null && usuario.isActivo();
+boolean tienePermiso  = usuario.getRol().equals("ADMIN");
+boolean noBloqueado   = !usuario.isBloqueado();
+
+if (usuarioValido && tienePermiso && noBloqueado) {
+    accederPanel();
+}
+```
+
+---
+
+#### ✅ BP-2: Limita las condiciones por `if` — extrae a métodos
+
+Más de 3 condiciones en un mismo `if` es una señal de que la lógica debe encapsularse en un método propio. Esto también facilita el testing unitario de esa validación de forma aislada.
+
+```java
+// ❌ Seis condiciones: imposible de leer de un vistazo
+if (ticket != null && ticket.getTitulo() != null && !ticket.getTitulo().isBlank()
+        && ticket.getEstado().equals("ABIERTO") && ticket.getPrioridad() >= 1
+        && ticket.getPrioridad() <= 5) {
+    procesarTicket(ticket);
+}
+
+// ✅ Método con nombre descriptivo: legible y fácil de probar de forma aislada
+if (esTicketProcesable(ticket)) {
+    procesarTicket(ticket);
+}
+
+private boolean esTicketProcesable(Ticket ticket) {
+    if (ticket == null) return false;
+    boolean tituloValido    = ticket.getTitulo() != null && !ticket.getTitulo().isBlank();
+    boolean estadoAbierto   = ticket.getEstado().equals("ABIERTO");
+    boolean prioridadValida = ticket.getPrioridad() >= 1 && ticket.getPrioridad() <= 5;
+    return tituloValido && estadoAbierto && prioridadValida;
+}
+```
+
+---
+
+#### ✅ BP-3: Guard clauses — retorna temprano en vez de anidar
+
+En lugar de envolver toda la lógica en bloques `if` anidados, comprueba las precondiciones al inicio del método y retorna (o lanza excepción) si no se cumplen. El "camino feliz" queda limpio y sin indentación profunda.
+
+```java
+// ❌ Anidamiento profundo: el camino principal está sepultado
+public String procesarTicket(Ticket ticket) {
+    if (ticket != null) {
+        if (ticket.isActivo()) {
+            if (!ticket.isBloqueado()) {
+                return "Procesado: " + ticket.getTitulo();
+            } else {
+                return "Ticket bloqueado";
+            }
+        } else {
+            return "Ticket inactivo";
+        }
+    } else {
+        return "Ticket nulo";
+    }
+}
+
+// ✅ Guard clauses: sale temprano en cada caso de error
+public String procesarTicket(Ticket ticket) {
+    if (ticket == null)       return "Ticket nulo";
+    if (!ticket.isActivo())   return "Ticket inactivo";
+    if (ticket.isBloqueado()) return "Ticket bloqueado";
+
+    // El camino feliz es obvio y está sin anidamiento
+    return "Procesado: " + ticket.getTitulo();
+}
+```
+
+> 💡 Las guard clauses también se usan en Spring Boot en los métodos de servicio: validan parámetros de entrada antes de operar con la base de datos.
+
+---
+
+#### ✅ BP-4: Ordena las condiciones estratégicamente
+
+El orden de las condiciones afecta tanto a la seguridad (evitar NPE) como al rendimiento (evitar operaciones costosas innecesarias).
+
+```java
+// ✅ Null check siempre a la IZQUIERDA del && — si falla, lo demás no se evalúa
+if (usuario != null && usuario.getRol().equals("ADMIN")) { ... }
+
+// ✅ Condición barata antes que operación costosa (llamada a BD, red, etc.)
+if (intentos < MAX_REINTENTOS && validarTokenEnBD(token)) { ... }
+//   ↑ comparación simple           ↑ operación costosa — solo si la simple pasa
+
+// ✅ En &&: pon la más probable que sea false a la izquierda (cortocircuita antes)
+if (esCacheValida && cargarDesdeBD(id) != null) { ... }
+
+// ✅ En ||: pon la más probable que sea true a la izquierda (cortocircuita antes)
+if (estaEnCache(id) || cargarDesdeBD(id) != null) { ... }
+```
+
+---
+
+#### ✅ BP-5: Evita las cadenas de negaciones
+
+Múltiples `!` seguidos o la negación de expresiones compuestas hacen el código muy difícil de razonar. Usa De Morgan o extrae un método con nombre positivo.
+
+```java
+// ❌ Doble negación — hay que hacer el cálculo mental de invertir dos veces
+if (!usuario.isInactivo() && !usuario.isBloqueado()) { ... }
+
+// ✅ Nombra el concepto con un método positivo
+if (usuario.isActivo() && usuario.estaDisponible()) { ... }
+
+// ❌ Negación de una expresión compuesta — muy difícil de leer
+if (!(!activo || !admin)) { ... }
+
+// ✅ Simplifica con De Morgan y extrae el nombre
+boolean puedeOperar = activo && admin;
+if (puedeOperar) { ... }
+```
+
+---
+
+#### ✅ BP-6: Compara objetos con `equals()`, no con `==`
+
+El operador `==` en objetos compara **referencias de memoria**, no el contenido. Para Strings y cualquier objeto usa `.equals()`. Cuando el objeto puede ser `null`, usa `Objects.equals()` o pon el literal a la izquierda.
+
+```java
+String estado = obtenerEstado();
+
+// ❌ Compara referencias — puede dar false aunque el texto sea igual
+if (estado == "ABIERTO") { ... }
+
+// ✅ Compara contenido — correcto
+if (estado.equals("ABIERTO")) { ... }
+
+// ✅ Seguro si estado puede ser null — Objects.equals maneja null sin NPE
+if (Objects.equals(estado, "ABIERTO")) { ... }
+
+// ✅ "Yoda condition" — el literal a la izquierda nunca lanza NPE
+if ("ABIERTO".equals(estado)) { ... }
+```
+
+---
+
+### Antipatrones frecuentes
+
+```java
+// ❌ Comparar boolean con true/false — siempre es redundante
+if (activo == true)  { ... }   // equivale a if (activo)
+if (activo == false) { ... }   // equivale a if (!activo)
+
+// ✅ Directo y sin ruido
+if (activo)  { ... }
+if (!activo) { ... }
+
+// ❌ Retornar true/false desde un if — totalmente innecesario
+public boolean esAdmin(Usuario u) {
+    if (u.getRol().equals("ADMIN")) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+// ✅ Retorna la expresión booleana directamente
+public boolean esAdmin(Usuario u) {
+    return u.getRol().equals("ADMIN");
+}
+
+// ❌ Asignación accidental dentro del if — compila, pero es un bug
+if (estado = "ABIERTO") { ... }     // asigna "ABIERTO" a estado, NO compara
+
+// ✅ Comparación correcta
+if (estado.equals("ABIERTO")) { ... }
+```
+
+> ⚠️ IntelliJ IDEA detecta la mayoría de estos antipatrones y los señala con advertencias amarillas. Actívalas: **Analyze → Inspect Code**.
+
 ---
 
 ## 🏋️ Ejercicios de práctica
@@ -406,6 +692,70 @@ public static String describir(Object obj) {
     };
 }
 ```
+</details>
+
+---
+
+### Ejercicio 3.4 — Condiciones compuestas y buenas prácticas
+
+El siguiente método tiene **cinco problemas** relacionados con operadores lógicos y buenas prácticas. Identifícalos y reescribe el método aplicando todo lo aprendido en la sección 3.8.
+
+```java
+public String validarAcceso(Usuario usuario, String accion) {
+    if (usuario != null) {
+        if (usuario.isActivo() == true) {
+            if (!(!usuario.isBloqueado())) {
+                return "Bloqueado";
+            }
+            if (usuario.getRol() == "ADMIN" || usuario.getRol() == "EDITOR"
+                    || usuario.getRol() == "MODERADOR" || usuario.getRol() == "SUPERVISOR"
+                    || accion != null && !accion.isBlank()) {
+                return "Acceso concedido para: " + accion;
+            } else {
+                return "Sin permiso";
+            }
+        } else {
+            return "Inactivo";
+        }
+    } else {
+        return "Usuario nulo";
+    }
+}
+```
+
+<details>
+<summary>🔍 Ver solución</summary>
+
+**Problemas identificados:**
+1. `usuario.isActivo() == true` — comparación redundante de boolean con `true`.
+2. `!(!usuario.isBloqueado())` — doble negación, equivale a `usuario.isBloqueado()`.
+3. Anidamiento profundo con cuatro niveles de `if/else` — se corrige con guard clauses.
+4. Comparación de `String` con `==` en lugar de `.equals()`.
+5. Cinco condiciones en un solo `if` — deben extraerse a un método con nombre descriptivo.
+
+```java
+public String validarAcceso(Usuario usuario, String accion) {
+    // Guard clauses — condiciones de error al inicio
+    if (usuario == null)          return "Usuario nulo";
+    if (!usuario.isActivo())      return "Inactivo";
+    if (usuario.isBloqueado())    return "Bloqueado";
+
+    // Condición compleja extraída con nombre descriptivo y equals() correcto
+    boolean tieneRolPermitido = usuario.getRol().equals("ADMIN")
+            || usuario.getRol().equals("EDITOR")
+            || usuario.getRol().equals("MODERADOR")
+            || usuario.getRol().equals("SUPERVISOR");
+    boolean accionValida = accion != null && !accion.isBlank();
+
+    if (tieneRolPermitido && accionValida) {
+        return "Acceso concedido para: " + accion;
+    }
+    return "Sin permiso";
+}
+```
+
+> 💡 Bonus: `tieneRolPermitido` podría moverse a un método `tieneRolPermitido(usuario)` o validarse contra un `Set<String>` de roles permitidos para mayor mantenibilidad.
+
 </details>
 
 ---
