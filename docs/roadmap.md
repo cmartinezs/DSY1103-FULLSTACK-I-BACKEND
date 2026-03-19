@@ -15,6 +15,7 @@ Este árbol muestra qué extras dependen de otros y en qué orden tiene más sen
 Nivel 1 — Programación (mayor impacto inmediato)
 ├── ☕  Java para Spring Boot   → lenguaje base de todo el curso
 │       └── 🧠  Lógica Proposicional  → condiciones, validaciones y reglas de negocio
+├── ➕  Matemáticas para Programar → operaciones, contadores, descuentos, redondeo
 ├── 🛠️  Lombok                 → menos código repetitivo desde el primer día
 ├── 🔷  JSON                   → formato de todas las respuestas REST
 ├── 📄  YAML                   → configuración de Spring Boot
@@ -45,6 +46,7 @@ Nivel 4 — Complementario
 |-------|-------|-----------------|
 | [☕ Java para Spring Boot](./extras/java-para-spring-boot/README.md) | 🔴 1 — Programación | 8 – 12 h |
 | [🧠 Lógica Proposicional](./extras/logica-proposicional/README.md) | 🔴 1 — Programación | 2 – 3 h |
+| [➕ Matemáticas para Programar](./extras/matematicas-para-programar/README.md) | 🔴 1 — Programación | 2 – 3 h |
 | [🛠️ Lombok](./extras/lombok/README.md) | 🔴 1 — Programación | 1 – 1.5 h |
 | [🔷 JSON](./extras/json/README.md) | 🔴 1 — Programación | 1 – 1.5 h |
 | [📄 YAML](./extras/yaml/README.md) | 🔴 1 — Programación | 1 – 2 h |
@@ -58,7 +60,7 @@ Nivel 4 — Complementario
 | [🌊 GitFlow](./extras/gitflow/README.md) | 🟢 4 — Complementario | 1 – 1.5 h |
 | [🏋️ Ejercicios Prácticos](./extras/ejercicios/README.md) | 🟢 4 — Complementario | 5 – 10 h |
 
-**Total estimado:** 25 – 45 horas según profundidad
+**Total estimado:** 27 – 48 horas según profundidad
 
 ---
 
@@ -131,30 +133,31 @@ Cada fin de semana es una sesión independiente. Elige según en qué parte del 
 
 Sigue el orden del mapa de dependencias, dedicando al menos una sesión a cada extra antes de avanzar al siguiente nivel:
 
-**Nivel 1 — Programación** `~16 h`
+**Nivel 1 — Programación** `~18 h`
 1. [Java para Spring Boot](./extras/java-para-spring-boot/README.md) — todos los módulos (00 – 12)
 2. [Lógica Proposicional](./extras/logica-proposicional/README.md)
-3. [Lombok](./extras/lombok/README.md)
-4. [JSON](./extras/json/README.md)
-5. [YAML](./extras/yaml/README.md)
-6. [Variables de Entorno](./extras/env-variables/README.md)
-7. [Maven](./extras/maven/README.md)
+3. [Matemáticas para Programar](./extras/matematicas-para-programar/README.md)
+4. [Lombok](./extras/lombok/README.md)
+5. [JSON](./extras/json/README.md)
+6. [YAML](./extras/yaml/README.md)
+7. [Variables de Entorno](./extras/env-variables/README.md)
+8. [Maven](./extras/maven/README.md)
 
 **Nivel 2 — Control de versiones** `~3 h`
 
-8. [Git y GitHub](./extras/git-github/README.md)
+9. [Git y GitHub](./extras/git-github/README.md)
 
 **Nivel 3 — Entorno de trabajo** `~3 h`
 
-9. [Terminal](./extras/terminal/README.md) — Bash y/o CMD + PowerShell
-10. [Markdown](./extras/markdown/README.md)
+10. [Terminal](./extras/terminal/README.md) — Bash y/o CMD + PowerShell
+11. [Markdown](./extras/markdown/README.md)
 
 **Nivel 4 — Complementario** `~12 h`
 
-11. [SOLID](./extras/solid/README.md)
-12. [Modelo de Madurez de Richardson](./extras/richardson-maturity-model/README.md)
-13. [GitFlow](./extras/gitflow/README.md)
-14. [Ejercicios Prácticos](./extras/ejercicios/README.md) — Serie I + Serie II
+12. [SOLID](./extras/solid/README.md)
+13. [Modelo de Madurez de Richardson](./extras/richardson-maturity-model/README.md)
+14. [GitFlow](./extras/gitflow/README.md)
+15. [Ejercicios Prácticos](./extras/ejercicios/README.md) — Serie I + Serie II
 
 ---
 

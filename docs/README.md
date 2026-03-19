@@ -25,6 +25,7 @@ docs/
     ├── logica-proposicional/
     ├── lombok/
     ├── markdown/
+    ├── matematicas-para-programar/
     ├── maven/
     ├── richardson-maturity-model/
     ├── solid/
@@ -68,6 +69,7 @@ Se estudian de forma **autónoma** en paralelo al curso.
 | 12 | Ejercicios Prácticos | 20 ejercicios progresivos que integran Java, POO y Lógica Proposicional en casos de uso reales | [→ Ver](./extras/ejercicios/README.md) |
 | 13 | Terminal — Bash y Windows | Comandos esenciales de terminal para desarrolladores backend (Linux/macOS y Windows) | [→ Ver](./extras/terminal/README.md) |
 | 14 | YAML | Formato de configuración estándar de Spring Boot (`application.yml`) y sus conceptos clave | [→ Ver](./extras/yaml/README.md) |
+| 15 | Matemáticas para Programar | Operaciones básicas, contador, acumulador, descuentos, cargos, redondeo y `BigDecimal` | [→ Ver](./extras/matematicas-para-programar/README.md) |
 
 > 📋 Ver índice completo de extras: [`extras/README.md`](./extras/README.md)
 > 🗺️ Ver roadmap de estudio recomendado: [`roadmap.md`](./roadmap.md)

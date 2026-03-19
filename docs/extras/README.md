@@ -26,7 +26,8 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 12 | [🏋️ Ejercicios Prácticos](#12-️-ejercicios-prácticos) | [`ejercicios/`](./ejercicios/README.md) |
 | 13 | [Terminal — Bash y Windows](#13-terminal--bash-y-windows) | [`terminal/`](./terminal/README.md) |
 | 14 | [YAML](#14-yaml) | [`yaml/`](./yaml/README.md) |
-| 15 | [Próximos temas](#15-próximos-temas) | — |
+| 15 | [➕ Matemáticas para Programar](#15-matemáticas-para-programar) | [`matematicas-para-programar/`](./matematicas-para-programar/README.md) |
+| 16 | [Próximos temas](#16-próximos-temas) | — |
 
 ---
 
@@ -226,7 +227,19 @@ Este extra cubre los mismos conceptos en **dos guías paralelas** según el sist
 
 ---
 
-## 15. Próximos temas
+## 15. ➕ Matemáticas para Programar
+
+Las **matemáticas para programar** cubren el conjunto de operaciones y patrones numéricos que aparecen constantemente en cualquier sistema real: sumar precios, contar eventos, aplicar descuentos, calcular impuestos, promediar calificaciones y redondear correctamente valores monetarios.
+
+**Módulos:** operaciones básicas y operadores Java (`+` `-` `*` `/` `%`) · contador y acumulador · promedio · porcentajes, descuentos y cargos / IVA · redondeo con `Math` · precisión decimal con `BigDecimal` · casos de uso reales (carrito, nómina, parking, notas).
+
+**¿Por qué importa?** El 90% de la lógica de negocio en un backend involucra algún tipo de cálculo. Saber cómo representar y ejecutar esas operaciones correctamente en Java evita bugs de división entera, errores de precisión con `double` y resultados inconsistentes en contextos financieros.
+
+→ [Ir a Matemáticas para Programar](./matematicas-para-programar/README.md)
+
+---
+
+## 16. Próximos temas
 
 Los siguientes contenidos se irán incorporando a medida que avance el curso:
 
