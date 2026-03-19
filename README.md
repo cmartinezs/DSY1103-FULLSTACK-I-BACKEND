@@ -21,8 +21,8 @@ Construir APIs REST con buenas prácticas desde el inicio:
 
 ## Estructura del repositorio
 
-- `Tickets/`: proyecto Spring Boot principal del curso
-- `docs/lessons/`: guías y material de clases
+- [`Tickets/`](./Tickets/README.md): proyecto Spring Boot principal del curso
+- [`docs/`](./docs/README.md): documentación del curso (lecciones y material de apoyo)
 
 ## Requisitos
 
@@ -34,7 +34,7 @@ Construir APIs REST con buenas prácticas desde el inicio:
 Desde la carpeta `Tickets/`:
 
 ```bash
-cd /home/cmartinezs/Github/cmartinezs/DSY1103-FULLSTACK-I-BACKEND/Tickets
+cd Tickets
 ./mvnw spring-boot:run
 ```
 
@@ -43,19 +43,13 @@ cd /home/cmartinezs/Github/cmartinezs/DSY1103-FULLSTACK-I-BACKEND/Tickets
 Desde la carpeta `Tickets/`:
 
 ```bash
-cd /home/cmartinezs/Github/cmartinezs/DSY1103-FULLSTACK-I-BACKEND/Tickets
+cd Tickets
 ./mvnw test
 ```
 
 ## Material de apoyo de la unidad
 
-Documentos clave de la clase de responsabilidades:
-
-- `docs/lessons/04-responsabilities/01_objetivo_y_alcance.md`
-- `docs/lessons/04-responsabilities/02_guion_paso_a_paso.md`
-- `docs/lessons/04-responsabilities/03_decisiones_rest_y_csr.md`
-- `docs/lessons/04-responsabilities/04_checklist_rubrica_minima.md`
-- `docs/lessons/04-responsabilities/05_actividad_individual_users.md`
+Toda la documentación del curso está centralizada en [`docs/`](./docs/README.md), incluyendo lecciones y material complementario.
 
 ## Estado del repositorio
 
