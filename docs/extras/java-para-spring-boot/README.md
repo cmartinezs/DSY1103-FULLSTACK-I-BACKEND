@@ -33,6 +33,7 @@
 | 10 | Lambdas y Streams | [`10_lambdas_y_streams.md`](./10_lambdas_y_streams.md) |
 | 11 | Novedades de Java 21 | [`11_java21.md`](./11_java21.md) |
 | 12 | El camino a Spring Boot | [`12_camino_a_spring_boot.md`](./12_camino_a_spring_boot.md) |
+| 13 | 📖 Glosario completo de palabras reservadas | [`13_glosario_palabras_reservadas.md`](./13_glosario_palabras_reservadas.md) |
 
 ---
 

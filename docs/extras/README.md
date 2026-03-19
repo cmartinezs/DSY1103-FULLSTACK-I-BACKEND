@@ -28,7 +28,9 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 14 | [YAML](#14-yaml) | [`yaml/`](./yaml/README.md) |
 | 15 | [➕ Matemáticas para Programar](#15-matemáticas-para-programar) | [`matematicas-para-programar/`](./matematicas-para-programar/README.md) |
 | 16 | [💡 Tips de Programación](#16-tips-de-programación) | [`tips-de-programacion/`](./tips-de-programacion/README.md) |
-| 17 | [Próximos temas](#17-próximos-temas) | — |
+| 17 | [🧠 Conceptos de Programación — Vocabulario Universal](#17-conceptos-de-programación--vocabulario-universal) | [`conceptos-de-programacion/`](./conceptos-de-programacion/README.md) |
+| 18 | [🛠️ Herramientas para Desarrolladores](#18-️-herramientas-para-desarrolladores) | [`herramientas-para-desarrolladores/`](./herramientas-para-desarrolladores/README.md) |
+| 19 | [Próximos temas](#19-próximos-temas) | — |
 
 ---
 
@@ -252,7 +254,29 @@ Los **tips de programación** presentan situaciones reales organizadas de menor 
 
 ---
 
-## 17. Próximos temas
+## 17. 🧠 Conceptos de Programación — Vocabulario Universal
+
+El **vocabulario universal del programador** reúne los conceptos fundamentales que se usan en **cualquier lenguaje de programación**: variable, constante, literal, asignación, sentencia, bloque, bucle, función, clase, objeto, ámbito, referencia y muchos más. Cada concepto incluye definición, perspectiva en otros lenguajes, ejemplo en Java y las confusiones más frecuentes.
+
+**¿Por qué importa?** Cuando un instructor dice *"declaras una variable y le asignas un literal"*, si no tienes claro qué significa cada término, la explicación no llega. Este módulo te da ese vocabulario previo — o te lo consolida si ya programas pero lo tenías difuso.
+
+→ [Ir a Conceptos de Programación](./conceptos-de-programacion/README.md)
+
+---
+
+## 18. 🛠️ Herramientas para Desarrolladores
+
+Las **herramientas para desarrolladores** cubren el ecosistema de software que un programador backend usa en el día a día: IDEs, clientes HTTP, gestores de bases de datos, contenedores, clientes Git, plugins de calidad de código, utilidades online y documentación de APIs.
+
+**Categorías:** IDEs (IntelliJ IDEA, VS Code) · Clientes HTTP (Postman, Insomnia, Hoppscotch, curl) · Bases de datos (DBeaver, pgAdmin, MySQL Workbench) · Contenedores (Docker Desktop) · Git GUI (GitKraken, GitHub Desktop) · Calidad (SonarLint) · Utilidades online (start.spring.io, jwt.io, regex101, JSONLint, crontab.guru) · DevTools del navegador · Documentación de API (SpringDoc OpenAPI / Swagger UI).
+
+**¿Por qué importa?** Conocer la herramienta correcta para cada tarea es tan importante como saber programar. Un buen entorno de trabajo multiplica la productividad y reduce errores en el desarrollo.
+
+→ [Ver documentación completa de Herramientas para Desarrolladores](./herramientas-para-desarrolladores/README.md)
+
+---
+
+## 19. Próximos temas
 
 Los siguientes contenidos se irán incorporando a medida que avance el curso:
 
