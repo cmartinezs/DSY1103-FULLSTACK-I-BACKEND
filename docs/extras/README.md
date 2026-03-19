@@ -50,9 +50,9 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 
 ## 3. Java para Spring Boot (Mini Curso)
 
-Java es el lenguaje del ecosistema **Spring Boot**. Este mini curso cubre desde la sintaxis esencial hasta los conceptos mínimos para escribir y entender código Spring Boot con soltura. Pensado para **cualquier nivel**: el módulo 00 es un repaso rápido (cheat sheet) para quien ya recuerda Java; los módulos 01-11 parten desde cero y avanzan de forma progresiva.
+Java es el lenguaje del ecosistema **Spring Boot**. Este mini curso cubre desde la sintaxis esencial hasta los conceptos mínimos para escribir y entender código Spring Boot con soltura. Pensado para **cualquier nivel**: el módulo 00 es un repaso rápido (cheat sheet) para quien ya recuerda Java; los módulos 01-12 parten desde los conceptos más básicos y avanzan de forma progresiva.
 
-**Temas cubiertos:** repaso rápido POO · sintaxis y tipos · control de flujo moderno · métodos y sobrecarga · clases, objetos y records · los 4 pilares POO · interfaces y abstracción · colecciones y genéricos · manejo de excepciones · lambdas y Streams · novedades Java 21 · arquitectura de Spring Boot.
+**Temas cubiertos:** repaso rápido POO · conceptos base (variables, operadores, bloques, bucles, parámetros) · sintaxis y tipos · control de flujo moderno · métodos y sobrecarga · clases, objetos y records · los 4 pilares POO · interfaces y abstracción · colecciones y genéricos · manejo de excepciones · lambdas y Streams · novedades Java 21 · arquitectura de Spring Boot.
 
 **Java:** 21 LTS — incluye `var`, text blocks, `record`, sealed classes, pattern matching, virtual threads y Sequenced Collections.
 

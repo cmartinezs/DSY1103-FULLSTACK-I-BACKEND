@@ -238,9 +238,9 @@ System.out.println(dto.titulo()); // "Error en login"
 
 ## ¿Qué sigue?
 
-Si este módulo te resultó fluido, puedes ir directamente al **[Módulo 05 — Los 4 pilares de la POO aplicados](./05_poo_pilares.md)** para ver los ejemplos con mayor profundidad, o al **[Módulo 11 — El camino a Spring Boot](./11_camino_a_spring_boot.md)** si ya te sientes listo.
+Si este módulo te resultó fluido, puedes ir directamente al **[Módulo 06 — Los 4 pilares de la POO aplicados](./06_poo_pilares.md)** para ver los ejemplos con mayor profundidad, o al **[Módulo 12 — El camino a Spring Boot](./12_camino_a_spring_boot.md)** si ya te sientes listo.
 
-Si en cambio encontraste conceptos que no recordabas del todo, empieza por el **[Módulo 01 — Sintaxis esencial y tipos de datos](./01_sintaxis_y_tipos.md)**.
+Si en cambio encontraste conceptos que no recordabas del todo, empieza por el **[Módulo 01 — Conceptos base de programación en Java](./01_conceptos_base.md)**.
 
 ---
 
