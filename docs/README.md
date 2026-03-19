@@ -15,16 +15,21 @@ docs/
 │   ├── 03-first-api/
 │   └── 04-responsabilities/
 └── extras/         # Material de apoyo autónomo
+    ├── ejercicios/
     ├── env-variables/
     ├── git-github/
     ├── gitflow/
+    ├── java-para-spring-boot/
     ├── java-poo/
     ├── json/
+    ├── logica-proposicional/
     ├── lombok/
     ├── markdown/
     ├── maven/
     ├── richardson-maturity-model/
-    └── solid/
+    ├── solid/
+    ├── terminal/
+    └── yaml/
 ```
 
 ---
@@ -51,7 +56,7 @@ Se estudian de forma **autónoma** en paralelo al curso.
 |---|------|-------------|--------|
 | 1 | Git y GitHub | Control de versiones distribuido y flujo de trabajo colaborativo | [→ Ver](./extras/git-github/README.md) |
 | 2 | GitFlow | Modelo de ramificación con ramas `main`, `develop`, `feature/*`, `release/*` y `hotfix/*` | [→ Ver](./extras/gitflow/README.md) |
-| 3 | Java y POO | Lenguaje base del stack y los cuatro pilares de la orientación a objetos | [→ Ver](./extras/java-poo/README.md) |
+| 3 | Java para Spring Boot | Mini curso desde sintaxis esencial hasta arquitectura Spring Boot (Java 21 LTS) | [→ Ver](./extras/java-para-spring-boot/README.md) |
 | 4 | JSON | Formato de intercambio de datos en APIs REST y su manejo con Jackson en Spring Boot | [→ Ver](./extras/json/README.md) |
 | 5 | Lombok | Librería Java para eliminar código boilerplate mediante anotaciones | [→ Ver](./extras/lombok/README.md) |
 | 6 | Markdown | Lenguaje de marcado para documentación técnica | [→ Ver](./extras/markdown/README.md) |
@@ -59,6 +64,10 @@ Se estudian de forma **autónoma** en paralelo al curso.
 | 8 | Modelo de Madurez de Richardson | Niveles 0–3 para clasificar la calidad de una API REST | [→ Ver](./extras/richardson-maturity-model/README.md) |
 | 9 | Principios SOLID | Cinco principios de diseño OO para código mantenible y extensible | [→ Ver](./extras/solid/README.md) |
 | 10 | Variables de Entorno | Configuración segura con `.env`, Spring Boot (`@Value`, perfiles) e IntelliJ IDEA | [→ Ver](./extras/env-variables/README.md) |
+| 11 | Lógica Proposicional | Proposiciones, operadores lógicos, tablas de verdad y leyes de De Morgan aplicadas a Java | [→ Ver](./extras/logica-proposicional/README.md) |
+| 12 | Ejercicios Prácticos | 20 ejercicios progresivos que integran Java, POO y Lógica Proposicional en casos de uso reales | [→ Ver](./extras/ejercicios/README.md) |
+| 13 | Terminal — Bash y Windows | Comandos esenciales de terminal para desarrolladores backend (Linux/macOS y Windows) | [→ Ver](./extras/terminal/README.md) |
+| 14 | YAML | Formato de configuración estándar de Spring Boot (`application.yml`) y sus conceptos clave | [→ Ver](./extras/yaml/README.md) |
 
 > 📋 Ver índice completo de extras: [`extras/README.md`](./extras/README.md)
 > 🗺️ Ver roadmap de estudio recomendado: [`roadmap.md`](./roadmap.md)
