@@ -20,7 +20,8 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 8 | [Niveles de Madurez de Richardson](#8-niveles-de-madurez-de-richardson) | [`richardson-maturity-model/`](./richardson-maturity-model/README.md) |
 | 9 | [Principios SOLID](#9-principios-solid) | [`solid/`](./solid/README.md) |
 | 10 | [Variables de Entorno](#10-variables-de-entorno) | [`env-variables/`](./env-variables/README.md) |
-| 11 | [Próximos temas](#11-próximos-temas) | — |
+| 11 | [Lógica Proposicional](#11-lógica-proposicional) | [`logica-proposicional/`](./logica-proposicional/README.md) |
+| 12 | [Próximos temas](#12-próximos-temas) | — |
 
 ---
 
@@ -155,7 +156,19 @@ Las **variables de entorno** permiten configurar la aplicación de forma diferen
 
 ---
 
-## 11. Próximos temas
+## 11. Lógica Proposicional
+
+La **lógica proposicional** es la rama de la lógica matemática que estudia las relaciones entre proposiciones y las leyes que las rigen. Es la base del razonamiento formal y —muy directamente— de las **condiciones, validaciones y reglas de negocio** en cualquier lenguaje de programación.
+
+**Conceptos clave:** proposiciones · negación (`!`) · conjunción (`&&`) · disyunción (`||`) · condicional (`→`) · bicondicional (`↔`) · tablas de verdad · tautologías · contradicciones · leyes de De Morgan · precedencia de operadores.
+
+**¿Por qué importa?** Cada `if`, `while` o expresión booleana en Java es lógica proposicional aplicada. Comprender estas leyes permite escribir condiciones correctas, simplificar lógica compleja y evitar errores como condiciones contradictorias o código muerto.
+
+→ [Ver documentación completa de Lógica Proposicional](./logica-proposicional/README.md)
+
+---
+
+## 12. Próximos temas
 
 Los siguientes contenidos se irán incorporando a medida que avance el curso:
 
