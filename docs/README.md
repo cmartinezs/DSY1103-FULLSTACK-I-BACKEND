@@ -10,6 +10,9 @@ Está organizada en dos grandes secciones: las **lecciones** de clase y el **mat
 ```
 docs/
 ├── lessons/        # Contenido directo de cada lección
+│   ├── 01-web-and-http/
+│   ├── 02-apis-and-rest/
+│   ├── 03-first-api/
 │   └── 04-responsabilities/
 └── extras/         # Material de apoyo autónomo
     ├── git-github/
@@ -26,6 +29,9 @@ Documentación generada por cada lección del curso. Incluye objetivos, guiones,
 
 | # | Lección | Descripción | Documentos |
 |---|---------|-------------|------------|
+| 01 | [La Web y HTTP](./lessons/01-web-and-http/) | Fundamentos de la Web, modelo cliente-servidor, DNS, HTTP, request, response, métodos y códigos de estado | [Objetivo y alcance](./lessons/01-web-and-http/01_objetivo_y_alcance.md) · [La Web y HTTP](./lessons/01-web-and-http/02_la_web_y_http.md) · [Request, Response y Códigos](./lessons/01-web-and-http/03_request_response_y_codigos.md) · [Rúbrica mínima](./lessons/01-web-and-http/04_checklist_rubrica_minima.md) · [Actividad individual](./lessons/01-web-and-http/05_actividad_individual.md) |
+| 02 | [APIs y REST](./lessons/02-apis-and-rest/) | Frontend vs Backend, monolito vs microservicios, qué es una API, principios REST y buenas prácticas de diseño | [Objetivo y alcance](./lessons/02-apis-and-rest/01_objetivo_y_alcance.md) · [Arquitecturas y roles](./lessons/02-apis-and-rest/02_arquitecturas_y_roles.md) · [APIs, REST y buenas prácticas](./lessons/02-apis-and-rest/03_apis_rest_y_buenas_practicas.md) · [Rúbrica mínima](./lessons/02-apis-and-rest/04_checklist_rubrica_minima.md) · [Actividad individual](./lessons/02-apis-and-rest/05_actividad_individual.md) |
+| 03 | [Tu primera API](./lessons/03-first-api/) | Crear un proyecto Spring Boot desde cero con IntelliJ, construir `GET /greetings` y entender el ciclo HTTP completo | [Objetivo y alcance](./lessons/03-first-api/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/03-first-api/02_guion_paso_a_paso.md) · [Cómo funciona HTTP](./lessons/03-first-api/03_como_funciona_http.md) · [Rúbrica mínima](./lessons/03-first-api/04_checklist_rubrica_minima.md) · [Actividad individual](./lessons/03-first-api/05_actividad_individual_greetings.md) |
 | 04 | [Separación de responsabilidades](./lessons/04-responsabilities/) | Patrón Controller → Service → Repository (CSR) aplicado a una API REST de tickets | [Objetivo y alcance](./lessons/04-responsabilities/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/04-responsabilities/02_guion_paso_a_paso.md) · [Decisiones REST y CSR](./lessons/04-responsabilities/03_decisiones_rest_y_csr.md) · [Rúbrica mínima](./lessons/04-responsabilities/04_checklist_rubrica_minima.md) · [Actividad individual](./lessons/04-responsabilities/05_actividad_individual_users.md) |
 
 ---
