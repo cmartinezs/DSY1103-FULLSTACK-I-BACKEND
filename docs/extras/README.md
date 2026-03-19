@@ -11,10 +11,12 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | # | Tema | Carpeta |
 |---|------|---------|
 | 1 | [Git y GitHub](#1-git-y-github) | [`git-github/`](./git-github/README.md) |
-| 2 | [Java y POO](#2-java-y-programación-orientada-a-objetos-poo) | [`java-poo/`](./java-poo/README.md) |
-| 3 | [Markdown](#3-markdown) | [`markdown/`](./markdown/README.md) |
-| 4 | [Niveles de Madurez de Richardson](#4-niveles-de-madurez-de-richardson) | [`richardson-maturity-model/`](./richardson-maturity-model/README.md) |
-| 5 | [Próximos temas](#5-próximos-temas) | — |
+| 2 | [GitFlow](#2-gitflow) | [`gitflow/`](./gitflow/README.md) |
+| 3 | [Java y POO](#3-java-y-programación-orientada-a-objetos-poo) | [`java-poo/`](./java-poo/README.md) |
+| 4 | [Markdown](#4-markdown) | [`markdown/`](./markdown/README.md) |
+| 5 | [Niveles de Madurez de Richardson](#5-niveles-de-madurez-de-richardson) | [`richardson-maturity-model/`](./richardson-maturity-model/README.md) |
+| 6 | [Lombok](#6-lombok) | [`lombok/`](./lombok/README.md) |
+| 7 | [Próximos temas](#7-próximos-temas) | — |
 
 ---
 
@@ -30,7 +32,19 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 
 ---
 
-## 2. Java y Programación Orientada a Objetos (POO)
+## 2. GitFlow
+
+**GitFlow** es un **modelo de ramificación** para Git que define cómo organizar las ramas de un proyecto y cómo fluyen los cambios entre ellas. Establece ramas permanentes (`main`, `develop`) y temporales (`feature/*`, `release/*`, `hotfix/*`).
+
+**Ramas clave:** `main` · `develop` · `feature/*` · `release/*` · `hotfix/*`
+
+**¿Por qué importa?** Estandariza el trabajo en equipo, protege el código de producción y facilita la gestión de versiones y correcciones urgentes.
+
+→ [Ver documentación completa de GitFlow](./gitflow/README.md)
+
+---
+
+## 3. Java y Programación Orientada a Objetos (POO)
 
 Java es el lenguaje del ecosistema **Spring Boot**. La POO organiza el código en torno a objetos que encapsulan estado y comportamiento.
 
@@ -42,7 +56,7 @@ Java es el lenguaje del ecosistema **Spring Boot**. La POO organiza el código e
 
 ---
 
-## 3. Markdown
+## 4. Markdown
 
 Markdown es el **lenguaje de marcado estándar** para documentación técnica. Se usa en `README.md`, issues, pull requests, wikis y más.
 
@@ -54,7 +68,7 @@ Markdown es el **lenguaje de marcado estándar** para documentación técnica. S
 
 ---
 
-## 4. Niveles de Madurez de Richardson
+## 5. Niveles de Madurez de Richardson
 
 El **Richardson Maturity Model (RMM)** clasifica las APIs REST en 4 niveles según qué tan bien aplican los principios REST.
 
@@ -71,7 +85,19 @@ El **Richardson Maturity Model (RMM)** clasifica las APIs REST en 4 niveles seg�
 
 ---
 
-## 5. Próximos temas
+## 6. Lombok
+
+**Lombok** es una librería Java que usa **procesamiento de anotaciones** para generar automáticamente código repetitivo (*boilerplate*): getters, setters, constructores, `toString`, `equals`, loggers y más.
+
+**Anotaciones clave:** `@Getter` · `@Setter` · `@AllArgsConstructor` · `@NoArgsConstructor` · `@RequiredArgsConstructor` · `@Data` · `@Builder` · `@Slf4j`
+
+**¿Por qué importa?** Reduce drásticamente el tamaño de las clases Java, evita errores humanos en código repetitivo y mejora la legibilidad. Es estándar en proyectos Spring Boot.
+
+→ [Ver documentación completa de Lombok](./lombok/README.md)
+
+---
+
+## 7. Próximos temas
 
 Los siguientes contenidos se irán incorporando a medida que avance el curso:
 
