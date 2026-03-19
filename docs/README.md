@@ -16,7 +16,9 @@ docs/
 │   └── 04-responsabilities/
 └── extras/         # Material de apoyo autónomo
     ├── git-github/
+    ├── gitflow/
     ├── java-poo/
+    ├── lombok/
     ├── markdown/
     └── richardson-maturity-model/
 ```
@@ -44,9 +46,11 @@ Se estudian de forma **autónoma** en paralelo al curso.
 | # | Tema | Descripción | Enlace |
 |---|------|-------------|--------|
 | 1 | Git y GitHub | Control de versiones distribuido y flujo de trabajo colaborativo | [→ Ver](./extras/git-github/README.md) |
-| 2 | Java y POO | Lenguaje base del stack y los cuatro pilares de la orientación a objetos | [→ Ver](./extras/java-poo/README.md) |
-| 3 | Markdown | Lenguaje de marcado para documentación técnica | [→ Ver](./extras/markdown/README.md) |
-| 4 | Modelo de Madurez de Richardson | Niveles 0–3 para clasificar la calidad de una API REST | [→ Ver](./extras/richardson-maturity-model/README.md) |
+| 2 | GitFlow | Modelo de ramificación con ramas `main`, `develop`, `feature/*`, `release/*` y `hotfix/*` | [→ Ver](./extras/gitflow/README.md) |
+| 3 | Java y POO | Lenguaje base del stack y los cuatro pilares de la orientación a objetos | [→ Ver](./extras/java-poo/README.md) |
+| 4 | Lombok | Librería Java para eliminar código boilerplate mediante anotaciones | [→ Ver](./extras/lombok/README.md) |
+| 5 | Markdown | Lenguaje de marcado para documentación técnica | [→ Ver](./extras/markdown/README.md) |
+| 6 | Modelo de Madurez de Richardson | Niveles 0–3 para clasificar la calidad de una API REST | [→ Ver](./extras/richardson-maturity-model/README.md) |
 
 > 📋 Ver índice completo de extras: [`extras/README.md`](./extras/README.md)
 
