@@ -30,6 +30,7 @@ docs/
     ├── richardson-maturity-model/
     ├── solid/
     ├── terminal/
+    ├── tips-de-programacion/
     └── yaml/
 ```
 
@@ -70,6 +71,7 @@ Se estudian de forma **autónoma** en paralelo al curso.
 | 13 | Terminal — Bash y Windows | Comandos esenciales de terminal para desarrolladores backend (Linux/macOS y Windows) | [→ Ver](./extras/terminal/README.md) |
 | 14 | YAML | Formato de configuración estándar de Spring Boot (`application.yml`) y sus conceptos clave | [→ Ver](./extras/yaml/README.md) |
 | 15 | Matemáticas para Programar | Operaciones básicas, contador, acumulador, descuentos, cargos, redondeo y `BigDecimal` | [→ Ver](./extras/matematicas-para-programar/README.md) |
+| 16 | Tips de Programación | 24 situaciones reales de menor a mayor complejidad: razonamiento, error común y solución en Java (consola y REST API) | [→ Ver](./extras/tips-de-programacion/README.md) |
 
 > 📋 Ver índice completo de extras: [`extras/README.md`](./extras/README.md)
 > 🗺️ Ver roadmap de estudio recomendado: [`roadmap.md`](./roadmap.md)

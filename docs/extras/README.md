@@ -27,7 +27,8 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 13 | [Terminal — Bash y Windows](#13-terminal--bash-y-windows) | [`terminal/`](./terminal/README.md) |
 | 14 | [YAML](#14-yaml) | [`yaml/`](./yaml/README.md) |
 | 15 | [➕ Matemáticas para Programar](#15-matemáticas-para-programar) | [`matematicas-para-programar/`](./matematicas-para-programar/README.md) |
-| 16 | [Próximos temas](#16-próximos-temas) | — |
+| 16 | [💡 Tips de Programación](#16-tips-de-programación) | [`tips-de-programacion/`](./tips-de-programacion/README.md) |
+| 17 | [Próximos temas](#17-próximos-temas) | — |
 
 ---
 
@@ -239,7 +240,19 @@ Las **matemáticas para programar** cubren el conjunto de operaciones y patrones
 
 ---
 
-## 16. Próximos temas
+## 16. 💡 Tips de Programación
+
+Los **tips de programación** presentan situaciones reales organizadas de menor a mayor complejidad, con el objetivo de desarrollar el razonamiento lógico para definir algoritmos. Cada tip explica el escenario en lenguaje natural, identifica el error más común, guía el razonamiento paso a paso y ofrece la solución en código Java.
+
+**Módulos:** cómo pensar un problema antes de codear · situaciones básicas (if/else, bucles, listas, validaciones) · situaciones intermedias (objetos, NullPointerException, Streams, agrupación, ordenamiento) · situaciones en REST API (traducir lógica a endpoints, leer parámetros, validar body, status codes, excepciones, separación de capas, filtros y respuestas estructuradas).
+
+**¿Por qué importa?** Saber la sintaxis no es suficiente. La diferencia entre un programador principiante y uno efectivo es la capacidad de leer una situación, entender qué necesita el algoritmo y traducirlo a código correcto sin reescribirlo tres veces.
+
+→ [Ir a Tips de Programación](./tips-de-programacion/README.md)
+
+---
+
+## 17. Próximos temas
 
 Los siguientes contenidos se irán incorporando a medida que avance el curso:
 
