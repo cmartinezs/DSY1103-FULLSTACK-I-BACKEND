@@ -12,7 +12,7 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 |---|------|---------|
 | 1 | [Git y GitHub](#1-git-y-github) | [`git-github/`](./git-github/README.md) |
 | 2 | [GitFlow](#2-gitflow) | [`gitflow/`](./gitflow/README.md) |
-| 3 | [Java y POO](#3-java-y-programación-orientada-a-objetos-poo) | [`java-poo/`](./java-poo/README.md) |
+| 3 | [Java para Spring Boot (Mini Curso)](#3-java-para-spring-boot-mini-curso) | [`java-para-spring-boot/`](./java-para-spring-boot/README.md) |
 | 4 | [JSON](#4-json) | [`json/`](./json/README.md) |
 | 5 | [Lombok](#5-lombok) | [`lombok/`](./lombok/README.md) |
 | 6 | [Markdown](#6-markdown) | [`markdown/`](./markdown/README.md) |
@@ -20,8 +20,7 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 8 | [Niveles de Madurez de Richardson](#8-niveles-de-madurez-de-richardson) | [`richardson-maturity-model/`](./richardson-maturity-model/README.md) |
 | 9 | [Principios SOLID](#9-principios-solid) | [`solid/`](./solid/README.md) |
 | 10 | [Variables de Entorno](#10-variables-de-entorno) | [`env-variables/`](./env-variables/README.md) |
-| 11 | [Mini Curso: Java para Spring Boot](#11-mini-curso-java-para-spring-boot) | [`java-para-spring-boot/`](./java-para-spring-boot/README.md) |
-| 12 | [Próximos temas](#12-próximos-temas) | — |
+| 11 | [Próximos temas](#11-próximos-temas) | — |
 
 ---
 
@@ -49,15 +48,15 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 
 ---
 
-## 3. Java y Programación Orientada a Objetos (POO)
+## 3. Java para Spring Boot (Mini Curso)
 
-Java es el lenguaje del ecosistema **Spring Boot**. La POO organiza el código en torno a objetos que encapsulan estado y comportamiento.
+Java es el lenguaje del ecosistema **Spring Boot**. Este mini curso cubre desde la sintaxis esencial hasta los conceptos mínimos para escribir y entender código Spring Boot con soltura. Pensado para **cualquier nivel**: el módulo 00 es un repaso rápido (cheat sheet) para quien ya recuerda Java; los módulos 01-11 parten desde cero y avanzan de forma progresiva.
 
-**Los 4 pilares:** Encapsulamiento · Herencia · Polimorfismo · Abstracción
+**Temas cubiertos:** repaso rápido POO · sintaxis y tipos · control de flujo moderno · métodos y sobrecarga · clases, objetos y records · los 4 pilares POO · interfaces y abstracción · colecciones y genéricos · manejo de excepciones · lambdas y Streams · novedades Java 21 · arquitectura de Spring Boot.
 
-**Conceptos Java relevantes:** `interface`, `Optional<T>`, generics, lambdas, Stream API, anotaciones (`@`), Records.
+**Java:** 21 LTS — incluye `var`, text blocks, `record`, sealed classes, pattern matching, virtual threads y Sequenced Collections.
 
-→ [Ver documentación completa de Java y POO](./java-poo/README.md)
+→ [Ir al Mini Curso: Java para Spring Boot](./java-para-spring-boot/README.md)
 
 ---
 
@@ -156,19 +155,7 @@ Las **variables de entorno** permiten configurar la aplicación de forma diferen
 
 ---
 
-## 11. Mini Curso: Java para Spring Boot
-
-Curso progresivo de **11 módulos** que lleva al alumno desde la sintaxis esencial de Java hasta los conceptos mínimos necesarios para escribir y entender código Spring Boot con soltura. Pensado para quien ya vio POO el año pasado y quiere reforzar y modernizar su base antes de las lecciones.
-
-**Temas cubiertos:** sintaxis y tipos · control de flujo moderno · métodos y sobrecarga · clases, objetos y records · los 4 pilares POO · interfaces y abstracción · colecciones y genéricos · manejo de excepciones · lambdas y Streams · novedades Java 21 · arquitectura de Spring Boot.
-
-**Java:** 21 LTS — incluye `var`, text blocks, `record`, sealed classes, pattern matching, virtual threads y Sequenced Collections.
-
-→ [Ir al Mini Curso: Java para Spring Boot](./java-para-spring-boot/README.md)
-
----
-
-## 12. Próximos temas
+## 11. Próximos temas
 
 Los siguientes contenidos se irán incorporando a medida que avance el curso:
 

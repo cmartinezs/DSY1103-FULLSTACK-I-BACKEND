@@ -1,6 +1,6 @@
 # ☕ Mini Curso: Java para Spring Boot
 
-> **Nivel de entrada:** conoces la teoría básica de POO del año anterior.  
+> **Nivel de entrada:** cualquiera — el módulo 00 es un repaso rápido para quienes ya recuerdan Java; los módulos 01-11 parten desde la sintaxis básica.  
 > **Objetivo:** llegar al nivel mínimo necesario para entender y escribir código Spring Boot con soltura.  
 > **Versión objetivo:** Java 21 (LTS).
 
@@ -8,10 +8,11 @@
 
 ## ¿Cómo usar este mini curso?
 
-1. Sigue los módulos **en orden**: cada uno construye sobre el anterior.  
-2. **Lee el código, no solo lo escanees.** Pregunta "¿por qué?" en cada línea.  
-3. Realiza los ejercicios al final de cada módulo **antes** de ver la solución.  
-4. El módulo 11 cierra con un puente directo a Spring Boot.
+1. **¿Ya recuerdas Java y POO?** Lee el [módulo 00](./00_repaso_rapido.md) como cheat sheet de referencia rápida y luego dirígete al módulo que necesites.  
+2. **¿No recuerdas bien Java o llevas tiempo sin practicarlo?** Sigue los módulos **01 al 11 en orden**: cada uno construye sobre el anterior.  
+3. **Lee el código, no solo lo escanees.** Pregunta "¿por qué?" en cada línea.  
+4. Realiza los ejercicios al final de cada módulo **antes** de ver la solución.  
+5. El módulo 11 cierra con un puente directo a Spring Boot.
 
 ---
 
@@ -19,6 +20,7 @@
 
 | # | Tema | Archivo |
 |---|------|---------|
+| 00 | Repaso rápido / Cheat Sheet (ya recuerdas Java) | [`00_repaso_rapido.md`](./00_repaso_rapido.md) |
 | 01 | Sintaxis esencial y tipos de datos | [`01_sintaxis_y_tipos.md`](./01_sintaxis_y_tipos.md) |
 | 02 | Control de flujo moderno | [`02_control_de_flujo.md`](./02_control_de_flujo.md) |
 | 03 | Métodos: diseño y sobrecarga | [`03_metodos.md`](./03_metodos.md) |
@@ -38,6 +40,9 @@
 ```
 Java 21
 │
+├── 00 Repaso rápido / Cheat Sheet ──────────────┐  Para quien ya
+│   (4 pilares, Optional, Streams, Records...)    │  recuerda Java
+│                                                 ┘
 ├── 01 Sintaxis básica ──────────────────────────┐
 ├── 02 Control de flujo (switch expr., sealed)    │
 ├── 03 Métodos y sobrecarga                       │  Base del lenguaje
