@@ -4,6 +4,8 @@ import cl.duoc.fullstack.tickets.model.Ticket;
 import cl.duoc.fullstack.tickets.service.TicketService;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,5 +22,14 @@ public class TicketController {
   @GetMapping
   public List<Ticket> getAllTickets() {
     return this.service.getTickets();
+  }
+
+  @PostMapping
+  public Ticket create(@RequestBody Ticket ticket) {
+    Ticket created = this.service.create(ticket);
+    if (created != null) {
+      return created;
+    }
+    return null;
   }
 }
