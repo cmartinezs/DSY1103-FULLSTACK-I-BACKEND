@@ -33,6 +33,7 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 19 | [🖥️ Uso de PC para Programadores](#19-️-uso-de-pc-para-programadores) | [`uso-de-pc/`](./uso-de-pc/README.md) |
 | 20 | [🕰️ Historia de la Computación e Informática](#20-️-historia-de-la-computación-e-informática) | [`historia-de-la-computacion/`](./historia-de-la-computacion/README.md) |
 | 21 | [Próximos temas](#21-próximos-temas) | — |
+| 22 | [🎯 Homologación — Diagnóstico Java](#22-homologación--diagnóstico-java) | [`homologacion/`](./homologacion/README.md) |
 
 ---
 
@@ -334,6 +335,31 @@ Los siguientes contenidos se irán incorporando a medida que avance el curso:
 | **JPA e Hibernate** | Persistencia de datos con ORM y anotaciones `@Entity` |
 | **Postman / curl** | Herramientas para probar y documentar APIs REST |
 | **Docker (básico)** | Contenedorización de aplicaciones Spring Boot |
+
+---
+
+## 22. 🎯 Homologación — Diagnóstico Java
+
+Evaluación diagnóstica de 10 ejercicios progresivos para desarrollar en **80 minutos de clase**. Cada ejercicio aplica conceptos fundamentales de Java: variables, estructuras de control (`if`, `while`, `do-while`, `for`), colecciones (`ArrayList`, `HashMap`) y los cuatro pilares de POO (encapsulamiento, herencia, abstracción y polimorfismo). Los alumnos deben expresar su pensamiento lógico con sus propias palabras antes de codificar.
+
+**10 ejercicios progresivos (Nivel 1 → 10):**
+
+| # | Ejercicio | Conceptos | Tiempo |
+|---|-----------|-----------|--------|
+| 1 | Presentación personal | Variables, `println` | ≤ 3 min |
+| 2 | Mayor de edad | `if / else` | ≤ 5 min |
+| 3 | Clasificador de notas | `if / else if / else`, rangos | ≤ 6 min |
+| 4 | Tabla de multiplicar | Bucle `for`, acumuladores | ≤ 7 min |
+| 5 | Contador regresivo | `while` y `do-while` | ≤ 8 min |
+| 6 | Lista de compras | `ArrayList`, `for-each` | ≤ 8 min |
+| 7 | Agenda de contactos | `HashMap`, colecciones clave-valor | ≤ 9 min |
+| 8 | Empleado y gerente | Encapsulamiento, herencia, `extends` | ≤ 10 min |
+| 9 | Formas geométricas | Interfaz, polimorfismo, `implements` | ≤ 12 min |
+| 10 | Sistema de vehículos | Clase abstracta, integración POO total | ≤ 12 min |
+
+**Package:** `cl.duoc.diagnostico.minombredeusuario`
+
+→ [Ver todos los ejercicios de homologación](./homologacion/README.md)
 
 ---
 
