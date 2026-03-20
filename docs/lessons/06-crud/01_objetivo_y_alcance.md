@@ -45,6 +45,24 @@ Más que ejecutar el código, el objetivo es que entiendas cada decisión. Al te
 
 ---
 
+## ¿Qué requerimientos implementamos en esta lección?
+
+> El proyecto completo está descrito en [`00_enunciado_proyecto.md`](../00_enunciado_proyecto.md).
+> Ahí encontrarás el escenario, los actores y la lista completa de requerimientos numerados.
+
+De esa lista, esta lección implementa los **cuatro restantes**:
+
+| Requerimiento | Lo que construimos |
+|---------------|--------------------|
+| **REQ-07** — Consultar un ticket por ID | El endpoint `GET /tickets/{id}` con `@PathVariable` |
+| **REQ-08** — Actualizar título o descripción | El endpoint `PUT /tickets/{id}` |
+| **REQ-09** — Eliminar un ticket | El endpoint `DELETE /tickets/{id}` |
+| **REQ-10** — Error claro cuando el ticket no existe | `Optional<T>` en las capas internas + respuesta `404 Not Found` en el controlador |
+
+Con esta lección el sistema cumple **todos** los requerimientos del enunciado. El proyecto Tickets tiene un CRUD completo y funcional.
+
+---
+
 ## ¿Qué NO cubre esta lección? (y por qué)
 
 | Tema | ¿Por qué lo dejamos después? |
@@ -59,17 +77,6 @@ El foco de esta lección es uno solo: **completar el ciclo de vida de un recurso
 
 ---
 
-## El problema que resuelven los nuevos endpoints
-
-Imagina que tienes un sistema de soporte técnico. Los usuarios pueden crear tickets con `POST`. Pero sin los nuevos endpoints:
-
-- No puedes consultar el estado de **un ticket específico** sin traer todos.
-- No puedes **actualizar** el título o la descripción de un ticket creado con error.
-- No puedes **eliminar** un ticket duplicado o creado por error.
-
-`GET /tickets/{id}`, `PUT /tickets/{id}` y `DELETE /tickets/{id}` resuelven exactamente esos tres problemas.
-
----
 
 ## La estructura que tienes al comenzar
 

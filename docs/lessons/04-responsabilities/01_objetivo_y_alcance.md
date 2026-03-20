@@ -30,6 +30,23 @@ Más importante que el código es que entiendas el **por qué** detrás de cada 
 
 ---
 
+## ¿Qué requerimientos implementamos en esta lección?
+
+> El proyecto completo está descrito en [`00_enunciado_proyecto.md`](../00_enunciado_proyecto.md).
+> Ahí encontrarás el escenario, los actores y la lista completa de requerimientos numerados.
+
+De esa lista, esta lección implementa **uno**:
+
+| Requerimiento | Lo que construimos |
+|---------------|--------------------|
+| **REQ-01** — Consultar todos los tickets | El endpoint `GET /tickets` que devuelve la lista completa en JSON |
+
+Solo uno. Pero ese uno lo construimos con una arquitectura que soportará todo lo demás sin necesidad de reescribir nada.
+
+Los REQ-02 al REQ-10 (crear, actualizar, eliminar, validar) **necesitan** esta base bien puesta para poder agregarse lección a lección sin romper lo que ya existe. Si construyes el `GET` de cualquier forma, el costo lo pagas después. Si lo construyes con capas, los siguientes pasos son naturales.
+
+---
+
 ## ¿Qué NO cubre esta lección? (y por qué)
 
 Es importante que sepas lo que intencionalmente dejamos para más adelante, para que no te preocupes si no lo ves aquí:

@@ -31,6 +31,25 @@ Más que ejecutar el código, el objetivo es que entiendas cada decisión. Al te
 
 ---
 
+## ¿Qué requerimientos implementamos en esta lección?
+
+> El proyecto completo está descrito en [`00_enunciado_proyecto.md`](../00_enunciado_proyecto.md).
+> Ahí encontrarás el escenario, los actores y la lista completa de requerimientos numerados.
+
+De esa lista, esta lección implementa **cinco**:
+
+| Requerimiento | Lo que construimos |
+|---------------|--------------------|
+| **REQ-02** — Registrar un nuevo ticket con título y descripción | El endpoint `POST /tickets` con `@RequestBody` |
+| **REQ-03** — Estado inicial `NEW` automático | El `Service` asigna `status = "NEW"` al crear |
+| **REQ-04** — Sin títulos duplicados | El `Service` valida con `existsByTitle()` antes de guardar |
+| **REQ-05** — Fecha y hora de creación automática | El `Service` asigna `createdAt = LocalDateTime.now()` |
+| **REQ-06** — Fecha estimada de resolución | El `Service` calcula `estimatedResolutionDate = hoy + 5 días` |
+
+Nota que REQ-03 a REQ-06 **no los envía el cliente** en el body del `POST`. Los calcula y asigna el servidor. Eso no es un detalle técnico: es una regla de negocio, y el lugar correcto para esa lógica es el `Service`.
+
+---
+
 ## ¿Qué NO cubre esta lección? (y por qué)
 
 Hay cosas que intencionalmente dejamos para más adelante:
