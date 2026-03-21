@@ -256,6 +256,239 @@ logs/
 
 ---
 
+## ⚠️ Errores comunes (especialmente en laboratorio)
+
+En equipos compartidos como los del laboratorio, es muy frecuente encontrarse con errores al usar Git y GitHub. Aquí están los más comunes y cómo resolverlos.
+
+---
+
+### ❌ `Please tell me who you are` / El push usa la cuenta de otro
+
+**Síntoma:** Al hacer `git commit` o `git push`, Git dice que no sabe quién eres, o peor, usa el usuario y correo de otro estudiante que usó el equipo antes.
+
+**Causa:** Git guarda la identidad del usuario de forma global en el equipo. En un PC compartido, esa configuración puede ser de otra persona.
+
+**Solución:**
+```bash
+# Ver qué usuario está configurado actualmente
+git config --global user.name
+git config --global user.email
+
+# Configurar TU identidad (hacerlo siempre al inicio del laboratorio)
+git config --global user.name "Tu Nombre"
+git config --global user.email "tu.correo@ejemplo.com"
+```
+
+> 💡 **Buena práctica en laboratorio:** siempre ejecuta `git config --global user.name` al comenzar para verificar que eres tú.
+
+---
+
+### ❌ `remote: Permission to usuario/repo.git denied`
+
+**Síntoma:** Al hacer `git push`, GitHub rechaza la operación diciendo que no tienes permiso, aunque el repositorio es tuyo.
+
+**Causa:** El equipo tiene guardadas las credenciales de otro usuario (token o contraseña). Git las usa automáticamente sin pedirte las tuyas.
+
+**Solución:**
+```bash
+# En Linux/Mac: borrar las credenciales guardadas del sistema
+git config --global --unset credential.helper
+
+# O bien, forzar que Git te pida credenciales nuevamente
+git config --global credential.helper ""
+```
+
+Si el repositorio usa HTTPS, también puedes cambiar el remote para incluir tu usuario:
+```bash
+git remote set-url origin https://TU_USUARIO@github.com/TU_USUARIO/tu-repo.git
+```
+
+> 💡 Lo más recomendable es usar **tokens de acceso personal (PAT)** de GitHub en lugar de contraseña. Se generan en: *GitHub → Settings → Developer settings → Personal access tokens*.
+
+---
+
+### ❌ `fatal: not a git repository`
+
+**Síntoma:**
+```
+fatal: not a git repository (or any of the parent directories): .git
+```
+
+**Causa:** Estás ejecutando comandos de Git en una carpeta que no es un repositorio Git (no tiene la carpeta `.git`).
+
+**Solución:**
+```bash
+# Verificar en qué carpeta estás
+pwd
+
+# Ir a la carpeta correcta de tu proyecto
+cd /ruta/a/tu/proyecto
+
+# Verificar que tiene la carpeta .git
+ls -la
+
+# Si es un proyecto nuevo y aún no tiene git, inicializarlo
+git init
+```
+
+---
+
+### ❌ `error: src refspec main does not match any`
+
+**Síntoma:** Al hacer `git push origin main`, Git dice que la rama `main` no existe.
+
+**Causa:** Nunca se hizo un primer `commit`, o la rama local tiene otro nombre (por ejemplo `master`).
+
+**Solución:**
+```bash
+# Ver qué ramas existen localmente
+git branch
+
+# Si no aparece ninguna, aún no hay commits. Crear el primero:
+git add .
+git commit -m "feat: primer commit"
+
+# Si la rama se llama 'master' en vez de 'main', renombrarla:
+git branch -M main
+
+# Luego hacer el push
+git push -u origin main
+```
+
+---
+
+### ❌ `Updates were rejected because the remote contains work`
+
+**Síntoma:**
+```
+! [rejected] main -> main (fetch first)
+error: failed to push some refs to 'https://github.com/...'
+hint: Updates were rejected because the remote contains work that you do not have locally.
+```
+
+**Causa:** El repositorio remoto tiene commits que tú no tienes localmente. Puede pasar si trabajaste desde otro equipo o si GitHub tiene cambios (como el README creado al crear el repo).
+
+**Solución:**
+```bash
+# Traer los cambios remotos primero y luego hacer push
+git pull origin main --rebase
+
+# Si hay conflictos, resolverlos y luego:
+git push origin main
+```
+
+> ⚠️ No usar `git push --force` a menos que sepas exactamente lo que haces. Puedes borrar el trabajo de otros.
+
+---
+
+### ❌ `CONFLICT (content): Merge conflict in archivo.java`
+
+**Síntoma:** Al hacer `git pull` o `git merge`, Git indica que hay conflictos y no puede fusionar automáticamente.
+
+**Causa:** El mismo archivo fue modificado en dos lugares distintos (dos ramas, dos equipos, etc.).
+
+**Solución:**
+```bash
+# 1. Ver los archivos con conflicto
+git status
+
+# 2. Abrir el archivo y buscar las marcas de conflicto:
+# <<<<<<< HEAD
+#     tu código
+# =======
+#     código del otro lado
+# >>>>>>> origin/main
+
+# 3. Editar el archivo manualmente, dejando solo el código correcto
+# 4. Marcar como resuelto y continuar
+git add archivo-con-conflicto.java
+git commit
+```
+
+---
+
+### ❌ `git` no se reconoce como comando / `command not found: git`
+
+**Síntoma:** Al escribir cualquier comando de Git, la terminal responde `command not found`.
+
+**Causa:** Git no está instalado en el equipo, o no está en el PATH del sistema.
+
+**Solución:**
+```bash
+# Verificar si Git está instalado
+git --version
+
+# En Ubuntu/Debian (si no está instalado)
+sudo apt install git
+
+# Verificar que está en el PATH
+which git
+```
+
+---
+
+### ❌ `Your branch is ahead of 'origin/main' by N commits`
+
+**Síntoma:** Git te dice que tu rama local está adelantada al remoto pero no hiciste `push`.
+
+**Causa:** Hiciste commits localmente pero no los subiste a GitHub.
+
+**Solución:**
+```bash
+# Simplemente hacer push
+git push origin main
+```
+
+---
+
+### ❌ `detached HEAD state`
+
+**Síntoma:**
+```
+HEAD detached at a1b2c3d
+```
+
+**Causa:** Hiciste checkout a un commit directamente (no a una rama). En este estado, los commits que hagas no pertenecen a ninguna rama y pueden perderse.
+
+**Solución:**
+```bash
+# Volver a la rama principal
+git checkout main
+# o
+git switch main
+
+# Si ya hiciste commits en este estado y no quieres perderlos, crear una rama primero:
+git switch -c mi-rama-rescate
+```
+
+---
+
+### ✅ Checklist para el laboratorio
+
+Antes de comenzar a trabajar en un equipo compartido, ejecuta estos pasos:
+
+```bash
+# 1. Verificar identidad
+git config --global user.name
+git config --global user.email
+
+# 2. Si no eres tú, configurar tu identidad
+git config --global user.name "Tu Nombre"
+git config --global user.email "tu.correo@ejemplo.com"
+
+# 3. Clonar tu repositorio (si no está en el equipo)
+git clone https://github.com/TU_USUARIO/tu-repo.git
+cd tu-repo
+
+# 4. Verificar en qué rama estás
+git branch
+
+# 5. Traer los últimos cambios
+git pull origin main
+```
+
+---
+
 ## Recursos recomendados
 
 | Recurso | Tipo | Enlace |
