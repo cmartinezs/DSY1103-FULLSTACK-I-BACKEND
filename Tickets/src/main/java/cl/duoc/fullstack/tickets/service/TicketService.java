@@ -36,4 +36,26 @@ public class TicketService {
     ticket.setEstimatedResolutionDate(estimated);
     return this.repository.save(ticket);
   }
+
+  public Ticket getById(Long id) {
+    return repository.getById(id);
+  }
+
+  public Ticket deleteById(Long id) {
+    return repository.deleteById(id);
+  }
+
+  public Ticket updateById(Long id, Ticket ticket) {
+    Ticket toUpdate = this.repository.getById(id);
+    if (toUpdate == null) {
+      return null;
+    }
+
+    toUpdate.setTitle(ticket.getTitle());
+    toUpdate.setDescription(ticket.getDescription());
+    toUpdate.setStatus(ticket.getStatus());
+    toUpdate.setEffectiveResolutionDate(ticket.getEffectiveResolutionDate());
+    this.repository.update(toUpdate);
+    return toUpdate;
+  }
 }

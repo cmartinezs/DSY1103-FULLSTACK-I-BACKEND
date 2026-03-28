@@ -59,14 +59,14 @@ ticket.map(Ticket::getTitle).ifPresent(System.out::println); // nunca explota
 
 ### Las operaciones clave de Optional
 
-| Operación | ¿Qué hace? |
-|---|---|
-| `Optional.of(valor)` | Crea un Optional con valor (lanza excepción si es null) |
-| `Optional.empty()` | Crea un Optional vacío |
-| `optional.map(fn)` | Si tiene valor, transforma; si está vacío, devuelve vacío |
-| `optional.orElse(otro)` | Devuelve el valor si existe, o `otro` si está vacío |
-| `optional.ifPresent(fn)` | Ejecuta la función solo si hay valor |
-| `optional.isPresent()` | `true` si tiene valor (evitar: es casi igual a un null check) |
+| Operación                | ¿Qué hace?                                                    |
+|--------------------------|---------------------------------------------------------------|
+| `Optional.of(valor)`     | Crea un Optional con valor (lanza excepción si es null)       |
+| `Optional.empty()`       | Crea un Optional vacío                                        |
+| `optional.map(fn)`       | Si tiene valor, transforma; si está vacío, devuelve vacío     |
+| `optional.orElse(otro)`  | Devuelve el valor si existe, u `otro` si está vacío           |
+| `optional.ifPresent(fn)` | Ejecuta la función solo si hay valor                          |
+| `optional.isPresent()`   | `true` si tiene valor (evitar: es casi igual a un null check) |
 
 > **¿Cuándo usar `Optional` y cuándo no?**
 > `Optional` está diseñado para **valores de retorno** de métodos que pueden no encontrar algo. No debe usarse como parámetro de método ni como campo de una clase: para esos casos hay mejores alternativas. En esta lección lo usarás exactamente donde corresponde: en los retornos de `findById()` y `update()`.

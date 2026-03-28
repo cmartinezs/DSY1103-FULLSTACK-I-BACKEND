@@ -49,4 +49,29 @@ public class TicketRepository {
     }
     return false;
   }
+
+  public Ticket getById(Long id) {
+    for (Ticket ticket : tickets) {
+      if (ticket.getId().equals(id)) {
+        return ticket;
+      }
+    }
+    return null;
+  }
+
+  public Ticket deleteById(Long id) {
+    for (Ticket ticket : tickets) {
+      if (ticket.getId().equals(id)) {
+        tickets.remove(ticket);
+        return ticket;
+      }
+    }
+    return null;
+  }
+
+  public void update(Ticket toUpdate) {
+    Ticket f = getById(toUpdate.getId());
+    int index = tickets.indexOf(f);
+    tickets.set(index, toUpdate);
+  }
 }
