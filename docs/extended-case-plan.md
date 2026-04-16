@@ -135,7 +135,12 @@ public class Ticket {
 
 ---
 
-### Lección 15: Microservicios (sin cambios)
+### Lección 15: Microservicios
+
+**Completado:**
+- OpenFeign con NotificationClient y fallback
+- RestClient alternativo
+- Notificaciones al crear/actualizar tickets
 
 ---
 
