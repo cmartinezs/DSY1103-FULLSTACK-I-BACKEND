@@ -80,7 +80,7 @@ El **tipo de dato** define **qué clase de información** puede almacenar una va
 
 | Categoría | Java | Python | JavaScript | C# |
 |-----------|------|--------|------------|----|
-| Entero | `int`, `long` | `int` | `number` | `int`, `long` |
+| Ente<br/>ro | `int`, `long` | `int` | `number` | `int`, `long` |
 | Decimal | `double`, `float` | `float` | `number` | `double`, `float` |
 | Texto | `String` | `str` | `string` | `string` |
 | Booleano | `boolean` | `bool` | `boolean` | `bool` |

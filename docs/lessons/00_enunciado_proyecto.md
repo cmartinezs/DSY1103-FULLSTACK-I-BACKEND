@@ -44,6 +44,10 @@ Estos son los requerimientos del sistema. Están numerados para que puedas rastr
 | **REQ-12** | El título del ticket no puede estar vacío ni en blanco; intentarlo debe devolver `400 Bad Request` |
 | **REQ-13** | La API debe aceptar un DTO de entrada (`TicketRequest`) separado del modelo de dominio (`Ticket`); el cliente solo envía lo que le corresponde |
 | **REQ-14** | `GET /tickets` debe admitir un parámetro opcional `?status=` para filtrar tickets por estado; sin el parámetro devuelve todos, ordenados por fecha de creación |
+| **REQ-15** | Los tickets deben persistirse en base de datos real: los datos sobreviven reinicios de la aplicación |
+| **REQ-16** | Cada ticket debe registrar qué usuario lo creó (usuario creador) |
+| **REQ-17** | Cada ticket puede ser asignado a un usuario técnico; la asignación puede cambiar durante la vida del ticket |
+| **REQ-18** | El sistema debe registrar automáticamente un historial de cambios de estado de cada ticket, con el estado anterior, el nuevo estado y la fecha y hora del cambio |
 
 ---
 
@@ -51,38 +55,41 @@ Estos son los requerimientos del sistema. Están numerados para que puedas rastr
 
 Esta tabla muestra de un vistazo cuándo se implementa cada requerimiento:
 
-| Requerimiento | L04 | L05 | L06 | L07 | L08 | L09 |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| REQ-01 — Consultar todos los tickets | ✅ | | | | | |
-| REQ-02 — Registrar un nuevo ticket | | ✅ | | | | |
-| REQ-03 — Estado inicial `NEW` | | ✅ | | | | |
-| REQ-04 — Sin títulos duplicados | | ✅ | | | | |
-| REQ-05 — Fecha de creación automática | | ✅ | | | | |
-| REQ-06 — Fecha estimada de resolución | | ✅ | | | | |
-| REQ-07 — Consultar ticket por ID | | | ✅ | | | |
-| REQ-08 — Actualizar ticket | | | ✅ | | | |
-| REQ-09 — Eliminar ticket | | | ✅ | | | |
-| REQ-10 — Error cuando no existe | | | ✅ | | | |
-| REQ-11 — Error con cuerpo JSON `{"message":"..."}` | | | | ✅ | | |
-| REQ-12 — Título no puede estar vacío | | | | | ✅ | |
-| REQ-13 — DTO separado del modelo | | | | | ✅ | |
-| REQ-14 — Filtro por estado `?status=` | | | | | | ✅ |
+| Requerimiento | L04 | L05 | L06 | L07 | L08 | L09 | L10 | L11 | L12 | L13 |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| REQ-01 — Consultar todos los tickets | ✅ | | | | | | | | | |
+| REQ-02 — Registrar un nuevo ticket | | ✅ | | | | | | | | |
+| REQ-03 — Estado inicial `NEW` | | ✅ | | | | | | | | |
+| REQ-04 — Sin títulos duplicados | | ✅ | | | | | | | | |
+| REQ-05 — Fecha de creación automática | | ✅ | | | | | | | | |
+| REQ-06 — Fecha estimada de resolución | | ✅ | | | | | | | | |
+| REQ-07 — Consultar ticket por ID | | | ✅ | | | | | | | |
+| REQ-08 — Actualizar ticket | | | ✅ | | | | | | | |
+| REQ-09 — Eliminar ticket | | | ✅ | | | | | | | |
+| REQ-10 — Error cuando no existe | | | ✅ | | | | | | | |
+| REQ-11 — Error con cuerpo JSON `{"message":"..."}` | | | | ✅ | | | | | | |
+| REQ-12 — Título no puede estar vacío | | | | | ✅ | | | | | |
+| REQ-13 — DTO separado del modelo | | | | | ✅ | | | | | |
+| REQ-14 — Filtro por estado `?status=` | | | | | | ✅ | | | | |
+| REQ-15 — Persistencia en base de datos real | | | | | | | ✅ | ✅ | | |
+| REQ-16 — Usuario creador del ticket | | | | | | | | | ✅ | |
+| REQ-17 — Usuario asignado al ticket | | | | | | | | | ✅ | |
+| REQ-18 — Historial de cambios de estado | | | | | | | | | | ✅ |
 
 ---
 
 ## Lo que el sistema NO cubre (por ahora)
 
-Estas funcionalidades están fuera del alcance de las lecciones 04-09. No es que no existan — es que requieren conocimientos que aún no tienes, y agregarlas ahora distraería del aprendizaje principal:
+Estas funcionalidades están fuera del alcance de las lecciones 04-13. No es que no existan — es que requieren conocimientos adicionales:
 
 | Funcionalidad fuera de alcance | Razón |
 |-------------------------------|-------|
-| Autenticación y control de acceso | Requiere conocer Spring Security |
-| Asignación de tickets a personas | Requiere relaciones entre entidades (JPA) |
-| Cambio manual de estado del ticket | Se implementará cuando haya base de datos real |
-| Notificaciones por correo | Fuera del alcance de una API REST básica |
-| Persistencia real (base de datos) | Las lecciones 04-09 trabajan en memoria; JPA viene después |
-| Manejo global de errores (`@ControllerAdvice`) | Se introduce en lección 07 como debate; la implementación formal es una etapa posterior |
-| Paginación | Requiere JPA y criterios de consulta avanzados |
+| Autenticación y control de acceso | Requiere Spring Security |
+| Notificaciones por correo al cambiar estado | Fuera del alcance de una API REST básica |
+| Manejo global de errores (`@ControllerAdvice`) | Se introduce en lección 07; implementación formal en etapa posterior |
+| Paginación (`Pageable`) | Requiere criterios de consulta avanzados con JPA |
+| Migraciones de esquema (Flyway / Liquibase) | Herramientas de nivel producción fuera del alcance del curso |
+| Quién realizó cada cambio de estado (auditoría completa) | Requiere autenticación (Spring Security) para saber quién es el usuario actual |
 
 ---
 

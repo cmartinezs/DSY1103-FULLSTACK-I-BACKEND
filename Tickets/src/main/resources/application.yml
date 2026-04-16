@@ -1,6 +1,12 @@
 spring:
   application:
     name: Tickets
+  profiles:
+    active: h2
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
 
 server:
   port: 8080
