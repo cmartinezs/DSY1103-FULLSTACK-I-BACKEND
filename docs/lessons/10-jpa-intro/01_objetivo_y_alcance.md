@@ -63,6 +63,30 @@ Al terminar esta lección tendrás:
 
 ---
 
+## Caso Extendido: Sistema de Tickets con Gestión de Usuarios
+
+A partir de esta lección, el sistema incluye gestión completa de usuarios con roles.
+
+### Roles definidos
+| Rol     | Descripción              |
+|---------|--------------------------|
+| USER    | Crea tickets, ve estado  |
+| AGENT   | Recibe tickets asignados |
+| ADMIN   | Supervisa y gestiona     |
+
+### Modelo de datos requerido
+- **User**: id, name, email, role (USER/AGENT/ADMIN), active
+- **Ticket**: relaciones con User (createdBy, assignedTo)
+
+### Nuevos requerimientos del caso extendido
+| Requerimiento | Descripción |
+|---|---|
+| **REQ-16** | Agregar entidad User con roles (USER, AGENT, ADMIN) |
+| **REQ-17** | Ticket debe tener relaciones ManyToOne con User (createdBy, assignedTo) |
+| **REQ-18** | DataInitializer debe cargar usuarios iniciales con diferentes roles |
+
+---
+
 ## La estructura que tienes al comenzar
 
 ```

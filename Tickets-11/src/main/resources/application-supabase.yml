@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/ticketsdb}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/tickets_db}
     driverClassName: org.postgresql.Driver
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:}

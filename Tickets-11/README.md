@@ -28,16 +28,20 @@ Perfiles de Spring Boot para múltiples bases de datos (H2, MySQL, PostgreSQL/Su
 
 ### 2. Perfiles de Configuración
 
-#### application-h2.yml (Desarrollo en memoria)
+#### application-h2.yml (Desarrollo)
 ```yaml
 spring:
   datasource:
-    url: jdbc:h2:mem:ticketsdb
+    # H2 en memoria (volátil - se pierde al cerrar la app)
+    # Para H2 persistente usar: jdbc:h2:file:./data/tickets_db
+    url: jdbc:h2:mem:tickets_db
     driverClassName: org.h2.Driver
   jpa:
     hibernate:
       ddl-auto: create-drop
 ```
+
+> **Nota**: H2 puede ser volátil (`mem`) o persistente (`file`). Para hacer H2 persistente: `jdbc:h2:file:./data/tickets_db`
 
 #### application-mysql.yml (MySQL local XAMPP)
 ```yaml

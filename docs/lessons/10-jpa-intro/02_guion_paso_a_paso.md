@@ -338,3 +338,193 @@ Resultado esperado: el ticket creado antes del reinicio aparece en la lista. Los
 2. Antes, `TicketRepository` era una clase con 150 líneas. Ahora es una interfaz con 3 métodos. ¿Quién escribe el código que falta?
 3. ¿Qué pasa si quitas `@NoArgsConstructor` de `Ticket` y reinicias la aplicación?
 4. ¿Cómo sabe Spring Data JPA que `findByStatusIgnoreCase` busca por el campo `status` y no por `title`?
+
+---
+
+## Caso Extendido: Sistema de Tickets con Gestión de Usuarios
+
+### Paso 10: crear entidad User
+
+Crea `model/User.java`:
+
+```java
+package cl.duoc.fullstack.tickets.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class User {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+
+  @NotBlank(message = "El nombre es requerido")
+  @Column(nullable = false, length = 100)
+  private String name;
+
+  @NotBlank(message = "El email es requerido")
+  @Column(nullable = false, unique = true, length = 150)
+  private String email;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  private Role role = Role.USER;
+
+  @Column(nullable = false)
+  private boolean active = true;
+
+  public enum Role {
+    USER,
+    AGENT,
+    ADMIN
+  }
+}
+```
+
+### Paso 11: crear UserRepository
+
+Crea `respository/UserRepository.java`:
+
+```java
+package cl.duoc.fullstack.tickets.respository;
+
+import cl.duoc.fullstack.tickets.model.User;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+  Optional<User> findByEmail(String email);
+  boolean existsByEmail(String email);
+}
+```
+
+### Paso 12: actualizar Ticket con relaciones a User
+
+Actualiza `model/Ticket.java` para agregar relaciones con User:
+
+```java
+// Agregar imports
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+
+// Agregar después de effectiveResolutionDate
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "created_by_id")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+private User createdBy;
+
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "assigned_to_id")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+private User assignedTo;
+```
+
+### Paso 13: actualizar DataInitializer
+
+Actualiza `config/DataInitializer.java` para cargar usuarios iniciales:
+
+```java
+package cl.duoc.fullstack.tickets.config;
+
+import cl.duoc.fullstack.tickets.model.Ticket;
+import cl.duoc.fullstack.tickets.model.User;
+import cl.duoc.fullstack.tickets.model.User.Role;
+import cl.duoc.fullstack.tickets.respository.TicketRepository;
+import cl.duoc.fullstack.tickets.respository.UserRepository;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+public class DataInitializer implements CommandLineRunner {
+
+  private final TicketRepository ticketRepository;
+  private final UserRepository userRepository;
+
+  public DataInitializer(TicketRepository ticketRepository, UserRepository userRepository) {
+    this.ticketRepository = ticketRepository;
+    this.userRepository = userRepository;
+  }
+
+  @Override
+  public void run(String... args) throws Exception {
+    // Cargar usuarios iniciales con diferentes roles
+    if (userRepository.count() == 0) {
+      User admin = new User();
+      admin.setName("Admin User");
+      admin.setEmail("admin@tickets.com");
+      admin.setRole(Role.ADMIN);
+      admin.setActive(true);
+      userRepository.save(admin);
+
+      User agent = new User();
+      agent.setName("Agent Smith");
+      agent.setEmail("agent@tickets.com");
+      agent.setRole(Role.AGENT);
+      agent.setActive(true);
+      userRepository.save(agent);
+
+      User user = new User();
+      user.setName("John Doe");
+      user.setEmail("john@tickets.com");
+      user.setRole(Role.USER);
+      user.setActive(true);
+      userRepository.save(user);
+    }
+
+    // Crear tickets de ejemplo
+    if (ticketRepository.count() == 0) {
+      LocalDateTime now = LocalDateTime.now();
+      LocalDate estimated = LocalDate.now().plusDays(5);
+
+      User creator = userRepository.findByEmail("john@tickets.com").orElse(null);
+      User assignee = userRepository.findByEmail("agent@tickets.com").orElse(null);
+
+      if (creator != null && assignee != null) {
+        Ticket t1 = new Ticket();
+        t1.setTitle("Ticket 1");
+        t1.setDescription("Descripción del ticket 1");
+        t1.setStatus("NEW");
+        t1.setCreatedAt(now);
+        t1.setEstimatedResolutionDate(estimated);
+        t1.setCreatedBy(creator);
+        t1.setAssignedTo(assignee);
+        ticketRepository.save(t1);
+      }
+    }
+  }
+}
+```
+
+### Resumen de archivos creados/modificados
+
+| Archivo | Acción |
+|---------|--------|
+| `model/User.java` | ✨ Nuevo - Entidad con roles |
+| `respository/UserRepository.java` | ✨ Nuevo - Repository de User |
+| `model/Ticket.java` | 📝 Modificado - Agregar relaciones ManyToOne |
+| `config/DataInitializer.java` | 📝 Modificado - Cargar usuarios iniciales |
+| `service/TicketService.java` | 📝 Modificado - Usar User entity |
+| `dto/TicketRequest.java` | 📝 Modificado - createdByName, assignedToId |
+| `dto/TicketResult.java` | 📝 Modificado - User objects |
