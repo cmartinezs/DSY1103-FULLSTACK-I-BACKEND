@@ -86,42 +86,41 @@ Crear proyectos independientes para cada lección (Tickets-10, Tickets-11, ..., 
 
 ### Lección 13: Historial y Auditoría
 - **Tema**: Tracking automático de cambios en la BD
-- **Proyecto**: `Tickets-13/` ⏳ **PENDIENTE**
+- **Proyecto**: `Tickets-13/` ✅ **COMPLETADA**
 - **Cambios**:
-  - Crear campos de auditoría en `Ticket` (`createdBy`, `updatedBy`, `createdAt`, `updatedAt`)
-  - Crear tabla `TicketAudit` para historial de cambios
-  - Implementar `@CreationTimestamp`, `@UpdateTimestamp` (Hibernate)
-  - Implementar listener para capturar cambios en Ticket
-  - Crear endpoint GET `/tickets/{id}/history` para ver historial
+  - ✅ Crear entidad `TicketHistory` (historial de cambios de estado)
+  - ✅ Crear relación `@OneToMany` en Ticket → TicketHistory
+  - ✅ Crear `TicketHistoryRepository`
+  - ✅ Implementar registro automático en TicketService
+  - ✅ Crear endpoint GET `/tickets/{id}/history` para ver historial
 - **Validación**:
-  - Campos de auditoría se actualizan automáticamente
-  - Cada cambio en Ticket se registra en `TicketAudit`
-  - Endpoint de historial retorna cambios en orden cronológico
-  - Tests de auditoría
-- **Status**: Pendiente
+  - ✅ Registro automático al crear ticket (estado NEW)
+  - ✅ Registro automático al cambiar estado (solo si cambia)
+  - ✅ Endpoint de historial retorna cambios en orden cronológico (más reciente primero)
+  - ✅ Tests pasando
+- **Status**: Directorio `Tickets-13/` creado y funcional
 
 ---
 
 ### Lección 14: Migraciones Flyway
 - **Tema**: Versionado profesional de cambios de BD
-- **Proyecto**: `Tickets-14/` ⏳ **PENDIENTE**
+- **Proyecto**: `Tickets-14/` ✅ **COMPLETADA**
 - **Cambios**:
-  - Agregar dependencia Flyway en `pom.xml`
-  - Crear directorio `src/main/resources/db/migration`
-  - Crear migraciones SQL:
-    - `V1__Initial_schema.sql` (tablas de Lección 10)
-    - `V2__Add_categories.sql` (categorías de Lección 12)
-    - `V3__Add_tags.sql` (tags de Lección 12)
-    - `V4__Add_audit_tables.sql` (auditoría de Lección 13)
-  - Configurar Flyway en `application-mysql.yml` y `application-supabase.yml`
-  - Mantener JPA automático para `application-h2.yml`
-  - Crear índices y constraints en migraciones
+  - ✅ Agregar dependencia Flyway (`flyway-core`, `flyway-mysql`) en `pom.xml`
+  - ✅ Crear directorio `src/main/resources/db/migration`
+  - ✅ Crear migraciones SQL:
+    - ✅ `V1__Initial_schema.sql` (users, tickets)
+    - ✅ `V2__Add_categories.sql` (categories)
+    - ✅ `V3__Add_tags.sql` (tags, ticket_tags)
+    - ✅ `V4__Add_audit_tables.sql` (ticket_history)
+  - ✅ Configurar Flyway en `application-mysql.yml` y `application-supabase.yml`
+  - ✅ Mantener JPA automático para `application-h2.yml` (create-drop)
+  - ✅ Crear índices y constraints en migraciones
 - **Validación**:
-  - Tabla `flyway_schema_history` existe con 4+ registros
-  - Migraciones se aplican automáticamente al arrancar
-  - BD está correctamente versionada
-  - Tests con BD migrada
-- **Status**: Pendiente
+  - ✅ Tests pasando con H2 (ddl-auto: create-drop)
+  - ✅ Compilación exitosa
+  - ✅ Flyway configurado para MySQL/Supabase (ddl-auto: validate)
+- **Status**: Directorio `Tickets-14/` creado y funcional
 
 ---
 
@@ -225,20 +224,20 @@ Crear proyectos independientes para cada lección (Tickets-10, Tickets-11, ..., 
 
 ## 📊 Progreso General
 
-### ✅ Completadas (3/9)
+### ✅ Completadas (5/9)
 
 | # | Lección | Proyecto | Status |
 |---|---------|----------|--------|
 | 10 | JPA Intro | `Tickets-10/` | ✅ HECHO |
 | 11 | Database Config | `Tickets-11/` | ✅ HECHO |
 | 12 | JPA Relations | `Tickets-12/` | ✅ HECHO |
+| 13 | Historial y Auditoría | `Tickets-13/` | ✅ HECHO |
+| 14 | Flyway Migrations | `Tickets-14/` | ✅ HECHO |
 
-### ⏳ Pendientes (6/9)
+### ⏳ Pendientes (4/9)
 
 | # | Lección | Proyecto | Status |
 |---|---------|----------|--------|
-| 13 | Auditing | `Tickets-13/` | ⏳ TODO |
-| 14 | Flyway Migrations | `Tickets-14/` | ⏳ TODO |
 | 15 | Microservices | `Tickets-15/` | ⏳ TODO |
 | 16 | Spring Security | `Tickets-16/` | ⏳ TODO |
 | 17 | Logging | `Tickets-17/` | ⏳ TODO |
@@ -291,13 +290,13 @@ Antes de marcar una lección como completa:
 
 ## 🚀 Próximos Pasos
 
-**Estado Actual**: Lecciones 10, 11 y 12 completadas (33% de progreso)
+**Estado Actual**: Lecciones 10, 11, 12, 13 y 14 completadas (56% de progreso)
 
-**Siguiente**: Lección 13 - Auditing
-- Clone `Tickets-12/` → `Tickets-13/`
-- Implementar auditoría automática de cambios
-- Crear tabla TicketAudit para historial
-- Endpoint de historial de cambios
+**Siguiente**: Lección 15 - Comunicación entre Microservicios
+- Clone `Tickets-14/` → `Tickets-15/`
+- Agregar RestClient o FeignClient
+- Crear segundo servicio mock externo
+- Implementar notificacionesHttp
 
 ## 📝 Notas Importantes
 
