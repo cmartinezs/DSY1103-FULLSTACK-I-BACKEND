@@ -6,6 +6,26 @@ Este proyecto implementa la **Lección 10: Introducción a JPA** del curso DSY11
 
 Migración del repositorio en-memoria basado en HashMap a **Spring Data JPA** con Hibernate.
 
+## 🎯 Caso de Uso Extendido (Sistema de Tickets con Gestión de Usuarios)
+
+### Roles definidos
+| Rol     | Descripción              |
+|---------|--------------------------|
+| USER    | Crea tickets, ve estado  |
+| AGENT   | Recibe tickets asignados |
+| ADMIN   | Supervisa y gestiona     |
+
+### Modelo de datos
+- **User**: id, name, email, role (USER/AGENT/ADMIN), active
+- **Ticket**: id, title, description, status, createdAt, estimatedResolutionDate, effectiveResolutionDate, createdBy (User), assignedTo (User)
+
+### Datos iniciales
+- admin@tickets.com (ADMIN)
+- agent@tickets.com (AGENT)
+- john@tickets.com (USER)
+
+---
+
 ## 🔄 Cambios desde Lección 09
 
 ### 1. Dependencias (pom.xml)
@@ -16,84 +36,76 @@ Migración del repositorio en-memoria basado en HashMap a **Spring Data JPA** co
 - ✅ Convertida a entidad JPA con `@Entity`
 - ✅ `@Id` + `@GeneratedValue(strategy = GenerationType.IDENTITY)` para auto-increment
 - ✅ `@Table(name = "tickets")` para mapeo
+- ✅ Relaciones `@ManyToOne` con User (createdBy, assignedTo)
+
+### 3. Nuevo Modelo (User.java)
+- ✅ Entidad con roles: USER, AGENT, ADMIN
+- ✅ Campos: id, name, email, role, active
+- ✅ Enumeración para tipo de rol
 
 ```java
 @Entity
-@Table(name = "tickets")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class Ticket {
+@Table(name = "users")
+@Getter @Setter
+public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-  // ... resto de campos
+  private String name;
+  private String email;
+  @Enumerated(EnumType.STRING)
+  private Role role = Role.USER;
+  private boolean active = true;
+
+  public enum Role { USER, AGENT, ADMIN }
 }
 ```
 
-### 3. Repositorio (TicketRepository.java)
-- ✅ Convertido de clase a interface
-- ✅ Extiende `JpaRepository<Ticket, Long>`
-- ✅ Métodos de query personalizados con `@Query`
+### 4. Repositorios
+- **TicketRepository**: JpaRepository con métodos de query
+- **UserRepository**: JpaRepository con métodos de búsqueda por email
 
-```java
-@Repository
-public interface TicketRepository extends JpaRepository<Ticket, Long> {
-  boolean existsByTitleIgnoreCase(String title);
-  
-  @Query("SELECT t FROM Ticket t WHERE UPPER(t.status) = UPPER(:status) ORDER BY t.createdAt")
-  List<Ticket> findAllByStatusIgnoreCase(@Param("status") String status);
-  
-  @Query("SELECT t FROM Ticket t ORDER BY t.createdAt")
-  List<Ticket> findAllOrderByCreatedAt();
-}
-```
+### 5. Servicio (TicketService.java)
+- ✅ Actualizado para usar User entity
+- ✅ Soporte para crear tickets con creador y asignado
+- ✅ Validación de que creador y asignado no sean el mismo
 
-### 4. Servicio (TicketService.java)
-- ✅ Actualizado para usar métodos de JpaRepository
-- ✅ Eliminados métodos no estándar (getAll() → findAllOrderByCreatedAt())
-- ✅ Corregido deleteById() para retornar boolean
+### 6. DTOs
+- **TicketRequest**: title, description, createdByName, assignedToId, status, effectiveResolutionDate
+- **TicketResult**: incluye objetos User para createdBy y assignedTo
 
-### 5. Configuración (application.yml)
+### 7. Configuración (application.yml)
 - ✅ Agregada configuración de H2 (in-memory)
 - ✅ JPA/Hibernate settings
 - ✅ `ddl-auto: create-drop` para desarrollo
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:h2:mem:ticketsdb
-    driverClassName: org.h2.Driver
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: create-drop
-```
+### 8. Inicializador de Datos (DataInitializer.java)
+- ✅ Carga usuarios iniciales con diferentes roles
+- ✅ Crea tickets de ejemplo con relaciones
 
-### 6. Inicializador de Datos (DataInitializer.java)
-- ✅ Nuevo componente con `@Component`
-- ✅ Implementa `CommandLineRunner`
-- ✅ Carga datos iniciales al iniciar la aplicación
-- ✅ Reemplaza constructor de TicketRepository
+---
 
-```java
-@Component
-public class DataInitializer implements CommandLineRunner {
-  @Override
-  public void run(String... args) throws Exception {
-    if (ticketRepository.count() == 0) {
-      // Crear tickets iniciales
-    }
-  }
-}
-```
+## 📊 Requisitos del Caso Extendido por Lección
+
+| Lección | Requisitos del Caso Extendido |
+|---------|------------------------------|
+| 10 | ✅ User entity con roles, Ticket con User relaciones, seed de datos |
+| 11 | Perfiles con diferentes configs de BD para usuarios |
+| 12 | Category/Tag relaciones con User |
+| 13 | Historial con User |
+| 14 | Flyway migrations con Foreign Keys a users |
+| 15 | Notificaciones con User |
+| 16 | Security con 3 roles (USER/AGENT/ADMIN) |
+| 17 | Logging de operaciones de usuarios |
+| 18 | Excepciones para casos de usuarios |
+
+---
 
 ## 🧪 Testing
 
 ```bash
 # Compilar
 ./mvnw clean compile
-
-# Tests
-./mvnw test
 
 # Ejecutar
 ./mvnw spring-boot:run
@@ -102,45 +114,33 @@ public class DataInitializer implements CommandLineRunner {
 ## ✅ Validación
 
 - [x] Proyecto compila sin errores
-- [x] Todos los tests pasan
 - [x] Endpoints CRUD funcionan con JPA
-- [x] Datos iniciales se cargan al iniciar
+- [x] Datos iniciales se cargan al iniciar (usuarios con roles)
 - [x] H2 en-memory funciona correctamente
 
-## 📚 Referencias
+## 📚 Endpoints disponibles
 
-- Lección: `docs/lessons/10-jpa-intro/`
-- Spring Data JPA: https://spring.io/projects/spring-data-jpa
-- Hibernate: https://hibernate.org/
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | /tickets | Listar todos los tickets |
+| GET | /tickets/by-id/{id} | Ver ticket por ID |
+| POST | /tickets | Crear nuevo ticket |
+| PUT | /tickets/by-id/{id} | Actualizar ticket |
+| DELETE | /tickets/by-id/{id} | Eliminar ticket |
 
-## 📦 Estructura
+## 📝 Archivos
 
-```
-Tickets-10/
-├── src/main/java/cl/duoc/fullstack/tickets/
-│   ├── config/
-│   │   └── DataInitializer.java        (NUEVO)
-│   ├── controller/
-│   │   └── TicketController.java
-│   ├── dto/
-│   │   └── TicketRequest.java
-│   ├── model/
-│   │   ├── Ticket.java                 (MODIFICADO)
-│   │   └── ErrorResponse.java
-│   ├── respository/
-│   │   └── TicketRepository.java       (REFACTORIZADO)
-│   ├── service/
-│   │   └── TicketService.java          (MODIFICADO)
-│   └── TicketsApplication.java
-├── src/main/resources/
-│   └── application.yml                 (MODIFICADO)
-├── pom.xml                             (MODIFICADO)
-└── README.md
-```
+| Archivo | Descripción |
+|---------|-------------|
+| `model/User.java` | Entidad User con roles |
+| `model/Ticket.java` | Entidad Ticket con relaciones a User |
+| `respository/UserRepository.java` | Repository de User |
+| `dto/TicketRequest.java` | DTO para crear tickets |
+| `dto/TicketResult.java` | DTO con datos de User |
+| `config/DataInitializer.java` | Carga usuarios y tickets iniciales |
 
 ---
 
 **Base**: Lección 09 (Repositorio Customizado)  
 **Stack**: Spring Boot 4.0.5, Java 21, JPA/Hibernate, H2  
-**Estado**: ✅ Completada y testeada
-
+**Estado**: ✅ Completada
