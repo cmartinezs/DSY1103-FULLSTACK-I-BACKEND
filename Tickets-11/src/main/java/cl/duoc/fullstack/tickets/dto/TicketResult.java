@@ -1,5 +1,6 @@
 package cl.duoc.fullstack.tickets.dto;
 
+import cl.duoc.fullstack.tickets.model.User;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -11,6 +12,6 @@ public record TicketResult(
     LocalDateTime createdAt,
     LocalDate estimatedResolutionDate,
     LocalDateTime effectiveResolutionDate,
-    String createdBy,
-    String assignedTo
+    User createdBy,
+    User assignedTo
 ) {}

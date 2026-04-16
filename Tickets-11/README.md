@@ -4,140 +4,123 @@
 
 Este proyecto implementa la **Lección 11: Configuración de Bases de Datos** del curso DSY1103 Fullstack I.
 
-Implementa perfiles de Spring Boot para soportar múltiples bases de datos sin modificar código Java:
-- **H2** (desarrollo en-memory)
-- **MySQL** (local vía XAMPP)
-- **PostgreSQL** (Supabase en la nube)
+Perfiles de Spring Boot para múltiples bases de datos (H2, MySQL, PostgreSQL/Supabase).
+
+## 🎯 Caso de Uso Extendido (Sistema de Tickets con Gestión de Usuarios)
+
+### Roles definidos
+| Rol     | Descripción              |
+|---------|--------------------------|
+| USER    | Crea tickets, ve estado  |
+| AGENT   | Recibe tickets asignados |
+| ADMIN   | Supervisa y gestiona     |
+
+### Modelo de datos
+- **User**: id, name, email, role (USER/AGENT/ADMIN), active
+- **Ticket**: id, title, description, status, createdAt, estimatedResolutionDate, effectiveResolutionDate, createdBy (User), assignedTo (User)
+
+---
 
 ## 🔄 Cambios desde Lección 10
 
-### 1. Drivers de BD (pom.xml)
+### 1. Dependencias (pom.xml)
 - ✅ Agregadas: `mysql-connector-j`, `postgresql`
-- H2 ya estaba presente
 
 ### 2. Perfiles de Configuración
-- ✅ **application.yml**: Configuración base (servidor, puerto, contexto)
-- ✅ **application-h2.yml**: H2 in-memory para desarrollo
-- ✅ **application-mysql.yml**: MySQL con variables de entorno
-- ✅ **application-supabase.yml**: PostgreSQL con variables de entorno
 
+#### application-h2.yml (Desarrollo en memoria)
 ```yaml
-# application-h2.yml
 spring:
-  config:
-    activate:
-      on-profile: h2
   datasource:
     url: jdbc:h2:mem:ticketsdb
-    driver-class-name: org.h2.Driver
+    driverClassName: org.h2.Driver
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
+```
 
-# application-mysql.yml
+#### application-mysql.yml (MySQL local XAMPP)
+```yaml
 spring:
-  config:
-    activate:
-      on-profile: mysql
   datasource:
-    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/tickets_db}
-    username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/ticketsdb}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:}
   jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+```
 
-# application-supabase.yml
+#### application-supabase.yml (PostgreSQL en la nube)
+```yaml
 spring:
-  config:
-    activate:
-      on-profile: supabase
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    driver-class-name: org.postgresql.Driver
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ticketsdb}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:}
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
 ```
 
 ### 3. Variables de Entorno (.env.example)
-- ✅ Plantilla de variables para MySQL y Supabase
-- ✅ Instrucciones de uso
+- ✅ Plantilla para configuración de BD
+- ✅ Sin credenciales hardcodeadas
 
-```env
-# MySQL
-MYSQL_URL=jdbc:mysql://localhost:3306/tickets_db?useSSL=false
-MYSQL_USERNAME=root
-MYSQL_PASSWORD=
+### 4. application.yml (Base)
+- ✅ Configuración base sin credenciales
+- ✅ Niveles de logging por perfil
 
-# Supabase
-DB_HOST=your-project.supabase.co
-DB_PORT=5432
-DB_NAME=postgres
-DB_USER=postgres
-DB_PASSWORD=your-password
-```
+---
 
-## 🧪 Ejecutar con Diferentes Perfiles
+## 📊 Requisitos del Caso Extendido por Lección
+
+| Lección | Requisitos del Caso Extendido |
+|---------|------------------------------|
+| 10 | ✅ User entity con roles, Ticket con User relaciones, seed de datos |
+| 11 | ✅ Perfiles con diferentes configs de BD para usuarios (H2, MySQL, Supabase) |
+| 12 | Category/Tag relaciones con User |
+| 13 | Historial con User |
+| 14 | Flyway migrations con Foreign Keys a users |
+| 15 | Notificaciones con User |
+| 16 | Security con 3 roles (USER/AGENT/ADMIN) |
+| 17 | Logging de operaciones de usuarios |
+| 18 | Excepciones para casos de usuarios |
+
+---
+
+## 🧪 Uso de Perfiles
 
 ```bash
-# H2 (por defecto)
+# H2 (desarrollo, por defecto)
 ./mvnw spring-boot:run
 
-# O explícitamente
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=h2"
+# MySQL local
+./mvnw spring-boot:run -Dspring.profiles.active=mysql
 
-# MySQL (después de configurar variables)
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=mysql"
-
-# Supabase (después de configurar variables)
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=supabase"
+# Supabase (PostgreSQL cloud)
+./mvnw spring-boot:run -Dspring.profiles.active=supabase
 ```
-
-## ⚙️ Configuración en IntelliJ IDEA
-
-1. **Edit Configurations** → Spring Boot
-2. **VM options**: `-Dspring.profiles.active=h2` (o mysql/supabase)
-3. **Environment variables**: Cargar desde `.env` usando EnvFile plugin
-4. Click **Apply** → **OK**
 
 ## ✅ Validación
 
-- [x] Proyecto compila con todos los perfiles
-- [x] Tests pasan (perfil por defecto: h2)
-- [x] Archivo .env.example documenta variables
-- [x] Cada perfil tiene su configuración JPA adecuada
-- [x] Sin credenciales hardcodeadas en código
+- [x] Proyecto compila sin errores
+- [x] Perfil H2 funciona (desarrollo)
+- [x] MySQL configurado (requiere BD local)
+- [x] Supabase/PostgreSQL configurado (requiere cloud)
+- [x] Sin credenciales hardcodeadas
 
-## 📚 Referencias
+## 📝 Archivos
 
-- Lección: `docs/lessons/11-database-config/`
-- Spring Boot Profiles: https://spring.io/blog/2015/02/04/what-s-new-in-spring-boot-1-2-0-m1-boot-properties-files
-- MySQL Connector: https://dev.mysql.com/downloads/connector/j/
-- PostgreSQL Driver: https://jdbc.postgresql.org/
-
-## 📦 Estructura
-
-```
-Tickets-11/
-├── src/main/resources/
-│   ├── application.yml              (Base)
-│   ├── application-h2.yml          (H2 profile)
-│   ├── application-mysql.yml       (MySQL profile)
-│   ├── application-supabase.yml    (PostgreSQL profile)
-│   └── ...
-├── .env.example                     (Plantilla variables)
-├── pom.xml                          (Drivers agregados)
-└── README.md
-```
+| Archivo | Descripción |
+|---------|-------------|
+| `application-h2.yml` | Configuración H2 (desarrollo) |
+| `application-mysql.yml` | Configuración MySQL |
+| `application-supabase.yml` | Configuración PostgreSQL/Supabase |
+| `.env.example` | Plantilla de variables de entorno |
 
 ---
 
 **Base**: Lección 10 (JPA Intro)  
-**Stack**: Spring Boot 4.0.5, Java 21, JPA/Hibernate, H2/MySQL/PostgreSQL  
-**Estado**: ✅ Completada y testeada
+**Stack**: Spring Boot 4.0.5, Java 21, JPA/Hibernate, H2, MySQL, PostgreSQL  
+**Estado**: ✅ Completada

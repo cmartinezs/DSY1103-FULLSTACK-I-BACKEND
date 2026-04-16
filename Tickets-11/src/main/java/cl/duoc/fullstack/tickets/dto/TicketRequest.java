@@ -10,9 +10,8 @@ public record TicketRequest(
     String title,
     @NotBlank(message = "La descripción es requerida")
     String description,
-    @NotBlank(message = "El creador es requerido")
-    String createdBy,
-    String assignedTo,
+    String createdByName,
+    Long assignedToId,
     String status,
     LocalDateTime effectiveResolutionDate
 ) {}
