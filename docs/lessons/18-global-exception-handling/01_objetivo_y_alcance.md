@@ -26,6 +26,8 @@ Respuesta: 400 + {"message": "Título no puede estar vacío"}
 - `ConstraintViolationException` → 400 Bad Request
 - `MethodArgumentNotValidException` → 400 Bad Request
 - `EntityNotFoundException` → 404 Not Found
+- `BadCredentialsException` → 401 Unauthorized
+- `AccessDeniedException` → 403 Forbidden
 - `Exception` genérico → 500 Internal Server Error + log
 
 ---
@@ -51,6 +53,8 @@ El foco: **handler centralizado para excepciones comunes**.
 | **REQ-32** | Capturar MethodArgumentNotValidException → 400 |
 | **REQ-33** | Capturar Exception genérico → 500 + log |
 | **REQ-34** | Stack trace solo en dev, oculto en prod |
+| **REQ-35** | Capturar BadCredentialsException → 401 |
+| **REQ-36** | Capturar AccessDeniedException → 403 |
 
 ---
 
