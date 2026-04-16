@@ -29,15 +29,16 @@ Un `HashMap` mantiene internamente un arreglo de "cubetas" (buckets). Cuando gua
 2. Ese hash determina en qué cubeta del arreglo se almacena
 3. Al buscar con `get(id)`, Java recalcula el hash y va directamente a esa cubeta
 
-```
-Mapa:
-┌────────────────────────────────┐
-│ cubeta 0: [id=5 → Ticket{...}] │
-│ cubeta 1: [id=1 → Ticket{...}] │  ← db.get(1L) va directo aquí
-│ cubeta 2: [id=2 → Ticket{...}] │  ← db.get(2L) va directo aquí
-│ cubeta 3: (vacía)              │
-│ ...                            │
-└────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Mapa[HashMap]
+        B0["cubeta 0<br/>[id=5 → Ticket]"]
+        B1["cubeta 1<br/>[id=1 → Ticket]"]
+        B2["cubeta 2<br/>[id=2 → Ticket]"]
+        B3["cubeta 3<br/>(vacía)"]
+    end
+    get1["db.get(1L)"] -->|"hash → 1"| B1
+    get2["db.get(2L)"] -->|"hash → 2"| B2
 ```
 
 No hay recorrido. No hay comparaciones. Un cálculo de hash y una posición de memoria.
@@ -152,31 +153,37 @@ public Optional<Ticket> findById(Long id) {
 
 ## El flujo completo de una petición `POST /tickets` con todo lo aprendido
 
-```
-[Cliente]
-  │ POST /tickets {"title": "Bug en login", "description": "..."}
-  ↓
-[TicketController.create(@Valid @RequestBody TicketRequest)]
-  │ @Valid valida que title no esté en blanco
-  │ Si falla → @ExceptionHandler → 400 + ErrorResponse
-  │ Si pasa ↓
-[TicketService.create(TicketRequest)]
-  │ ¿Ya existe el título?
-  │ Si sí → throw IllegalArgumentException → Controller captura → 409 + ErrorResponse
-  │ Si no ↓
-  │ Construye Ticket: title/description del DTO, status/fechas del servidor
-  ↓
-[TicketRepository.save(Ticket)]
-  │ Asigna id (currentId++)
-  │ db.put(id, ticket)
-  ↓
-[TicketService] recibe el Ticket guardado
-  ↓
-[TicketController] recibe el Ticket
-  ↓
-ResponseEntity.status(201).body(ticket) → Jackson serializa a JSON
-  ↓
-[Cliente] recibe {"id":3,"title":"Bug en login","status":"NEW","createdAt":"..."}
+```mermaid
+sequenceDiagram
+    participant Client as Cliente
+    participant Ctrl as TicketController
+    participant Svc as TicketService
+    participant Repo as TicketRepository
+    
+    Client->>Ctrl: POST /tickets {"title": "Bug en login", "description": "..."}
+    
+    rect rgb(240, 248, 255)
+        Note over Ctrl: @Valid valida title no vacío
+        alt título vacío
+            Ctrl-->>Client: 400 Bad Request + ErrorResponse
+        end
+    end
+    
+    Ctrl->>Svc: create(TicketRequest)
+    
+    rect rgb(255, 240, 240)
+        Note over Svc: ¿Ya existe el título?
+        alt título duplicado
+            Svc-->>Ctrl: throw IllegalArgumentException
+            Ctrl-->>Client: 409 Conflict + ErrorResponse
+        end
+    end
+    
+    Svc-->>Repo: save(Ticket)<br/>Asigna id (currentId++)
+    Repo-->>Svc: Ticket guardado
+    
+    Svc-->>Ctrl: Ticket
+    Ctrl-->>Client: 201 Created + JSON {"id":3,"title":"Bug en login","status":"NEW","createdAt":"..."}
 ```
 
 Cada capa hace exactamente lo que le corresponde. Ninguna hace más.

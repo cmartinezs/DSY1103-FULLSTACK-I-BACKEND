@@ -1,6 +1,7 @@
 package cl.duoc.fullstack.tickets.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -36,8 +37,16 @@ public class Ticket {
   private LocalDateTime createdAt;
   private LocalDate estimatedResolutionDate;
   private LocalDateTime effectiveResolutionDate;
-  private String createdBy;
-  private String assignedTo;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "created_by_id")
+  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+  private User createdBy;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "assigned_to_id")
+  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+  private User assignedTo;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "category_id")

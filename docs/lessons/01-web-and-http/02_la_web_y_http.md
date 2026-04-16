@@ -21,9 +21,12 @@ Existen otros servicios que también usan Internet pero no son la Web: el correo
 
 Toda comunicación en la Web sigue el mismo patrón básico:
 
-```
-[Cliente]  ──── petición (request) ────►  [Servidor]
-           ◄─── respuesta (response) ────
+```mermaid
+sequenceDiagram
+    participant Client as Cliente
+    participant Server as Servidor
+    Client->>Server: petición (request)
+    Server-->>Client: respuesta (response)
 ```
 
 ### ¿Qué es un cliente?

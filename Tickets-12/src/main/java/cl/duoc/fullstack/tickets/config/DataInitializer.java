@@ -3,9 +3,11 @@ package cl.duoc.fullstack.tickets.config;
 import cl.duoc.fullstack.tickets.model.Category;
 import cl.duoc.fullstack.tickets.model.Tag;
 import cl.duoc.fullstack.tickets.model.Ticket;
+import cl.duoc.fullstack.tickets.model.User;
 import cl.duoc.fullstack.tickets.respository.CategoryRepository;
 import cl.duoc.fullstack.tickets.respository.TagRepository;
 import cl.duoc.fullstack.tickets.respository.TicketRepository;
+import cl.duoc.fullstack.tickets.respository.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,14 +20,17 @@ public class DataInitializer implements CommandLineRunner {
   private final TicketRepository ticketRepository;
   private final CategoryRepository categoryRepository;
   private final TagRepository tagRepository;
+  private final UserRepository userRepository;
 
   public DataInitializer(
       TicketRepository ticketRepository,
       CategoryRepository categoryRepository,
-      TagRepository tagRepository) {
+      TagRepository tagRepository,
+      UserRepository userRepository) {
     this.ticketRepository = ticketRepository;
     this.categoryRepository = categoryRepository;
     this.tagRepository = tagRepository;
+    this.userRepository = userRepository;
   }
 
   @Override
@@ -33,6 +38,11 @@ public class DataInitializer implements CommandLineRunner {
     if (ticketRepository.count() == 0) {
       LocalDateTime now = LocalDateTime.now();
       LocalDate estimated = LocalDate.now().plusDays(5);
+
+      User admin = new User();
+      admin.setName("Admin");
+      admin.setEmail("admin@example.com");
+      User savedAdmin = userRepository.save(admin);
 
       Category catBug = new Category();
       catBug.setName("Bug");
@@ -65,7 +75,7 @@ public class DataInitializer implements CommandLineRunner {
       t1.setStatus("NEW");
       t1.setCreatedAt(now);
       t1.setEstimatedResolutionDate(estimated);
-      t1.setCreatedBy("admin");
+      t1.setCreatedBy(savedAdmin);
       t1.setCategory(savedBugCat);
       t1.setTags(List.of(savedUrgentTag, savedBackendTag));
       ticketRepository.save(t1);
@@ -76,7 +86,7 @@ public class DataInitializer implements CommandLineRunner {
       t2.setStatus("NEW");
       t2.setCreatedAt(now);
       t2.setEstimatedResolutionDate(estimated);
-      t2.setCreatedBy("admin");
+      t2.setCreatedBy(savedAdmin);
       t2.setCategory(savedFeatureCat);
       t2.setTags(List.of(savedUITag));
       ticketRepository.save(t2);

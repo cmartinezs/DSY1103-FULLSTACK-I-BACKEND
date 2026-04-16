@@ -1,76 +1,35 @@
 # 🗺️ Mapa de Decisiones: Qué Perfil Usar
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  ¿Cuál es tu caso de uso?                                       │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-        ┌──────────────────┼──────────────────┐
-        │                  │                  │
-        ▼                  ▼                  ▼
-   
-   Desarrollo          Desarrollo         Producción /
-   ultra rápido,      local con datos     Entrega final,
-   tests              persistentes         Equipo
-        │                  │                  │
-        │                  │                  │
-        ▼                  ▼                  ▼
-   
-   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-   │   H2 MEMORY  │  │    MYSQL     │  │   SUPABASE   │
-   │ (en memoria) │  │   (XAMPP)    │  │ (PostgreSQL) │
-   └──────────────┘  └──────────────┘  └──────────────┘
-        │                  │                  │
-        │                  │                  │
-        ▼                  ▼                  ▼
-        
-   Perfil: h2       Perfil: mysql      Perfil: supabase
-        │                  │                  │
-        │                  │                  │
-        ▼                  ▼                  ▼
-        
-   BD se reinicia   Base de datos      Base de datos
-   cada vez que     persistente        en la nube
-   arrancas         en tu PC           accesible siempre
-        │                  │                  │
-        │                  │                  │
-        ▼                  ▼                  ▼
-   
-   Requiere:        Requiere:          Requiere:
-   - nada           - XAMPP running     - Supabase account
-                    - Driver MySQL      - Variables de entorno
+```mermaid
+flowchart TD
+    q{"¿Cuál es tu<br/>caso de uso?"}
+    q -->|"Desarrollo<br/>ultra rápido"| h2[H2 MEMORY<br/>en memoria]
+    q -->|"Desarrollo local<br/>datos persiste" | mysql[MYSQL<br/>XAMPP]
+    q -->|"Producción /<br/>Entrega final" | supabase[SUPABASE<br/>PostgreSQL]
+    h2 --> perf_h2[Perfil: h2]
+    mysql --> perf_mysql[Perfil: mysql]
+    supabase --> perf_supabase[Perfil: supabase]
+    perf_h2 --> res_h2[BD se reinicia<br/>cada ejecución<br/>Requiere: nada]
+    perf_mysql --> res_mysql[BD persistente<br/>en tu PC<br/>Requiere: XAMPP]
+    perf_supabase --> res_supabase[BD en nube<br/>accesible siempre<br/>Requiere: cuenta]
 ```
 
 ---
 
 ## 🎯 Por Etapa del Proyecto
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                  SEMANA 1-2: Aprendizaje                    │
-│                       Usa: H2 o MySQL                        │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ./mvnw spring-boot:run              # H2 por defecto       │
-│                                                              │
-│  O con MySQL:                                               │
-│  ./mvnw spring-boot:run \                                   │
-│    -Dspring-boot.run.arguments="--spring.profiles.active=mysql"
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   SEMANA 3: Entrega Final                   │
-│                     Usa: Supabase                            │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  1. Copia .env.example a .env                              │
-│  2. Rellena credenciales de Supabase                       │
-│  3. export SPRING_PROFILES_ACTIVE=supabase                 │
-│  4. ./mvnw spring-boot:run                                 │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph "Semana 1-2: Aprendizaje"
+        step1[./mvnw spring-boot:run<br/>H2 por defecto]
+        step2[./mvnw spring-boot:run<br/>--spring.profiles.active=mysql]
+    end
+    step1 -->|"o bien"| step2
+    step2 --> semana3[Semana 3: Entrega Final]
+    semana3 --> f1[Copia .env.example a .env]
+    f1--> f2[Rellena credenciales]
+    f2--> f3[export SPRING_PROFILES_ACTIVE=supabase]
+    f3--> f4[./mvnw spring-boot:run]
 ```
 
 ---

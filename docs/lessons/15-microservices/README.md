@@ -105,21 +105,19 @@ public class TicketService {
 
 Arquitectura donde una aplicación se divide en múltiples servicios independientes:
 
-```
-Antes (Monolito):
-┌──────────────────┐
-│ Tickets Service  │
-├────────────────  │
-│ Users code       │
-│ Tickets code     │
-│ Notifications    │
-└──────────────────┘
+```mermaid
+flowchart TB
+    subgraph Antes[Monolito]
+        direction TB
+        A[Users code]
+        B[Tickets code]
+        C[Notifications]
+    end
 
-Después (Microservicios):
-┌─────────────┐  ┌─────────────┐  ┌──────────────┐
-│   Tickets   │→→│    Users    │→→│Notifications│
-│  (8080)     │  │   (8081)    │  │   (8082)     │
-└─────────────┘  └─────────────┘  └──────────────┘
+    subgraph Después[Microservicios]
+        direction LR
+        D[Tickets 8080] --> E[Users 8081] --> F[Notifications 8082]
+    end
 ```
 
 ### RestClient vs RestTemplate vs FeignClient

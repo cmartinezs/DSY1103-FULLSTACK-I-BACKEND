@@ -208,25 +208,17 @@ SPRING_PROFILES_ACTIVE=mysql
 
 ## Flujo de Carga de Configuración
 
+```mermaid
+flowchart TD
+    base[application.yml<br/>Puerto: 8080<br/>Perfil: h2] --> choose{¿Cuál perfil<br/>está activo?}
+    choose -->|h2| h2file[application-h2.yml]
+    choose -->|mysql| mysqlfile[application-mysql.yml]
+    choose -->|supabase| supabasefile[application-supabase.yml]
+    h2file --> env[Sistema operativo / IDE<br/>inyecta variables de entorno]
+    mysqlfile --> env
+    supabasefile --> env
+    env --> ready[App configurada y corriendo]
 ```
-┌─────────────────────────────────────────────┐
-│  application.yml (configuración base)       │
-│  - Puerto: 8080                             │
-│  - Contexto: /ticket-app                    │
-│  - Perfil activo: h2                        │
-└────────────┬────────────────────────────────┘
-             │
-             ▼
-    ¿Cuál perfil está activo?
-    │
-    ├─ h2       → application-h2.yml
-    ├─ mysql    → application-mysql.yml
-    └─ supabase → application-supabase.yml
-    │
-    ▼
-Sistema Operativo / IntelliJ
-Inyecta variables de entorno
-│
 ├─ ${MYSQL_URL} = "jdbc:mysql://..."
 ├─ ${DB_HOST} = "db.xxxx.supabase.co"
 └─ ...

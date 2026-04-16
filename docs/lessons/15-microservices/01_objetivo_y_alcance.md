@@ -6,26 +6,10 @@ En la lección 12 aprendiste a versionear cambios de BD con Flyway. Tu aplicaci�
 
 Pero en equipos grandes, surge una necesidad: **dividir la aplicación en microservicios independientes**. Por ejemplo:
 
-```
-Microservicios:
-
-┌─────────────────────┐
-│  Tickets Service    │  (actualización de tickets)
-│  (puerto 8080)      │
-└────────────┬────────┘
-             │ HTTP
-             ▼
-┌─────────────────────┐
-│  Users Service      │  (gestión de usuarios)
-│  (puerto 8081)      │
-└─────────────────────┘
-             △
-             │ HTTP
-             │
-┌─────────────────────┐
-│  Notifications      │  (envío de notificaciones)
-│  (puerto 8082)      │
-└─────────────────────┘
+```mermaid
+flowchart LR
+    tickets[Tickets Service<br/>puerto 8080] -- HTTP --> users[Users Service<br/>puerto 8081]
+    users -- HTTP --> notif[Notifications<br/>puerto 8082]
 ```
 
 Cada microservicio es una **aplicación independiente** en un puerto diferente. Se comunican vía HTTP/REST.

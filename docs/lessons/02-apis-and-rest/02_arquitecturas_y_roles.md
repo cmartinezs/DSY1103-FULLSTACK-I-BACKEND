@@ -41,14 +41,16 @@ El backend tiene acceso a recursos que el frontend no puede tener:
 
 A través de HTTP, usando el patrón que aprendiste en la lección anterior:
 
-```
-[Navegador / App móvil]        [Servidor Backend]        [Base de datos]
-       (Frontend)                  (Spring Boot)
-           │                            │                       │
-           │── GET /productos ─────────►│                       │
-           │                            │── SELECT * FROM... ──►│
-           │                            │◄─ [{id:1,...}, ...] ──│
-           │◄─ 200 OK [{...}, ...] ─────│                       │
+```mermaid
+sequenceDiagram
+    participant FE as Navegador / App móvil<br/>(Frontend)
+    participant BE as Servidor Backend<br/>(Spring Boot)
+    participant DB as Base de datos
+    
+    FE->>BE: GET /productos
+    BE->>DB: SELECT * FROM...
+    DB-->>BE: [{id:1,...}, ...]
+    BE-->>FE: 200 OK [{...}, ...]
 ```
 
 El frontend envía peticiones HTTP al backend. El backend consulta lo que necesita (base de datos, otros servicios) y devuelve una respuesta, generalmente en formato JSON. El frontend usa esa respuesta para mostrar información al usuario.
@@ -84,16 +86,18 @@ Una vez que tienes claro que el backend existe, surge la pregunta: ¿cómo se or
 
 En una arquitectura **monolítica**, toda la lógica del backend vive en **una sola aplicación** que se despliega como una unidad.
 
-```
-┌─────────────────────────────────────────────────┐
-│                  Monolito                        │
-│  ┌───────────┐ ┌───────────┐ ┌───────────────┐  │
-│  │  Módulo   │ │  Módulo   │ │    Módulo     │  │
-│  │ Usuarios  │ │ Productos │ │    Pedidos    │  │
-│  └───────────┘ └───────────┘ └───────────────┘  │
-│                                                  │
-│              Base de datos única                 │
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Monolito[Monolito]
+        direction LR
+        M1[Módulo<br/>Usuarios]
+        M2[Módulo<br/>Productos]
+        M3[Módulo<br/>Pedidos]
+    end
+    DB[(Base de datos<br/>únida)]
+    M1 --- DB
+    M2 --- DB
+    M3 --- DB
 ```
 
 **Ventajas del monolito:**
@@ -118,16 +122,22 @@ En una arquitectura **monolítica**, toda la lógica del backend vive en **una s
 
 En una arquitectura de **microservicios**, el sistema se divide en **muchos servicios pequeños e independientes**, cada uno responsable de una capacidad de negocio específica.
 
-```
-┌───────────────┐    ┌───────────────┐    ┌───────────────┐
-│   Servicio    │    │   Servicio    │    │   Servicio    │
-│   Usuarios    │    │   Productos   │    │    Pedidos    │
-│               │    │               │    │               │
-│  DB propia    │    │  DB propia    │    │  DB propia    │
-└───────┬───────┘    └───────┬───────┘    └───────┬───────┘
-        │                   │                     │
-        └───────────────────┴─────────────────────┘
-                        (se comunican por HTTP u otro protocolo)
+```mermaid
+flowchart TB
+    S1[Servicio<br/>Usuarios]
+    S2[Servicio<br/>Productos]
+    S3[Servicio<br/>Pedidos]
+    DB1[(DB propia)]
+    DB2[(DB propia)]
+    DB3[(DB propia)]
+    S1 --- DB1
+    S2 --- DB2
+    S3 --- DB3
+    
+    S1 -.-> S2
+    S2 -.-> S3
+    S3 -.-> S1
+    note right: se comunican por HTTP
 ```
 
 **Ventajas de los microservicios:**
@@ -166,6 +176,20 @@ No existe una respuesta única. La decisión depende del contexto:
 
 Ahora tienes el cuadro completo. Un sistema web moderno típico tiene tres niveles o "capas":
 
+```mermaid
+flowchart TB
+    subgraph "Nivel 1: Presentación (Frontend)"
+        FE[Navegador / App móvil<br/>React, Angular, Vue]
+    end
+    subgraph "Nivel 2: Aplicación (Backend)"
+        BE[Servidor de aplicación<br/>Spring Boot, Node.js<br/>Lógica de negocio, API]
+    end
+    subgraph "Nivel 3: Datos (Persistencia)"
+        DB[(Base de datos<br/>PostgreSQL, MySQL, MongoDB)]
+    end
+    
+    FE -->|HTTP / JSON| BE
+    BE -->|SQL| DB
 ```
 Nivel 1: Presentación (Frontend)
          ┌────────────────────────────┐

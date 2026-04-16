@@ -4,9 +4,11 @@ import cl.duoc.fullstack.tickets.dto.TicketRequest;
 import cl.duoc.fullstack.tickets.model.Category;
 import cl.duoc.fullstack.tickets.model.Tag;
 import cl.duoc.fullstack.tickets.model.Ticket;
+import cl.duoc.fullstack.tickets.model.User;
 import cl.duoc.fullstack.tickets.respository.CategoryRepository;
 import cl.duoc.fullstack.tickets.respository.TagRepository;
 import cl.duoc.fullstack.tickets.respository.TicketRepository;
+import cl.duoc.fullstack.tickets.respository.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,14 +22,17 @@ public class TicketService {
   private final TicketRepository repository;
   private final CategoryRepository categoryRepository;
   private final TagRepository tagRepository;
+  private final UserRepository userRepository;
 
   public TicketService(
       TicketRepository repository,
       CategoryRepository categoryRepository,
-      TagRepository tagRepository) {
+      TagRepository tagRepository,
+      UserRepository userRepository) {
     this.repository = repository;
     this.categoryRepository = categoryRepository;
     this.tagRepository = tagRepository;
+    this.userRepository = userRepository;
   }
 
   public List<Ticket> getTickets() {
@@ -48,19 +53,30 @@ public class TicketService {
           "Ya existe un ticket con el título: \"" + request.title() + "\"");
     }
 
-    if (request.assignedTo() != null
-        && request.assignedTo().equals(request.createdBy())) {
-      throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
-    }
-
     Ticket ticket = new Ticket();
     ticket.setTitle(request.title());
     ticket.setDescription(request.description());
-    ticket.setCreatedBy(request.createdBy());
-    ticket.setAssignedTo(request.assignedTo());
     ticket.setStatus("NEW");
     ticket.setCreatedAt(LocalDateTime.now());
     ticket.setEstimatedResolutionDate(LocalDate.now().plusDays(5));
+
+    if (request.createdById() != null) {
+      User creator = userRepository.findById(request.createdById())
+          .orElseThrow(() -> new IllegalArgumentException(
+              "No existe un usuario con ID " + request.createdById()));
+      ticket.setCreatedBy(creator);
+    }
+
+    if (request.assignedToId() != null) {
+      User assignee = userRepository.findById(request.assignedToId())
+          .orElseThrow(() -> new IllegalArgumentException(
+              "No existe un usuario con ID " + request.assignedToId()));
+      if (request.createdById() != null
+          && request.assignedToId().equals(request.createdById())) {
+        throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
+      }
+      ticket.setAssignedTo(assignee);
+    }
 
     if (request.categoryId() != null) {
       Optional<Category> category = categoryRepository.findById(request.categoryId());
@@ -101,19 +117,22 @@ public class TicketService {
 
     Ticket toUpdate = found.get();
 
-    if (request.assignedTo() != null
-        && request.assignedTo().equals(toUpdate.getCreatedBy())) {
-      throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
-    }
-
     toUpdate.setTitle(request.title());
     toUpdate.setDescription(request.description());
     if (request.status() != null && !request.status().isBlank()) {
       toUpdate.setStatus(request.status());
     }
     toUpdate.setEffectiveResolutionDate(request.effectiveResolutionDate());
-    if (request.assignedTo() != null) {
-      toUpdate.setAssignedTo(request.assignedTo());
+
+    if (request.assignedToId() != null) {
+      User assignee = userRepository.findById(request.assignedToId())
+          .orElseThrow(() -> new IllegalArgumentException(
+              "No existe un usuario con ID " + request.assignedToId()));
+      User creator = toUpdate.getCreatedBy();
+      if (creator != null && request.assignedToId().equals(creator.getId())) {
+        throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
+      }
+      toUpdate.setAssignedTo(assignee);
     }
 
     if (request.categoryId() != null) {

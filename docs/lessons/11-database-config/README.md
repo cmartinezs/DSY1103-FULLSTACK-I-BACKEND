@@ -18,7 +18,6 @@
 
 | Documento | Duración | Para |
 |-----------|----------|------|
-| **[00. Índice](00_indice.md)** | 3 min | Empezar aquí (navegación) |
 | **[01. Objetivo y Alcance](01_objetivo_y_alcance.md)** | 5 min | Entender qué aprenderás |
 | **[02. Guión Paso a Paso](02_guion_paso_a_paso.md)** ⭐ | 30 min | Instrucciones prácticas |
 | **[03. MySQL vs PostgreSQL](03_mysql_vs_postgresql.md)** | 10 min | Entender diferencias |
@@ -116,21 +115,18 @@ SPRING_PROFILES_ACTIVE=mysql
 
 ## 💡 Cómo Funcionan los Perfiles
 
-```
-┌─────────────────────────────────────┐
-│  application.yml (base común)       │
-│  - Puerto: 8080                     │
-│  - Perfil activo: h2 (por defecto)  │
-└────────────┬────────────────────────┘
-             │
-        ¿Cuál es el perfil?
-        │
-        ├─ h2       → application-h2.yml
-        ├─ mysql    → application-mysql.yml  (+ variables .env)
-        └─ supabase → application-supabase.yml (+ variables .env)
-        │
-        ▼
-    Spring Boot arranca con la configuración correcta
+```mermaid
+flowchart TD
+    base[application.yml<br/>Puerto: 8080<br/>Perfil: h2] --> q{Cuál perfil?}
+    q -->|"spring.profiles.active=h2"| h2[h2 → application-h2.yml]
+    q -->|"spring.profiles.active=mysql"| mysql[mysql → application-mysql.yml]
+    q -->|"spring.profiles.active=supabase"| supabase[supabase → application-supabase.yml]
+    h2 --> boot1[Spring Boot]
+    mysql --> boot2[Spring Boot + .env]
+    supabase --> boot3[Spring Boot + .env]
+    boot1 --> run[App iniciada]
+    boot2 --> run
+    boot3 --> run
 ```
 
 ---

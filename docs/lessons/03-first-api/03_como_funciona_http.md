@@ -247,17 +247,28 @@ En producción, en lugar de `localhost` usarías el nombre de dominio real del s
 
 ## El ciclo completo en una imagen
 
+```mermaid
+sequenceDiagram
+    participant Client as Navegador / Postman
+    participant Server as Spring Boot (Tomcat :8080)
+    participant Ctrl as GreetingsController
+
+    Client->>Server: GET /greetings
+    Server->>Ctrl: busca ruta → greet()
+    Ctrl-->>Server: "Hola"
+    Server-->>Client: 200 OK / "Hola"
+```
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     TU MÁQUINA                          │
 │                                                         │
 │  ┌─────────────┐    GET /greetings    ┌───────────────┐ │
-│  │  Navegador  │ ─────────────────────▶  Spring Boot  │ │
+│  │  Navegador  │ ───────────────────▶ │  Spring Boot  │ │
 │  │  o Postman  │                      │  (puerto 8080)│ │
 │  │             │ ◀─────────────────── │               │ │
-│  └─────────────┘    200 OK / "Hola"  │  Tomcat       │ │
-│                                      │  GreetingsCtrl│ │
-│                                      └───────────────┘ │
+│  └─────────────┘    200 OK / "Hola"   │  Tomcat       │ │
+│                                       │  GreetingsCtrl│ │
+│                                       └───────────────┘ │
 └─────────────────────────────────────────────────────────┘
 ```
 

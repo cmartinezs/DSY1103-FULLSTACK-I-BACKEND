@@ -23,24 +23,29 @@ Confundirlas genera vulnerabilidades.
 
 ## Flujo en tu aplicación
 
-```
-1. AUTENTICACIÓN (verificar quién es)
-   ┌─────────────────────────────────────┐
-   │ Usuario envía: user=admin, pass=123 │
-   │ Spring busca en UserDetailsService  │
-   │ Valida: ¿existe usuario "admin"?    │
-   │ Valida: ¿contraseña es correcta?    │
-   │ Resultado: ✅ Autenticado           │
-   └─────────────────────────────────────┘
-
-2. AUTORIZACIÓN (verificar qué puede hacer)
-   ┌──────────────────────────────────────────────┐
-   │ Usuario intenta: DELETE /tickets/1           │
-   │ Endpoint requiere: @PreAuthorize("hasRole") │
-   │ Spring verifica: ¿usuario tiene rol ADMIN?   │
-   │ Resultado: Si ADMIN → ✅ permitido           │
-   │ Resultado: Si USER → ❌ 403 Forbidden       │
-   └──────────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant User as Usuario
+    participant SB as Spring Security
+    
+    rect rgb(240, 248, 255)
+        Note over User,SB: 1. AUTENTICACIÓN (¿Quién eres?)
+        User->>SB: user=admin, pass=123
+        SB->>SB: busca en UserDetailsService
+        SB->>SB: Valida existencia y contraseña
+        SB-->>User: ✅ Autenticado (401 si falla)
+    end
+    
+    rect rgb(255, 248, 240)
+        Note over User,SB: 2. AUTORIZACIÓN (¿Qué puedes hacer?)
+        User->>SB: DELETE /tickets/1
+        SB->>SB: @PreAuthorize("hasRole('ADMIN')")
+        alt tiene rol ADMIN
+            SB-->>User: ✅ 200 OK
+        else tiene rol USER
+            SB-->>User: ❌ 403 Forbidden
+        end
+    end
 ```
 
 ---
