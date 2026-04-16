@@ -11,10 +11,10 @@ public record TicketRequest(
     String title,
     @NotBlank(message = "La descripción es requerida")
     String description,
-    Long createdById,
+    String createdByName,
     Long assignedToId,
-    String status,
-    LocalDateTime effectiveResolutionDate,
     Long categoryId,
-    List<Long> tagIds
+    List<Long> tagIds,
+    String status,
+    LocalDateTime effectiveResolutionDate
 ) {}
