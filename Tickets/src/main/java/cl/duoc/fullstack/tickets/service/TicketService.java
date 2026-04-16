@@ -20,11 +20,20 @@ public class TicketService {
     return this.repository.getAll();
   }
 
-  public Ticket create(Ticket ticket) {
+  public List<Ticket> getTickets(String statusFilter) {
+    return this.repository.getAll(statusFilter);
+  }
 
+  public Ticket create(Ticket ticket) {
     boolean exists = this.repository.existsByTitle(ticket.getTitle());
     if (exists) {
-      return null;
+      throw new IllegalArgumentException(
+          "Ya existe un ticket con el título: \"" + ticket.getTitle() + "\"");
+    }
+
+    if (ticket.getAssignedTo() != null 
+        && ticket.getAssignedTo().equals(ticket.getCreatedBy())) {
+      throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
     }
 
     LocalDateTime now = LocalDateTime.now();
@@ -51,10 +60,18 @@ public class TicketService {
       return null;
     }
 
+    if (ticket.getAssignedTo() != null 
+        && ticket.getAssignedTo().equals(toUpdate.getCreatedBy())) {
+      throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
+    }
+
     toUpdate.setTitle(ticket.getTitle());
     toUpdate.setDescription(ticket.getDescription());
     toUpdate.setStatus(ticket.getStatus());
     toUpdate.setEffectiveResolutionDate(ticket.getEffectiveResolutionDate());
+    if (ticket.getAssignedTo() != null) {
+      toUpdate.setAssignedTo(ticket.getAssignedTo());
+    }
     this.repository.update(toUpdate);
     return toUpdate;
   }

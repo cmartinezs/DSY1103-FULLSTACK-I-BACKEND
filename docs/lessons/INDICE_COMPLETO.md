@@ -1,6 +1,15 @@
-# 📚 Índice Completo del Curso — 13 Lecciones
+# 📚 Índice Completo del Curso — 19 Lecciones
 
 ## 🎓 Estructura del Curso
+
+### ⚫ Pre-requisitos (Lección 0)
+Herramientas y versionado
+
+| # | Título | Estado |
+|---|--------|--------|
+| 00 | Git & GitHub | ✅ Completada |
+
+---
 
 ### 🟢 Fundamentos (Lecciones 1-4)
 Conceptos básicos de web, HTTP y REST
@@ -39,7 +48,7 @@ Persistencia avanzada
 
 ---
 
-### 🟣 Producción (Lecciones 14-15)
+### 🟣 Producción I (Lecciones 14-15)
 Migraciones y comunicación entre servicios
 
 | # | Título | Status | Destacado |
@@ -49,9 +58,23 @@ Migraciones y comunicación entre servicios
 
 ---
 
+### 🔴 Producción II (Lecciones 16-18)
+Seguridad, auditoría y manejo de errores
+
+| # | Título | Status | Destacado |
+|---|--------|--------|-----------|
+| 16 | Spring Security | ✅ Completada | **Autenticación + Autorización, Roles ADMIN/USER** |
+| 17 | Logging | ✅ Completada | **SLF4J + Logback, Niveles DEBUG/INFO/WARN/ERROR** |
+| 18 | Exception Handling Global | ✅ Completada | **@ControllerAdvice, Respuestas Uniformes** |
+
+---
+
 ## 📖 Navegación Recomendada
 
 ```
+Pre-requisitos
+├─ Lección 0 (Git)
+
 Principiante
 ├─ Lecciones 1-4  (Conceptos básicos)
 └─ Lecciones 5-6  (Primera API funcional)
@@ -64,7 +87,10 @@ Intermedio
 
 Avanzado
 ├─ Lección 14     (Migraciones profesionales)
-└─ Lección 15     (Microservicios)
+├─ Lección 15     (Microservicios)
+├─ Lección 16     (Seguridad)
+├─ Lección 17     (Logging)
+└─ Lección 18     (Manejo global de errores)
 ```
 
 ---

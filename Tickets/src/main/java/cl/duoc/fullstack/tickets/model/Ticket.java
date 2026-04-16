@@ -28,4 +28,7 @@ public class Ticket {
   private LocalDateTime createdAt;
   private LocalDate estimatedResolutionDate;
   private LocalDateTime effectiveResolutionDate;
+  @NotBlank(message = "El creador es requerido")
+  private String createdBy;
+  private String assignedTo;
 }

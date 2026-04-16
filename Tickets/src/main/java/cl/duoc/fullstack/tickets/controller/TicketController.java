@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -26,28 +27,22 @@ public class TicketController {
   }
 
   @GetMapping
-  public List<Ticket> getAllTickets() {
-    return this.service.getTickets();
+  public ResponseEntity<List<Ticket>> getAllTickets(
+      @RequestParam(required = false) String status) {
+    List<Ticket> tickets = status != null 
+        ? this.service.getTickets(status) 
+        : this.service.getTickets();
+    return ResponseEntity.ok(tickets);
   }
 
   @PostMapping
-  public ResponseEntity<String> create(@Valid @RequestBody Ticket ticket) {
-    Ticket created = this.service.create(ticket);
-    if (created != null) {
+  public ResponseEntity<Object> create(@Valid @RequestBody Ticket ticket) {
+    try {
+      Ticket created = this.service.create(ticket);
       return ResponseEntity.status(HttpStatus.CREATED).body("Ticket Creado");
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
-    return ResponseEntity.badRequest().build();
-  }
-
-  @PutMapping("/by-id/{id}")
-  public ResponseEntity<Ticket> getTicketById(
-      @PathVariable Long id,
-      @RequestBody Ticket ticket) {
-    Ticket updated = this.service.updateById(id, ticket);
-    if (updated != null) {
-      return ResponseEntity.status(200).body(updated);
-    }
-    return ResponseEntity.notFound().build();
   }
 
   @GetMapping("/by-id/{id}")
@@ -59,6 +54,21 @@ public class TicketController {
     return ResponseEntity.notFound().build();
   }
 
+  @PutMapping("/by-id/{id}")
+  public ResponseEntity<Object> updateTicketById(
+      @PathVariable Long id,
+      @Valid @RequestBody Ticket ticket) {
+    try {
+      Ticket updated = this.service.updateById(id, ticket);
+      if (updated != null) {
+        return ResponseEntity.status(200).body(updated);
+      }
+      return ResponseEntity.notFound().build();
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+  }
+
   @DeleteMapping("/by-id/{id}")
   public ResponseEntity<Ticket> deleteTicketById(@PathVariable Long id) {
     Ticket found = this.service.deleteById(id);
@@ -68,3 +78,4 @@ public class TicketController {
     return ResponseEntity.notFound().build();
   }
 }
+
