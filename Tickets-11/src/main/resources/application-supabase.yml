@@ -1,4 +1,7 @@
 spring:
+  config:
+    activate:
+      on-profile: supabase
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     driver-class-name: org.postgresql.Driver
@@ -6,6 +9,15 @@ spring:
     password: ${DB_PASSWORD}
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
+
+logging:
+  level:
+    root: INFO
+    cl.duoc.fullstack: DEBUG
+

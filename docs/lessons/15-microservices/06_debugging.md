@@ -33,6 +33,16 @@ java.net.SocketTimeoutException: Read timed out
 **Causa:** El servicio tarda más del timeout configurado.
 
 **Solución:**
+
+### Con RestClient
+```java
+// Configurar en RestClient builder
+restClient = builder
+    .baseUrl("http://localhost:8081")
+    .build();
+```
+
+### Con FeignClient
 ```yaml
 spring:
   cloud:
@@ -43,22 +53,38 @@ spring:
             read-timeout: 30000  # Aumentar a 30 segundos
 ```
 
+### Con RestTemplate (Legacy)
+```java
+@Bean
+public RestTemplate restTemplate() {
+    HttpComponentsClientHttpRequestFactory factory = 
+        new HttpComponentsClientHttpRequestFactory();
+    factory.setReadTimeout(30000);
+    return new RestTemplate(factory);
+}
+```
+
 ---
 
-## Error 3: "Feign client not found"
+## Error 3: "Bean not found"
 
-**Síntoma:**
+**Síntoma (RestClient):**
 ```
-Error creating bean with name 'usersServiceClient'
+Error creating bean with name 'restClientBuilder'
+```
+
+**Síntoma (FeignClient):**
+```
+Error creating bean with name 'userServiceClient'
 No bean of type 'UserServiceClient' found
 ```
 
-**Causa:** `@EnableFeignClients` no está en la app principal.
+**Causa FeignClient:** `@EnableFeignClients` no está en la app principal.
 
 **Solución:**
 ```java
 @SpringBootApplication
-@EnableFeignClients  // ← AGREGAR
+@EnableFeignClients  // ← AGREGAR solo para Feign
 public class TicketsApplication {
     public static void main(String[] args) {
         SpringApplication.run(TicketsApplication.class, args);
@@ -90,12 +116,26 @@ curl -v http://localhost:8081/users/1
 
 ## Debugging: Logs Detallados
 
+### RestClient
+```yaml
+logging:
+  level:
+    org.springframework.web.client.RestClient: DEBUG
+```
+
+### FeignClient
 ```yaml
 logging:
   level:
     org.springframework.cloud.openfeign: DEBUG
-    org.springframework.web.client.RestTemplate: DEBUG
     feign.Logger: DEBUG
+```
+
+### RestTemplate (Legacy)
+```yaml
+logging:
+  level:
+    org.springframework.web.client.RestTemplate: DEBUG
 ```
 
 **Verás en logs:**
@@ -118,7 +158,7 @@ logging:
 public class TicketServiceTest {
     
     @MockBean
-    private UserServiceClient userClient;
+    private UserServiceClient userClient;  // Funciona para RestClient o Feign
     
     @Autowired
     private TicketService ticketService;

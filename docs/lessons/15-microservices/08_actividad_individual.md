@@ -2,7 +2,7 @@
 
 ## 🎯 Objetivo
 
-Implementar comunicación HTTP entre dos microservicios usando **FeignClient o RestTemplate**. Tu aplicación Tickets debe llamar a un servicio externo (real o mock).
+Implementar comunicación HTTP entre dos microservicios usando **RestClient, FeignClient o RestTemplate**. Tu aplicación Tickets debe llamar a un servicio externo (real o mock).
 
 ---
 
@@ -10,16 +10,22 @@ Implementar comunicación HTTP entre dos microservicios usando **FeignClient o R
 
 ### 1. Elegir Cliente HTTP
 
-- [ ] Decidir entre RestTemplate o FeignClient
+- [ ] Decidir entre **RestClient** (recomendado), FeignClient o RestTemplate
 - [ ] Justificar tu elección
+
+**Recomendación:**
+- **RestClient**: Mejor opción para la mayoría de casos (Spring 6.1+)
+- **FeignClient**: Si necesitas múltiples clientes con configuración común
+- **RestTemplate**: Solo si trabajas con Spring < 6.0 (legacy)
 
 ### 2. Implementar Cliente
 
-**Si usas RestTemplate:**
+**Si usas RestClient (recomendado):**
 ```java
-- [ ] Crear bean RestTemplate con configuración
-- [ ] Implementar método que hace llamada HTTP
-- [ ] Manejar excepciones (try/catch)
+- [ ] Inyectar RestClient.Builder
+- [ ] Crear cliente con .baseUrl()
+- [ ] Implementar método GET que hace llamada HTTP
+- [ ] Manejar excepciones (.onStatus())
 ```
 
 **Si usas FeignClient:**
@@ -27,6 +33,13 @@ Implementar comunicación HTTP entre dos microservicios usando **FeignClient o R
 - [ ] Crear interface anotada con @FeignClient
 - [ ] Agregar @EnableFeignClients en app principal
 - [ ] Implementar fallback
+```
+
+**Si usas RestTemplate (Legacy):**
+```java
+- [ ] Crear bean RestTemplate con configuración
+- [ ] Implementar método que hace llamada HTTP
+- [ ] Manejar excepciones (try/catch)
 ```
 
 ### 3. Servicio Externo
@@ -71,19 +84,27 @@ GET /users/email/{email} → Retorna UserDTO
 ## 🚀 Pasos
 
 1. **Elegir enfoque**
-   - [ ] RestTemplate (simple) o FeignClient (elegante)
+   - [ ] RestClient (recomendado), FeignClient o RestTemplate
 
 2. **Implementar cliente**
    ```java
-   // RestTemplate
-   UserDTO user = restTemplate.getForObject(url, UserDTO.class, id);
+   // RestClient (Recomendado)
+   UserDTO user = restClient.get()
+       .uri("/users/{id}", id)
+       .retrieve()
+       .body(UserDTO.class);
    
    // FeignClient
    UserDTO user = userClient.getUserById(id);
+   
+   // RestTemplate (Legacy)
+   UserDTO user = restTemplate.getForObject(url, UserDTO.class, id);
    ```
 
 3. **Configurar timeouts**
    ```yaml
+   # RestClient se configura en el builder
+   # FeignClient
    spring:
      cloud:
        openfeign:
@@ -119,7 +140,7 @@ GET /users/email/{email} → Retorna UserDTO
 7. **Commit**
    ```bash
    git add src/main/java/...
-   git commit -m "feat: comunicación con Users Service via FeignClient"
+   git commit -m "feat: comunicación con Users Service via RestClient"
    ```
 
 ---
@@ -128,18 +149,19 @@ GET /users/email/{email} → Retorna UserDTO
 
 Debes poder responder:
 
-- [ ] "¿Por qué elegí RestTemplate/FeignClient?"
+- [ ] "¿Por qué elegí RestClient/FeignClient/RestTemplate?"
 - [ ] "¿Qué es un microservicio?"
 - [ ] "¿Qué pasa si el servicio remoto cae?"
 - [ ] "¿Cómo configuro timeouts?"
 - [ ] "¿Qué muestra el log de la llamada HTTP?"
+- [ ] "¿Cuáles son las ventajas de RestClient vs Feign?"
 
 ---
 
 ## 📦 Entrega
 
 Sube tu código con:
-- ✅ Cliente HTTP (RestTemplate o FeignClient)
+- ✅ Cliente HTTP (RestClient preferentemente)
 - ✅ Fallback implementado
 - ✅ Configuración de timeouts
 - ✅ Integración en `TicketService`
@@ -154,6 +176,7 @@ Sube tu código con:
 - Crear **segunda app Spring Boot** (Users Service)
 - Implementar **reintentos automáticos**
 - Agregar **metrics** de llamadas HTTP
+- Comparar performance: RestClient vs FeignClient vs RestTemplate
 
 ---
 

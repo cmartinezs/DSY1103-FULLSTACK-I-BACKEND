@@ -4,14 +4,15 @@
 
 ### Dependencias
 
-- [ ] Spring Cloud OpenFeign agregado a `pom.xml` (o solo RestTemplate)
+- [ ] Spring Cloud OpenFeign agregado a `pom.xml` (si usas Feign)
 - [ ] Resilience4j agregado (opcional, para circuit breaker)
+- [ ] RestClient disponible (Spring 6.1+)
 
 ### Código
 
 - [ ] `@EnableFeignClients` en aplicación principal (si usas Feign)
-- [ ] `RestTemplate` registrado en `@Bean` (si usas RestTemplate)
-- [ ] Cliente HTTP creado (Feign interface o RestTemplate)
+- [ ] RestClient.Builder inyectado (si usas RestClient)
+- [ ] Cliente HTTP creado (RestClient, Feign interface o RestTemplate)
 - [ ] Fallback implementado (para Feign)
 - [ ] Manejo de errores implementado
 
@@ -20,6 +21,7 @@
 - [ ] Timeouts configurados en `application.yml`
 - [ ] Logging configurado para ver requests/responses
 - [ ] URLs correctas (host y puerto)
+- [ ] Perfil seleccionado correctamente
 
 ### Testing
 
@@ -29,7 +31,7 @@
 
 ### Documentación
 
-- [ ] Entiendo cuándo usar RestTemplate vs FeignClient
+- [ ] Entiendo cuándo usar RestClient vs FeignClient vs RestTemplate
 - [ ] Puedo explicar qué son microservicios
 - [ ] Sé cómo manejar timeouts y errores
 - [ ] Entiendo circuit breaker
@@ -43,8 +45,9 @@
 | Criterio | Insuficiente | Satisfactorio | Excelente |
 |----------|-------------|--------------|-----------|
 | Uso correcto | ❌ No funciona | ✅ Funciona | ✅ + optimizado |
-| RestTemplate | ❌ Mal | ✅ Correcto | ✅ + timeout |
+| RestClient | ❌ No usa | ✅ Usa correctamente | ✅ + configurado |
 | FeignClient | ❌ No comprende | ✅ Usa | ✅ + fallback |
+| RestTemplate | ❌ Usa deprecated | ✅ Solo si legacy | ✅ N/A |
 | Elección | ❌ Equivocada | ✅ Apropiada | ✅ + justificada |
 
 ### 2. Manejo de Errores (30%)
@@ -69,6 +72,7 @@
 | Criterio | Insuficiente | Satisfactorio | Excelente |
 |----------|-------------|--------------|-----------|
 | Microservicios | ❌ Confuso | ✅ Entiende | ✅ + ventajas/desventajas |
+| RestClient vs Feign | ❌ No diferencia | ✅ Conoce diferencias | ✅ + cuándo usar cada uno |
 | Debugging | ❌ No sabe | ✅ Puede debuggear | ✅ + logs avanzados |
 
 ---

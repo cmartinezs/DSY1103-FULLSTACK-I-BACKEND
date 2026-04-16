@@ -28,55 +28,81 @@ public class UserController {
 
 ### Servicio 2: Tickets Service (Puerto 8080 - Cliente)
 
-#### Opción A: Con RestTemplate
+#### Opción A: Con RestClient (Recomendado)
 
 ```java
-// TicketsApplication.java
-@SpringBootApplication
-public class TicketsApplication {
+// RestClientConfig.java
+@Configuration
+public class RestClientConfig {
     
     @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
+    public RestClient.Builder restClientBuilder() {
+        return RestClient.builder();
     }
 }
 
-// TicketService.java
+// UserServiceClient.java (con RestClient)
 @Service
 @RequiredArgsConstructor
+@Slf4j
+public class UserServiceClient {
+    
+    private final RestClient.Builder restClientBuilder;
+    private RestClient restClient;
+    
+    @PostConstruct
+    public void init() {
+        this.restClient = restClientBuilder
+            .baseUrl("http://localhost:8081")
+            .build();
+    }
+    
+    public UserDTO getUserById(Long id) {
+        try {
+            log.info("Fetching user {} from Users Service", id);
+            return restClient.get()
+                .uri("/users/{id}", id)
+                .retrieve()
+                .body(UserDTO.class);
+        } catch (Exception e) {
+            log.error("Error fetching user {}: {}", id, e.getMessage());
+            return null;
+        }
+    }
+    
+    public UserDTO getUserByEmail(String email) {
+        try {
+            return restClient.get()
+                .uri("/users/email/{email}", email)
+                .retrieve()
+                .body(UserDTO.class);
+        } catch (Exception e) {
+            log.error("Error fetching user by email {}: {}", email, e.getMessage());
+            return null;
+        }
+    }
+}
+
+// TicketService.java (con RestClient)
+@Service
+@RequiredArgsConstructor
+@Slf4j
 public class TicketService {
     
     private final TicketRepository ticketRepository;
-    private final RestTemplate restTemplate;
-    private static final Logger log = LoggerFactory.getLogger(TicketService.class);
+    private final UserServiceClient userClient;
     
     public TicketDetailDTO getTicketDetail(Long ticketId) {
         Ticket ticket = ticketRepository.findById(ticketId)
             .orElseThrow(() -> new TicketNotFoundException(ticketId));
         
         // Llamar a Users Service
-        UserDTO creator = getUserFromService(ticket.getCreatedById());
+        UserDTO creator = userClient.getUserById(ticket.getCreatedById());
         
         return TicketDetailDTO.builder()
             .ticket(ticket)
             .creator(creator)
             .build();
-    }
-    
-    private UserDTO getUserFromService(Long userId) {
-        String url = "http://localhost:8081/users/{id}";
-        
-        try {
-            log.info("Fetching user {} from Users Service", userId);
-            UserDTO user = restTemplate.getForObject(url, UserDTO.class, userId);
-            return user;
-        } catch (HttpClientErrorException.NotFound e) {
-            log.warn("User {} not found in Users Service", userId);
-            return null;
-        } catch (Exception e) {
-            log.error("Error communicating with Users Service: {}", e.getMessage(), e);
-            return null;
-        }
     }
 }
 ```
@@ -93,7 +119,7 @@ public class TicketsApplication {
     }
 }
 
-// UserServiceClient.java
+// UserServiceClient.java (con Feign)
 @FeignClient(
     name = "users-service",
     url = "http://localhost:8081",
@@ -110,9 +136,8 @@ public interface UserServiceClient {
 
 // UserServiceClientFallback.java
 @Component
+@Slf4j
 public class UserServiceClientFallback implements UserServiceClient {
-    
-    private static final Logger log = LoggerFactory.getLogger(UserServiceClientFallback.class);
     
     @Override
     public UserDTO getUserById(Long id) {
@@ -134,11 +159,11 @@ public class UserServiceClientFallback implements UserServiceClient {
 // TicketService.java (con FeignClient)
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TicketService {
     
     private final TicketRepository ticketRepository;
     private final UserServiceClient userClient;  // ← Inyectar automáticamente
-    private static final Logger log = LoggerFactory.getLogger(TicketService.class);
     
     public TicketDetailDTO getTicketDetail(Long ticketId) {
         Ticket ticket = ticketRepository.findById(ticketId)
@@ -155,10 +180,79 @@ public class TicketService {
 }
 ```
 
+#### Opción C: Con RestTemplate (Legacy - No recomendado)
+
+```java
+// TicketsApplication.java (DEPRECADO)
+@SpringBootApplication
+public class TicketsApplication {
+    
+    @Bean
+    @Deprecated(since = "6.0", forRemoval = true)
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+}
+
+// TicketService.java (con RestTemplate - DEPRECADO)
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class TicketService {
+    
+    private final TicketRepository ticketRepository;
+    private final RestTemplate restTemplate;
+    
+    public TicketDetailDTO getTicketDetail(Long ticketId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+            .orElseThrow(() -> new TicketNotFoundException(ticketId));
+        
+        UserDTO creator = getUserFromService(ticket.getCreatedById());
+        
+        return TicketDetailDTO.builder()
+            .ticket(ticket)
+            .creator(creator)
+            .build();
+    }
+    
+    private UserDTO getUserFromService(Long userId) {
+        String url = "http://localhost:8081/users/{id}";
+        
+        try {
+            log.info("Fetching user {} from Users Service", userId);
+            return restTemplate.getForObject(url, UserDTO.class, userId);
+        } catch (HttpClientErrorException.NotFound e) {
+            log.warn("User {} not found", userId);
+            return null;
+        } catch (Exception e) {
+            log.error("Error communicating with Users Service: {}", e.getMessage());
+            return null;
+        }
+    }
+}
+```
+
 ---
 
 ## Configuración en `application.yml`
 
+### Con RestClient
+```yaml
+spring:
+  application:
+    name: tickets-service
+
+server:
+  port: 8080
+  servlet:
+    context-path: "/ticket-app"
+
+logging:
+  level:
+    org.springframework.web.client: DEBUG
+```
+
+### Con FeignClient
 ```yaml
 spring:
   application:
@@ -168,13 +262,11 @@ spring:
     openfeign:
       client:
         config:
-          # Global
           default:
             connect-timeout: 5000
             read-timeout: 10000
             logger-level: BASIC
           
-          # Por servicio específico
           users-service:
             connect-timeout: 3000
             read-timeout: 8000
@@ -188,7 +280,6 @@ server:
 logging:
   level:
     org.springframework.cloud.openfeign: DEBUG
-    org.springframework.web.client.RestTemplate: DEBUG
 ```
 
 ---

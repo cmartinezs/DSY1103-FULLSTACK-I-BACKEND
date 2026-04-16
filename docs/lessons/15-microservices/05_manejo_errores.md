@@ -2,12 +2,40 @@
 
 ## Timeouts
 
+### RestClient (Recomendado)
 ```java
-// RestTemplate con timeout
+@Configuration
+public class RestClientConfig {
+    
+    @Bean
+    public RestClient.Builder restClientBuilder() {
+        return RestClient.builder()
+            .requestInitializer(request -> {
+                // Configurar timeouts a nivel de HTTPClient si es necesario
+            });
+    }
+}
+```
+
+### FeignClient
+```yaml
+spring:
+  cloud:
+    openfeign:
+      client:
+        config:
+          users-service:
+            connect-timeout: 5000     # 5 segundos
+            read-timeout: 10000       # 10 segundos
+```
+
+### RestTemplate (Legacy - No recomendado)
+```java
 @Configuration
 public class RestTemplateConfig {
     
     @Bean
+    @Deprecated(since = "6.0", forRemoval = true)
     public RestTemplate restTemplate() {
         HttpComponentsClientHttpRequestFactory factory = 
             new HttpComponentsClientHttpRequestFactory();
@@ -20,22 +48,46 @@ public class RestTemplateConfig {
 }
 ```
 
-```yaml
-# FeignClient con timeout
-spring:
-  cloud:
-    openfeign:
-      client:
-        config:
-          users-service:
-            connect-timeout: 5000
-            read-timeout: 10000
-```
-
 ---
 
 ## Reintentos Automáticos
 
+### RestClient
+```java
+@Service
+@Slf4j
+public class UserServiceClient {
+    
+    private final RestClient restClient;
+    
+    public UserDTO getUserById(Long id) {
+        return retry(() -> restClient.get()
+            .uri("/users/{id}", id)
+            .retrieve()
+            .body(UserDTO.class), 3);
+    }
+    
+    private <T> T retry(Supplier<T> supplier, int maxAttempts) {
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                return supplier.get();
+            } catch (Exception e) {
+                if (attempt == maxAttempts) throw e;
+                log.warn("Attempt {} failed, retrying...", attempt);
+                try {
+                    Thread.sleep(1000 * attempt);  // Backoff exponencial
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(ie);
+                }
+            }
+        }
+        throw new RuntimeException("Retries exhausted");
+    }
+}
+```
+
+### FeignClient
 ```yaml
 spring:
   cloud:
@@ -64,6 +116,7 @@ spring:
 ```java
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TicketService {
     
     private final UserServiceClient userClient;
@@ -95,6 +148,9 @@ resilience4j:
         failure-rate-threshold: 50         # Abrir si 50% de llamadas falla
         wait-duration-in-open-state: 10s   # Esperar 10s antes de reintentar
         permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      users-service:
+        base-config: default
 ```
 
 ---
@@ -102,21 +158,23 @@ resilience4j:
 ## Manejo de Excepciones
 
 ```java
-@ExceptionHandler(FeignException.class)
-public ResponseEntity<?> handleFeignException(FeignException e) {
-    log.error("Feign error: {}", e.getMessage());
+@ExceptionHandler(HttpClientErrorException.class)
+public ResponseEntity<?> handleHttpClientException(HttpClientErrorException e) {
+    log.error("HTTP error: {}", e.getMessage());
     
-    if (e.status() == 404) {
+    if (e.getStatusCode().value() == 404) {
         return ResponseEntity.notFound().build();
     }
     
-    if (e.status() >= 500) {
-        return ResponseEntity.status(503)
-            .body("Servicio temporalmente no disponible");
-    }
-    
-    return ResponseEntity.status(e.status())
+    return ResponseEntity.status(e.getStatusCode())
         .body("Error en llamada a microservicio");
+}
+
+@ExceptionHandler(Exception.class)
+public ResponseEntity<?> handleGenericException(Exception e) {
+    log.error("Error de comunicación: {}", e.getMessage());
+    return ResponseEntity.status(503)
+        .body("Servicio temporalmente no disponible");
 }
 ```
 
@@ -128,20 +186,35 @@ public ResponseEntity<?> handleFeignException(FeignException e) {
 logging:
   level:
     org.springframework.cloud.openfeign: DEBUG
-    org.springframework.web.client: DEBUG
+    org.springframework.web.client.RestClient: DEBUG
+    org.springframework.web.client.RestTemplate: DEBUG
     
     # Por cliente específico
     com.example.clients: TRACE
 ```
 
 ```java
-// Logger personalizado
+// Logger personalizado para Feign
 @Component
 public class FeignLoggingConfiguration {
     
     @Bean
     public feign.Logger.Level feignLoggerLevel() {
         return feign.Logger.Level.FULL;
+    }
+}
+
+// Logger personalizado para RestClient
+@Component
+@Slf4j
+public class RestClientInterceptor {
+    
+    public void logRequest(HttpRequest request, byte[] body) {
+        log.debug("REST request: {} {}", request.getMethod(), request.getURI());
+    }
+    
+    public void logResponse(HttpResponse response) {
+        log.debug("REST response: {}", response.getStatusCode());
     }
 }
 ```

@@ -1,14 +1,26 @@
 spring:
+  config:
+    activate:
+      on-profile: h2
   datasource:
     url: jdbc:h2:mem:ticketsdb
     driver-class-name: org.h2.Driver
     username: sa
-    password:
+    password: ''
   h2:
     console:
       enabled: true
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
+
+logging:
+  level:
+    root: INFO
+    cl.duoc.fullstack: DEBUG
+

@@ -2,87 +2,118 @@
 
 ---
 
-## Parte 1: RestTemplate (Simple y Flexible)
+## Parte 1: RestClient (Recomendado - Spring 6.1+)
 
-### Paso 1: Crear un Cliente HTTP Simple
+### Paso 1: Crear un Cliente HTTP Moderno
 
 ```java
-// Inyectar RestTemplate desde Spring
-import org.springframework.web.client.RestTemplate;
+// NotificationClient.java
+import org.springframework.web.client.RestClient;
 import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
-public class TicketService {
+@Slf4j
+@RequiredArgsConstructor
+public class NotificationClient {
     
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     
-    public TicketService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public NotificationClient(RestClient.Builder builder) {
+        this.restClient = builder
+            .baseUrl("http://localhost:8082")  // URL del servicio de notificaciones
+            .build();
     }
     
-    // Llamar a otro microservicio
-    public UserDTO getUser(Long userId) {
-        String url = "http://localhost:8081/users/{id}";
-        
+    // Enviar notificación
+    public void sendNotification(Long userId, String message) {
         try {
-            UserDTO user = restTemplate.getForObject(url, UserDTO.class, userId);
-            return user;
+            NotificationRequest request = new NotificationRequest(userId, message);
+            
+            restClient.post()
+                .uri("/notifications")
+                .body(request)
+                .retrieve()
+                .toBodilessEntity();
+                
+            log.info("Notificación enviada a usuario {}", userId);
         } catch (Exception e) {
-            log.error("Error fetching user {}: {}", userId, e.getMessage());
-            return null;  // o lanzar excepción
+            log.error("Error enviando notificación a usuario {}: {}", userId, e.getMessage());
+        }
+    }
+    
+    // Obtener notificación
+    public NotificationDTO getNotification(Long notificationId) {
+        try {
+            return restClient.get()
+                .uri("/notifications/{id}", notificationId)
+                .retrieve()
+                .body(NotificationDTO.class);
+        } catch (Exception e) {
+            log.error("Error obteniendo notificación {}: {}", notificationId, e.getMessage());
+            return null;
         }
     }
 }
 ```
 
-### Paso 2: Registrar RestTemplate en Spring
+### Paso 2: Configurar RestClient en Spring
 
 ```java
-// TicketsApplication.java
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+// RestClientConfig.java
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
+import java.time.Duration;
 
-@SpringBootApplication
-public class TicketsApplication {
-    
-    public static void main(String[] args) {
-        SpringApplication.run(TicketsApplication.class, args);
-    }
+@Configuration
+public class RestClientConfig {
     
     @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
+    public RestClient.Builder restClientBuilder() {
+        return RestClient.builder()
+            .requestFactory(new org.springframework.http.client.BufferingClientHttpRequestFactory(
+                new org.springframework.http.client.SimpleClientHttpRequestFactory()
+            ));
     }
 }
 ```
 
-### Paso 3: Usar en Tu Controlador
+### Paso 3: Usar en Tu Servicio
 
 ```java
-@RestController
-@RequestMapping("/tickets")
+// TicketService.java
+@Service
 @RequiredArgsConstructor
-public class TicketController {
+@Slf4j
+public class TicketService {
     
-    private final TicketService ticketService;
+    private final TicketRepository ticketRepository;
+    private final NotificationClient notificationClient;
     
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getTicket(@PathVariable Long id) {
-        Ticket ticket = ticketService.findById(id);
+    public Ticket createTicket(TicketRequest request) {
+        Ticket ticket = new Ticket();
+        ticket.setTitle(request.getTitle());
+        ticket.setDescription(request.getDescription());
+        // ... más campos
         
-        // Llamar a Users Service
-        UserDTO creator = ticketService.getUser(ticket.getCreatedById());
+        Ticket saved = ticketRepository.save(ticket);
         
-        return ResponseEntity.ok(new TicketResponse(ticket, creator));
+        // Notificar a través del microservicio
+        notificationClient.sendNotification(
+            ticket.getCreatedById(),
+            "Tu ticket '" + ticket.getTitle() + "' ha sido creado"
+        );
+        
+        return saved;
     }
 }
 ```
 
 ---
 
-## Parte 2: FeignClient (Automático y Elegante)
+## Parte 2: FeignClient (Alternativa - Múltiples Llamadas)
 
 ### Paso 1: Agregar Dependencias
 
@@ -120,7 +151,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(
     name = "users-service",
-    url = "http://localhost:8081"  // URL del otro microservicio
+    url = "http://localhost:8081",  // URL del otro microservicio
+    fallback = UserServiceClientFallback.class
 )
 public interface UserServiceClient {
     
@@ -132,7 +164,38 @@ public interface UserServiceClient {
 }
 ```
 
-### Paso 4: Usar en Servicio
+### Paso 4: Implementar Fallback
+
+```java
+// UserServiceClientFallback.java
+import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
+
+@Component
+@Slf4j
+public class UserServiceClientFallback implements UserServiceClient {
+    
+    @Override
+    public UserDTO getUserById(Long id) {
+        log.warn("Users Service no disponible, usando fallback para usuario {}", id);
+        
+        // Retornar objeto por defecto
+        return UserDTO.builder()
+            .id(id)
+            .name("Usuario Desconocido")
+            .email("unknown@example.com")
+            .build();
+    }
+    
+    @Override
+    public UserDTO getUserByEmail(String email) {
+        log.warn("Users Service no disponible, usando fallback para email {}", email);
+        return null;  // o un valor por defecto
+    }
+}
+```
+
+### Paso 5: Usar en Servicio
 
 ```java
 // TicketService.java
@@ -140,7 +203,7 @@ public interface UserServiceClient {
 @RequiredArgsConstructor
 public class TicketService {
     
-    private final UserServiceClient userClient;  // ← Inyectar automáticamente
+    private final UserServiceClient userClient;
     
     public TicketDetail getTicketWithUser(Long ticketId) {
         Ticket ticket = ticketRepository.findById(ticketId);
@@ -155,11 +218,31 @@ public class TicketService {
 
 ---
 
-## Parte 3: Configuración Avanzada (Timeouts, Reintentos)
+## Parte 3: Configuración de Timeouts y Reintentos
 
-### Configuración en `application.yml`
+### RestClient con Timeouts
+
+```java
+// RestClientConfig.java
+@Configuration
+public class RestClientConfig {
+    
+    @Bean
+    public RestClient notificationClient(RestClient.Builder builder) {
+        return builder
+            .baseUrl("http://localhost:8082")
+            .requestInitializer(request -> {
+                request.getHeaders().set("Connection", "Keep-Alive");
+            })
+            .build();
+    }
+}
+```
+
+### FeignClient con Timeouts
 
 ```yaml
+# application.yml
 spring:
   cloud:
     openfeign:
@@ -169,48 +252,19 @@ spring:
             connect-timeout: 5000      # 5 segundos para conectar
             read-timeout: 10000        # 10 segundos para leer
             logger-level: BASIC        # Log de requests/responses
-```
-
-### Implementar Fallback (Qué Hacer si Falla)
-
-```java
-// UserServiceClient.java
-@FeignClient(
-    name = "users-service",
-    url = "http://localhost:8081",
-    fallback = UserServiceClientFallback.class  // ← Fallback
-)
-public interface UserServiceClient {
-    @GetMapping("/users/{id}")
-    UserDTO getUserById(@PathVariable Long id);
-}
-
-// UserServiceClientFallback.java (ejecutar si falla)
-@Component
-public class UserServiceClientFallback implements UserServiceClient {
-    
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-    
-    @Override
-    public UserDTO getUserById(Long id) {
-        log.warn("Users Service indisponible, usando fallback para usuario {}", id);
-        
-        // Retornar objeto por defecto
-        return UserDTO.builder()
-            .id(id)
-            .name("Usuario Desconocido")
-            .email("unknown@example.com")
-            .build();
-    }
-}
+          default:
+            connect-timeout: 5000
+            read-timeout: 10000
 ```
 
 ---
 
-## Parte 4: RestTemplate con Configuración
+## Parte 4: RestTemplate (Legacy - No Recomendado)
+
+⚠️ **RestTemplate está deprecado desde Spring 6.0. Solo usar si necesitas mantener código legacy.**
 
 ```java
-// RestTemplateConfig.java
+// RestTemplateConfig.java (DEPRECADO)
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -221,42 +275,31 @@ import java.time.Duration;
 public class RestTemplateConfig {
     
     @Bean
+    @Deprecated(since = "6.0", forRemoval = true)
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         return builder
-            .setConnectTimeout(Duration.ofSeconds(5))    // Timeout conexión
-            .setReadTimeout(Duration.ofSeconds(10))       // Timeout lectura
+            .setConnectTimeout(Duration.ofSeconds(5))
+            .setReadTimeout(Duration.ofSeconds(10))
             .build();
     }
 }
 ```
 
----
-
-## Parte 5: Manejo de Errores
-
 ```java
-// Con RestTemplate
+// Uso (DEPRECADO)
 @Service
-@RequiredArgsConstructor
-public class TicketService {
+public class NotificationServiceLegacy {
     
     private final RestTemplate restTemplate;
     
-    public UserDTO getUser(Long userId) {
-        String url = "http://localhost:8081/users/{id}";
+    public void notifyUser(Long userId, String message) {
+        String url = "http://localhost:8082/notifications";
+        NotificationRequest req = new NotificationRequest(userId, message);
         
         try {
-            UserDTO user = restTemplate.getForObject(url, UserDTO.class, userId);
-            return user;
-        } catch (HttpClientErrorException.NotFound e) {
-            log.warn("Usuario {} no encontrado", userId);
-            return null;
-        } catch (HttpServerErrorException e) {
-            log.error("Error en Users Service: {}", e.getMessage());
-            throw new ServiceUnavailableException("Users Service temporalmente indisponible");
-        } catch (ResourceAccessException e) {
-            log.error("No puedo conectar a Users Service: {}", e.getMessage());
-            throw new ServiceUnavailableException("Users Service no responde");
+            restTemplate.postForObject(url, req, Void.class);
+        } catch (Exception e) {
+            log.error("Error: {}", e.getMessage());
         }
     }
 }
@@ -264,28 +307,14 @@ public class TicketService {
 
 ---
 
-## Comparación Rápida
+## Resumen: ¿Cuál Usar?
 
-```
-RestTemplate:
-GET http://localhost:8081/users/1
-POST http://localhost:8081/users
-DELETE http://localhost:8081/users/1
-
-Código:
-    UserDTO user = restTemplate.getForObject(url, UserDTO.class, 1);
-
-─────────────────────────────────────
-
-FeignClient (más limpio):
-    UserDTO user = userClient.getUserById(1L);
-
-Automático:
-✓ Serialización/deserialización
-✓ Manejo de errores
-✓ Timeouts
-✓ Reintentos
-```
+| Situación | Recomendación |
+|-----------|---------------|
+| **Proyecto nuevo, Spring 6.1+** | ✅ **RestClient** |
+| **Múltiples servicios, código limpio** | ✅ **FeignClient** |
+| **Código legacy, Spring <6.0** | ⚠️ **RestTemplate** |
+| **Una llamada simple** | ✅ **RestClient** |
 
 ---
 

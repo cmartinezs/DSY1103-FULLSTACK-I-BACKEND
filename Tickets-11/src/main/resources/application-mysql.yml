@@ -1,4 +1,7 @@
 spring:
+  config:
+    activate:
+      on-profile: mysql
   datasource:
     url: ${MYSQL_URL:jdbc:mysql://localhost:3306/tickets_db?useSSL=false&serverTimezone=America/Santiago}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -6,6 +9,15 @@ spring:
     password: ${MYSQL_PASSWORD:}
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
+
+logging:
+  level:
+    root: INFO
+    cl.duoc.fullstack: DEBUG
+

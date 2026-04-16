@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: Tickets
+  config:
+    activate:
+      on-profile: default
+  datasource:
+    url: jdbc:h2:mem:ticketsdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ''
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: "/ticket-app"
+
+logging:
+  level:
+    root: INFO
+    cl.duoc.fullstack: DEBUG
+
+

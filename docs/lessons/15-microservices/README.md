@@ -1,6 +1,6 @@
 # Lección 13 — Comunicación entre Microservicios
 
-**Aprende a comunicar dos microservicios independientes usando FeignClient y RestTemplate. Implementa resilencia, timeouts y fallbacks.**
+**Aprende a comunicar dos microservicios independientes usando RestClient, FeignClient o RestTemplate. Implementa resilencia, timeouts y fallbacks.**
 
 ---
 
@@ -10,7 +10,7 @@
 |-----------|----------|------|
 | **01. Objetivo y Alcance** | 5 min | Entender qué aprenderás |
 | **02. Guión Paso a Paso** ⭐ | 20 min | Instrucciones prácticas |
-| **03. RestTemplate vs FeignClient** | 10 min | Comparación y decisión |
+| **03. RestClient vs RestTemplate vs FeignClient** | 10 min | Comparación y decisión |
 | **04. Ejemplos Prácticos** | 15 min | Código completo |
 | **05. Manejo de Errores** | 10 min | Timeouts, fallbacks, resilencia |
 | **06. Debugging** | 10 min | Logs y troubleshooting |
@@ -21,7 +21,31 @@
 
 ## 🎯 Quick Start (10 min)
 
-### Con FeignClient (Recomendado)
+### Con RestClient (Recomendado - Spring 6.1+)
+
+```java
+// 1. Inyectar builder
+@Service
+public class TicketService {
+    private final RestClient restClient;
+    
+    public TicketService(RestClient.Builder builder) {
+        this.restClient = builder
+            .baseUrl("http://localhost:8081")
+            .build();
+    }
+    
+    // 2. Usar
+    public UserDTO getUser(Long id) {
+        return restClient.get()
+            .uri("/users/{id}", id)
+            .retrieve()
+            .body(UserDTO.class);
+    }
+}
+```
+
+### Con FeignClient (Alternativa)
 
 ```java
 // 1. Habilitar
@@ -49,7 +73,7 @@ public class TicketService {
 }
 ```
 
-### Con RestTemplate (Simple)
+### Con RestTemplate (Legacy - No recomendado)
 
 ```java
 // 1. Registrar
@@ -98,14 +122,15 @@ Después (Microservicios):
 └─────────────┘  └─────────────┘  └──────────────┘
 ```
 
-### RestTemplate vs FeignClient
+### RestClient vs RestTemplate vs FeignClient
 
-| Aspecto | RestTemplate | FeignClient |
-|---------|-------------|-------------|
-| **Líneas de código** | Muchas | Pocas |
-| **Aprendizaje** | Fácil | Intermedio |
-| **Automático** | No | Sí |
-| **Ideal para** | 1-2 llamadas | Múltiples llamadas |
+| Aspecto | RestClient | RestTemplate | FeignClient |
+|---------|-----------|-------------|-------------|
+| **Líneas de código** | Pocas | Muchas | Pocas |
+| **Aprendizaje** | Fácil | Fácil | Intermedio |
+| **Automático** | Parcial | No | Sí |
+| **Ideal para** | Estándar moderno | Legacy | Múltiples llamadas |
+| **Estado** | ✅ Recomendado | ⚠️ Deprecated | ✅ Alternativa |
 
 ---
 
@@ -114,20 +139,20 @@ Después (Microservicios):
 ```
 src/main/java/
 ├── clients/
-│   ├── UserServiceClient.java      (Feign)
-│   └── UserServiceClientFallback.java
+│   ├── NotificationClient.java          (RestClient o Feign)
+│   └── NotificationClientFallback.java  (optional)
 ├── services/
-│   └── TicketService.java          (usa client)
-└── TicketsApplication.java         (@EnableFeignClients)
+│   └── TicketService.java               (usa client)
+└── TicketsApplication.java              (@EnableFeignClients si aplica)
 ```
 
 ---
 
 ## ✅ Checklist
 
-- [ ] Dependencia FeignClient o RestTemplate
+- [ ] Dependencia de cliente HTTP elegida (RestClient / RestTemplate / FeignClient)
 - [ ] Cliente HTTP creado
-- [ ] Fallback para errores
+- [ ] Fallback para errores (si aplica)
 - [ ] Timeouts configurados
 - [ ] Integrado en TicketService
 - [ ] API responde con datos enriquecidos
