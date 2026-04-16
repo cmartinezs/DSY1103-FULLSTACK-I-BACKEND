@@ -2,6 +2,8 @@ package cl.duoc.fullstack.tickets.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,4 +35,17 @@ public class User {
   @Email(message = "El email no tiene un formato válido")
   @Column(nullable = false, unique = true, length = 150)
   private String email;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  private Role role = Role.USER;
+
+  @Column(nullable = false)
+  private boolean active = true;
+
+  public enum Role {
+    USER,
+    AGENT,
+    ADMIN
+  }
 }

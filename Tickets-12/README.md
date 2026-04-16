@@ -1,16 +1,33 @@
-# Lección 12: Relaciones JPA
+# Tickets-12: Lección 12 - Relaciones JPA
 
-## 📚 Objetivo
+## 📋 Descripción
 
-Implementar relaciones JPA en la aplicación Ticket:
-- **One-to-Many**: Ticket ↔ Category
-- **Many-to-Many**: Ticket ↔ Tag
+Este proyecto implementa la **Lección 12: Relaciones JPA** del curso DSY1103 Fullstack I.
 
-## 🔄 Cambios Implementados
+Agrega entidades Category y Tag con relaciones One-to-Many y Many-to-Many.
+
+## 🎯 Caso de Uso Extendido (Sistema de Tickets con Gestión de Usuarios)
+
+### Roles definidos
+| Rol     | Descripción              |
+|---------|--------------------------|
+| USER    | Crea tickets, ve estado  |
+| AGENT   | Recibe tickets asignados |
+| ADMIN   | Supervisa y gestiona     |
+
+### Modelo de datos
+- **User**: id, name, email, role (USER/AGENT/ADMIN), active
+- **Ticket**: relaciones con User (createdBy, assignedTo), Category, Tags
+- **Category**: One-to-Many con Ticket
+- **Tag**: Many-to-Many con Ticket
+
+---
+
+## 🔄 Cambios desde Lección 11
 
 ### 1. Nuevas Entidades
 
-#### **Category** (Relación One-to-Many)
+#### Category.java
 ```java
 @Entity
 @Table(name = "categories")
@@ -21,13 +38,12 @@ public class Category {
   private String name;
   private String description;
   
-  @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference
+  @OneToMany(mappedBy = "category")
   private List<Ticket> tickets = new ArrayList<>();
 }
 ```
 
-#### **Tag** (Relación Many-to-Many)
+#### Tag.java
 ```java
 @Entity
 @Table(name = "tags")
@@ -38,175 +54,92 @@ public class Tag {
   private String name;
   private String color;
   
-  @ManyToMany(mappedBy = "tags")
-  @JsonIgnore
+  @ManyToMany
+  @JoinTable(
+    name = "ticket_tags",
+    joinColumns = @JoinColumn(name = "tag_id"),
+    inverseJoinColumns = @JoinColumn(name = "ticket_id")
+  )
   private List<Ticket> tickets = new ArrayList<>();
 }
 ```
 
-#### **Ticket** (Actualizado con relaciones)
-```java
-@ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name = "category_id")
-@JsonBackReference
-private Category category;
+### 2. Relaciones en Ticket
+- `@ManyToOne` Category
+- `@ManyToMany` Tags (vía JoinTable)
 
-@ManyToMany(fetch = FetchType.LAZY)
-@JoinTable(
-    name = "ticket_tags",
-    joinColumns = @JoinColumn(name = "ticket_id"),
-    inverseJoinColumns = @JoinColumn(name = "tag_id")
-)
-private List<Tag> tags = new ArrayList<>();
-```
-
-### 2. Repositorios
-
-- **CategoryRepository**: `JpaRepository<Category, Long>`
-  - Método: `existsByNameIgnoreCase(String name)`
-
-- **TagRepository**: `JpaRepository<Tag, Long>`
-  - Método: `existsByNameIgnoreCase(String name)`
-
-### 3. DTOs de Entrada
-
-- **CategoryRequest**: `CategoryRequest(String name, String description)`
-- **TagRequest**: `TagRequest(String name, String color)`
-- **TicketRequest**: Actualizado con `Long categoryId` y `List<Long> tagIds`
+### 3. Repositorios
+- CategoryRepository
+- TagRepository
 
 ### 4. Servicios
+- CategoryService (CRUD)
+- TagService (CRUD)
 
-- **CategoryService**: CRUD completo + validación de duplicados
-- **TagService**: CRUD completo + validación de duplicados
-- **TicketService**: Actualizado para manejar categorías y tags
+### 5. Controladores
+- CategoryController (/categories)
+- TagController (/tags)
 
-### 5. Controladores REST
+### 6. DataInitializer
+- Categorías: Bug, Feature, Support
+- Tags: urgent, backend, frontend
 
-#### **CategoryController** (`/ticket-app/categories`)
-```
-GET    /                        # Listar todas
-GET    /by-id/{id}             # Obtener por ID
-POST   /                        # Crear (validado)
-PUT    /by-id/{id}             # Actualizar (validado)
-DELETE /by-id/{id}             # Eliminar
-```
+---
 
-#### **TagController** (`/ticket-app/tags`)
-```
-GET    /                        # Listar todas
-GET    /by-id/{id}             # Obtener por ID
-POST   /                        # Crear (validado)
-PUT    /by-id/{id}             # Actualizar (validado)
-DELETE /by-id/{id}             # Eliminar
-```
+## 📊 Requisitos del Caso Extendido por Lección
 
-### 6. Manejo de Serialización Circular
+| Lección | Requisitos del Caso Extendido |
+|---------|------------------------------|
+| 10 | ✅ User entity con roles, Ticket con User relaciones, seed de datos |
+| 11 | ✅ Perfiles con diferentes configs de BD para usuarios (H2, MySQL, Supabase) |
+| 12 | ✅ Category (One-to-Many), Tag (Many-to-Many), CRUD completo |
+| 13 | Historial con User |
+| 14 | Flyway migrations con Foreign Keys a users |
+| 15 | Notificaciones con User |
+| 16 | Security con 3 roles (USER/AGENT/ADMIN) |
+| 17 | Logging de operaciones de usuarios |
+| 18 | Excepciones para casos de usuarios |
 
-Uso de anotaciones Jackson para evitar loops infinitos:
-- `@JsonManagedReference` en Category.tickets
-- `@JsonBackReference` en Ticket.category
-- `@JsonIgnore` en Tag.tickets
+---
 
-### 7. DataInitializer Actualizado
+## 🧪 Endpoints
 
-Carga inicial de datos:
-- 2 Categorías: "Bug", "Feature"
-- 3 Tags: "Urgent" (rojo), "Backend" (azul), "UI" (verde)
-- 2 Tickets con relaciones asignadas
-
-## 📊 Base de Datos
-
-Nuevas tablas creadas:
-```sql
-CREATE TABLE categories (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(255) NOT NULL UNIQUE,
-  description VARCHAR(255)
-);
-
-CREATE TABLE tags (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(255) NOT NULL UNIQUE,
-  color VARCHAR(7)
-);
-
-CREATE TABLE ticket_tags (
-  ticket_id BIGINT NOT NULL,
-  tag_id BIGINT NOT NULL,
-  PRIMARY KEY (ticket_id, tag_id),
-  FOREIGN KEY (ticket_id) REFERENCES tickets(id),
-  FOREIGN KEY (tag_id) REFERENCES tags(id)
-);
-
-ALTER TABLE tickets ADD COLUMN category_id BIGINT;
-ALTER TABLE tickets ADD FOREIGN KEY (category_id) REFERENCES categories(id);
-```
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | /categories | Listar categorías |
+| POST | /categories | Crear categoría |
+| GET | /categories/by-id/{id} | Ver categoría |
+| PUT | /categories/by-id/{id} | Actualizar categoría |
+| DELETE | /categories/by-id/{id} | Eliminar categoría |
+| GET | /tags | Listar tags |
+| POST | /tags | Crear tag |
+| GET | /tags/by-id/{id} | Ver tag |
+| PUT | /tags/by-id/{id} | Actualizar tag |
+| DELETE | /tags/by-id/{id} | Eliminar tag |
 
 ## ✅ Validación
 
-- [x] Compilación sin errores
-- [x] Todos los tests pasan
-- [x] Aplicación arranca correctamente
-- [x] Endpoints REST funcionan correctamente
+- [x] Proyecto compila sin errores
+- [x] CRUD de categorías funciona
+- [x] CRUD de tags funciona
+- [x] Relaciones JPA correctas
 - [x] Serialización JSON sin loops infinitos
-- [x] Validación de duplicados en categorías y tags
-- [x] Relaciones One-to-Many funcionan (cascade)
-- [x] Relaciones Many-to-Many funcionan
-- [x] Datos iniciales se cargan correctamente
 
-## 🧪 Pruebas Manuales
+## 📝 Archivos
 
-### Crear Categoría
-```bash
-curl -X POST http://localhost:8080/ticket-app/categories \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Enhancement", "description": "Mejoras"}'
-```
+| Archivo | Descripción |
+|---------|-------------|
+| `model/Category.java` | Entidad Category con One-to-Many |
+| `model/Tag.java` | Entidad Tag con Many-to-Many |
+| `respository/CategoryRepository.java` | Repository de Category |
+| `respository/TagRepository.java` | Repository de Tag |
+| `service/CategoryService.java` | CRUD de categorías |
+| `service/TagService.java` | CRUD de tags |
+| `controller/CategoryController.java` | Endpoints /categories |
+| `controller/TagController.java` | Endpoints /tags |
 
-### Crear Tag
-```bash
-curl -X POST http://localhost:8080/ticket-app/tags \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Documentation", "color": "#FFA500"}'
-```
+---
 
-### Crear Ticket con Categoría y Tags
-```bash
-curl -X POST http://localhost:8080/ticket-app/tickets \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Nuevo Ticket",
-    "description": "Con relaciones",
-    "createdBy": "admin",
-    "categoryId": 1,
-    "tagIds": [1, 2]
-  }'
-```
-
-### Listar Tickets con Relaciones
-```bash
-curl http://localhost:8080/ticket-app/tickets | jq '.[] | {id, title, category, tags}'
-```
-
-## 📝 Archivos Modificados/Creados
-
-| Archivo | Tipo | Descripción |
-|---------|------|-------------|
-| `model/Category.java` | ✨ Nuevo | Entidad One-to-Many |
-| `model/Tag.java` | ✨ Nuevo | Entidad Many-to-Many |
-| `model/Ticket.java` | 📝 Actualizado | Agregadas relaciones |
-| `respository/CategoryRepository.java` | ✨ Nuevo | JPA Repository |
-| `respository/TagRepository.java` | ✨ Nuevo | JPA Repository |
-| `service/CategoryService.java` | ✨ Nuevo | CRUD Service |
-| `service/TagService.java` | ✨ Nuevo | CRUD Service |
-| `service/TicketService.java` | 📝 Actualizado | Manejo de relaciones |
-| `controller/CategoryController.java` | ✨ Nuevo | REST Controller |
-| `controller/TagController.java` | ✨ Nuevo | REST Controller |
-| `dto/CategoryRequest.java` | ✨ Nuevo | Request DTO |
-| `dto/TagRequest.java` | ✨ Nuevo | Request DTO |
-| `dto/TicketRequest.java` | 📝 Actualizado | Agregados IDs |
-| `config/DataInitializer.java` | 📝 Actualizado | Datos de prueba |
-
-## 🚀 Próximo Paso
-
-Lección 13: Auditoría (TicketAudit, @CreationTimestamp, endpoint de historial)
+**Base**: Lección 11 (Configuración de BD)  
+**Stack**: Spring Boot 4.0.5, Java 21, JPA/Hibernate, H2, MySQL, PostgreSQL  
+**Estado**: ✅ Completada

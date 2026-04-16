@@ -75,9 +75,12 @@ public class User {
 - **TicketResult**: incluye objetos User para createdBy y assignedTo
 
 ### 7. Configuración (application.yml)
-- ✅ Agregada configuración de H2 (in-memory)
+- ✅ Agregada configuración de H2 (in-memory o archivo)
 - ✅ JPA/Hibernate settings
 - ✅ `ddl-auto: create-drop` para desarrollo
+- ✅ H2 puede ser volátil (`mem`) o persistente (`file`)
+
+> **Nota**: H2 por defecto usa base de datos en memoria (`jdbc:h2:mem:tickets_db`). Para hacer H2 persistente (los datos se mantienen entre ejecuciones), usar: `jdbc:h2:file:./data/tickets_db`
 
 ### 8. Inicializador de Datos (DataInitializer.java)
 - ✅ Carga usuarios iniciales con diferentes roles

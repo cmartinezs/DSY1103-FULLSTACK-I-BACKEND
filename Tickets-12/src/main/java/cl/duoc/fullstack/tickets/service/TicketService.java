@@ -24,19 +24,19 @@ import org.springframework.stereotype.Service;
 public class TicketService {
 
   private final TicketRepository repository;
+  private final UserRepository userRepository;
   private final CategoryRepository categoryRepository;
   private final TagRepository tagRepository;
-  private final UserRepository userRepository;
 
   public TicketService(
       TicketRepository repository,
+      UserRepository userRepository,
       CategoryRepository categoryRepository,
-      TagRepository tagRepository,
-      UserRepository userRepository) {
+      TagRepository tagRepository) {
     this.repository = repository;
+    this.userRepository = userRepository;
     this.categoryRepository = categoryRepository;
     this.tagRepository = tagRepository;
-    this.userRepository = userRepository;
   }
 
   public List<TicketResult> getTickets() {
@@ -61,47 +61,39 @@ public class TicketService {
           "Ya existe un ticket con el título: \"" + request.title() + "\"");
     }
 
+    User creator = userRepository.findByEmail(request.createdByName()).orElse(null);
+    if (creator == null) {
+      throw new IllegalArgumentException("Usuario creador no encontrado: " + request.createdByName());
+    }
+
+    User assignedTo = null;
+    if (request.assignedToId() != null) {
+      assignedTo = userRepository.findById(request.assignedToId()).orElse(null);
+      if (assignedTo != null && assignedTo.getId().equals(creator.getId())) {
+        throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
+      }
+    }
+
+    Category category = null;
+    if (request.categoryId() != null) {
+      category = categoryRepository.findById(request.categoryId()).orElse(null);
+    }
+
+    List<Tag> tags = new ArrayList<>();
+    if (request.tagIds() != null) {
+      tags = tagRepository.findAllById(request.tagIds());
+    }
+
     Ticket ticket = new Ticket();
     ticket.setTitle(request.title());
     ticket.setDescription(request.description());
+    ticket.setCreatedBy(creator);
+    ticket.setAssignedTo(assignedTo);
+    ticket.setCategory(category);
+    ticket.setTags(tags);
     ticket.setStatus("NEW");
     ticket.setCreatedAt(LocalDateTime.now());
     ticket.setEstimatedResolutionDate(LocalDate.now().plusDays(5));
-
-    if (request.createdById() != null) {
-      User creator = userRepository.findById(request.createdById())
-          .orElseThrow(() -> new IllegalArgumentException(
-              "No existe un usuario con ID " + request.createdById()));
-      ticket.setCreatedBy(creator);
-    }
-
-    if (request.assignedToId() != null) {
-      User assignee = userRepository.findById(request.assignedToId())
-          .orElseThrow(() -> new IllegalArgumentException(
-              "No existe un usuario con ID " + request.assignedToId()));
-      if (request.createdById() != null
-          && request.assignedToId().equals(request.createdById())) {
-        throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
-      }
-      ticket.setAssignedTo(assignee);
-    }
-
-    if (request.categoryId() != null) {
-      Optional<Category> category = categoryRepository.findById(request.categoryId());
-      category.ifPresentOrElse(
-          ticket::setCategory,
-          () -> {
-            throw new IllegalArgumentException("Category not found");
-          });
-    }
-
-    if (request.tagIds() != null && !request.tagIds().isEmpty()) {
-      List<Tag> tags = tagRepository.findAllById(request.tagIds());
-      ticket.setTags(tags);
-    } else {
-      ticket.setTags(new ArrayList<>());
-    }
-
     Ticket saved = this.repository.save(ticket);
     return toResult(saved);
   }
@@ -126,57 +118,69 @@ public class TicketService {
 
     Ticket toUpdate = found.get();
 
+    if (request.assignedToId() != null) {
+      User assignedTo = userRepository.findById(request.assignedToId()).orElse(null);
+      if (assignedTo != null && toUpdate.getCreatedBy() != null
+          && assignedTo.getId().equals(toUpdate.getCreatedBy().getId())) {
+        throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
+      }
+      toUpdate.setAssignedTo(assignedTo);
+    }
+
+    if (request.categoryId() != null) {
+      Category category = categoryRepository.findById(request.categoryId()).orElse(null);
+      toUpdate.setCategory(category);
+    }
+
+    if (request.tagIds() != null) {
+      List<Tag> tags = tagRepository.findAllById(request.tagIds());
+      toUpdate.setTags(tags);
+    }
+
     toUpdate.setTitle(request.title());
     toUpdate.setDescription(request.description());
     if (request.status() != null && !request.status().isBlank()) {
       toUpdate.setStatus(request.status());
     }
     toUpdate.setEffectiveResolutionDate(request.effectiveResolutionDate());
-
-    if (request.assignedToId() != null) {
-      User assignee = userRepository.findById(request.assignedToId())
-          .orElseThrow(() -> new IllegalArgumentException(
-              "No existe un usuario con ID " + request.assignedToId()));
-      User creator = toUpdate.getCreatedBy();
-      if (creator != null && request.assignedToId().equals(creator.getId())) {
-        throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
-      }
-      toUpdate.setAssignedTo(assignee);
-    }
-
-    if (request.categoryId() != null) {
-      Optional<Category> category = categoryRepository.findById(request.categoryId());
-      category.ifPresentOrElse(
-          toUpdate::setCategory,
-          () -> {
-            throw new IllegalArgumentException("Category not found");
-          });
-    }
-
-    if (request.tagIds() != null && !request.tagIds().isEmpty()) {
-      List<Tag> tags = tagRepository.findAllById(request.tagIds());
-      toUpdate.setTags(tags);
-    }
-
     Ticket saved = this.repository.save(toUpdate);
     return Optional.of(toResult(saved));
   }
 
   private TicketResult toResult(Ticket ticket) {
-    UserResult createdBy = ticket.getCreatedBy() != null
-        ? new UserResult(ticket.getCreatedBy().getId(), ticket.getCreatedBy().getName(), ticket.getCreatedBy().getEmail())
-        : null;
-    UserResult assignedTo = ticket.getAssignedTo() != null
-        ? new UserResult(ticket.getAssignedTo().getId(), ticket.getAssignedTo().getName(), ticket.getAssignedTo().getEmail())
-        : null;
-    CategoryResult category = ticket.getCategory() != null
-        ? new CategoryResult(ticket.getCategory().getId(), ticket.getCategory().getName(), ticket.getCategory().getDescription())
-        : null;
-    List<TagResult> tags = ticket.getTags() != null
-        ? ticket.getTags().stream()
-            .map(tag -> new TagResult(tag.getId(), tag.getName(), tag.getColor()))
-            .toList()
-        : List.of();
+    UserResult createdByResult = null;
+    if (ticket.getCreatedBy() != null) {
+      createdByResult = new UserResult(
+          ticket.getCreatedBy().getId(),
+          ticket.getCreatedBy().getName(),
+          ticket.getCreatedBy().getEmail()
+      );
+    }
+
+    UserResult assignedToResult = null;
+    if (ticket.getAssignedTo() != null) {
+      assignedToResult = new UserResult(
+          ticket.getAssignedTo().getId(),
+          ticket.getAssignedTo().getName(),
+          ticket.getAssignedTo().getEmail()
+      );
+    }
+
+    CategoryResult categoryResult = null;
+    if (ticket.getCategory() != null) {
+      categoryResult = new CategoryResult(
+          ticket.getCategory().getId(),
+          ticket.getCategory().getName(),
+          ticket.getCategory().getDescription()
+      );
+    }
+
+    List<TagResult> tagResults = null;
+    if (ticket.getTags() != null && !ticket.getTags().isEmpty()) {
+      tagResults = ticket.getTags().stream()
+          .map(tag -> new TagResult(tag.getId(), tag.getName(), tag.getColor()))
+          .toList();
+    }
 
     return new TicketResult(
         ticket.getId(),
@@ -186,10 +190,10 @@ public class TicketService {
         ticket.getCreatedAt(),
         ticket.getEstimatedResolutionDate(),
         ticket.getEffectiveResolutionDate(),
-        createdBy,
-        assignedTo,
-        category,
-        tags
+        createdByResult,
+        assignedToResult,
+        categoryResult,
+        tagResults
     );
   }
 }
