@@ -1,8 +1,8 @@
 package cl.duoc.fullstack.tickets.controller;
 
+import cl.duoc.fullstack.tickets.dto.TicketHistoryResult;
 import cl.duoc.fullstack.tickets.dto.TicketRequest;
 import cl.duoc.fullstack.tickets.dto.TicketResult;
-import cl.duoc.fullstack.tickets.dto.TicketHistoryResult;
 import cl.duoc.fullstack.tickets.model.ErrorResponse;
 import cl.duoc.fullstack.tickets.service.TicketService;
 import jakarta.validation.Valid;
@@ -83,11 +83,8 @@ public class TicketController {
   }
 
   @GetMapping("/{id}/history")
-  public ResponseEntity<List<TicketHistoryResult>> getHistory(@PathVariable Long id) {
-    if (!service.existsById(id)) {
-      return ResponseEntity.notFound().build();
-    }
-    List<TicketHistoryResult> history = service.getHistory(id);
+  public ResponseEntity<List<TicketHistoryResult>> getTicketHistory(@PathVariable Long id) {
+    List<TicketHistoryResult> history = this.service.getTicketHistory(id);
     return ResponseEntity.ok(history);
   }
 

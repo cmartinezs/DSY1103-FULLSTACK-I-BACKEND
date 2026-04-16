@@ -1,12 +1,15 @@
--- V1: Initial schema (Lección 10)
--- Users table
+-- V1: Initial schema (Lección 10 + Caso Extendido)
+-- Users table with roles
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) NOT NULL UNIQUE
+    email VARCHAR(150) NOT NULL UNIQUE,
+    role VARCHAR(20) NOT NULL DEFAULT 'USER',
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tickets table (sin relaciones aún)
+-- Tickets table (sin category_id, se agrega en V2)
 CREATE TABLE IF NOT EXISTS tickets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -23,3 +26,5 @@ CREATE TABLE IF NOT EXISTS tickets (
 
 CREATE INDEX idx_tickets_status ON tickets(status);
 CREATE INDEX idx_tickets_created_at ON tickets(created_at);
+CREATE INDEX idx_tickets_created_by ON tickets(created_by_id);
+CREATE INDEX idx_tickets_assigned_to ON tickets(assigned_to_id);

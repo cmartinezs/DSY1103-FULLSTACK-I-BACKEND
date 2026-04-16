@@ -1,212 +1,155 @@
-# Lección 12: Relaciones JPA
+# Tickets-14: Lección 14 - Migraciones Flyway
 
-## 📚 Objetivo
+## 📋 Descripción
 
-Implementar relaciones JPA en la aplicación Ticket:
-- **One-to-Many**: Ticket ↔ Category
-- **Many-to-Many**: Ticket ↔ Tag
+Este proyecto implementa la **Lección 14: Migraciones Flyway** del curso DSY1103 Fullstack I.
 
-## 🔄 Cambios Implementados
+Agrega versionado de base de datos con Flyway.
 
-### 1. Nuevas Entidades
+## 🎯 Caso de Uso Extendido (Sistema de Tickets con Gestión de Usuarios)
 
-#### **Category** (Relación One-to-Many)
-```java
-@Entity
-@Table(name = "categories")
-public class Category {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-  private String name;
-  private String description;
-  
-  @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference
-  private List<Ticket> tickets = new ArrayList<>();
-}
+### Roles definidos
+| Rol     | Descripción              |
+|---------|--------------------------|
+| USER    | Crea tickets, ve estado  |
+| AGENT   | Recibe tickets asignados |
+| ADMIN   | Supervisa y gestiona     |
+
+### Modelo de datos
+- **User**: id, name, email, role (USER/AGENT/ADMIN), active
+- **Ticket**: relaciones con User, Category, Tags
+- **Category**: One-to-Many con Ticket
+- **Tag**: Many-to-Many con Ticket
+- **TicketHistory**: historial de cambios de estado
+
+---
+
+## 🔄 Cambios desde Lección 13
+
+### 1. Dependencias Agregadas
+```xml
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-core</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-mysql</artifactId>
+</dependency>
 ```
 
-#### **Tag** (Relación Many-to-Many)
-```java
-@Entity
-@Table(name = "tags")
-public class Tag {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-  private String name;
-  private String color;
-  
-  @ManyToMany(mappedBy = "tags")
-  @JsonIgnore
-  private List<Ticket> tickets = new ArrayList<>();
-}
+> **Nota**: `flyway-core` incluye soporte para PostgreSQL/Supabase. No se necesita dependencia adicional.
+
+### 2. Migraciones SQL
+
+#### V1__Initial_schema.sql
+- Tabla users con campos role y active
+- Tabla tickets con Foreign Keys a users
+
+#### V2__Add_categories.sql
+- Tabla categories
+- Foreign Key category_id en tickets
+
+#### V3__Add_tags.sql
+- Tabla tags
+- Tabla ticket_tags (Many-to-Many)
+
+#### V4__Add_audit_tables.sql
+- Tabla ticket_history
+
+### 3. Configuración de Flyway por Perfil
+
+#### H2 (application-h2.yml)
+```yaml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
 ```
+> H2 usa JPA para crear las tablas automáticamente (ddl-auto: create-drop). Flyway deshabilitado.
 
-#### **Ticket** (Actualizado con relaciones)
-```java
-@ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name = "category_id")
-@JsonBackReference
-private Category category;
-
-@ManyToMany(fetch = FetchType.LAZY)
-@JoinTable(
-    name = "ticket_tags",
-    joinColumns = @JoinColumn(name = "ticket_id"),
-    inverseJoinColumns = @JoinColumn(name = "tag_id")
-)
-private List<Tag> tags = new ArrayList<>();
+#### MySQL (application-mysql.yml)
+```yaml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
 ```
+> MySQL usa Flyway. JPA valida que el esquema coincida.
 
-### 2. Repositorios
-
-- **CategoryRepository**: `JpaRepository<Category, Long>`
-  - Método: `existsByNameIgnoreCase(String name)`
-
-- **TagRepository**: `JpaRepository<Tag, Long>`
-  - Método: `existsByNameIgnoreCase(String name)`
-
-### 3. DTOs de Entrada
-
-- **CategoryRequest**: `CategoryRequest(String name, String description)`
-- **TagRequest**: `TagRequest(String name, String color)`
-- **TicketRequest**: Actualizado con `Long categoryId` y `List<Long> tagIds`
-
-### 4. Servicios
-
-- **CategoryService**: CRUD completo + validación de duplicados
-- **TagService**: CRUD completo + validación de duplicados
-- **TicketService**: Actualizado para manejar categorías y tags
-
-### 5. Controladores REST
-
-#### **CategoryController** (`/ticket-app/categories`)
+#### Supabase/PostgreSQL (application-supabase.yml)
+```yaml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
 ```
-GET    /                        # Listar todas
-GET    /by-id/{id}             # Obtener por ID
-POST   /                        # Crear (validado)
-PUT    /by-id/{id}             # Actualizar (validado)
-DELETE /by-id/{id}             # Eliminar
-```
+> PostgreSQL/Supabase usa Flyway. JPA valida el esquema.
 
-#### **TagController** (`/ticket-app/tags`)
-```
-GET    /                        # Listar todas
-GET    /by-id/{id}             # Obtener por ID
-POST   /                        # Crear (validado)
-PUT    /by-id/{id}             # Actualizar (validado)
-DELETE /by-id/{id}             # Eliminar
-```
+---
 
-### 6. Manejo de Serialización Circular
+## 📊 Requisitos del Caso Extendido por Lección
 
-Uso de anotaciones Jackson para evitar loops infinitos:
-- `@JsonManagedReference` en Category.tickets
-- `@JsonBackReference` en Ticket.category
-- `@JsonIgnore` en Tag.tickets
+| Lección | Requisitos del Caso Extendido |
+|---------|------------------------------|
+| 10 | ✅ User entity con roles, Ticket con User relaciones, seed de datos |
+| 11 | ✅ Perfiles con diferentes configs de BD para usuarios (H2, MySQL, Supabase) |
+| 12 | ✅ Category (One-to-Many), Tag (Many-to-Many), CRUD completo |
+| 13 | ✅ TicketHistory, registro automático, endpoint de historial |
+| 14 | ✅ Flyway migrations con Foreign Keys a users |
+| 15 | Notificaciones con User |
+| 16 | Security con 3 roles (USER/AGENT/ADMIN) |
+| 17 | Logging de operaciones de usuarios |
+| 18 | Excepciones para casos de usuarios |
 
-### 7. DataInitializer Actualizado
+---
 
-Carga inicial de datos:
-- 2 Categorías: "Bug", "Feature"
-- 3 Tags: "Urgent" (rojo), "Backend" (azul), "UI" (verde)
-- 2 Tickets con relaciones asignadas
+## 🧪 Uso
 
-## 📊 Base de Datos
+```bash
+# H2 (desarrollo sin Flyway - JPA crea tablas)
+./mvnw spring-boot:run
 
-Nuevas tablas creadas:
-```sql
-CREATE TABLE categories (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(255) NOT NULL UNIQUE,
-  description VARCHAR(255)
-);
+# MySQL (con Flyway)
+./mvnw spring-boot:run -Dspring.profiles.active=mysql
 
-CREATE TABLE tags (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(255) NOT NULL UNIQUE,
-  color VARCHAR(7)
-);
-
-CREATE TABLE ticket_tags (
-  ticket_id BIGINT NOT NULL,
-  tag_id BIGINT NOT NULL,
-  PRIMARY KEY (ticket_id, tag_id),
-  FOREIGN KEY (ticket_id) REFERENCES tickets(id),
-  FOREIGN KEY (tag_id) REFERENCES tags(id)
-);
-
-ALTER TABLE tickets ADD COLUMN category_id BIGINT;
-ALTER TABLE tickets ADD FOREIGN KEY (category_id) REFERENCES categories(id);
+# Supabase (con Flyway)
+./mvnw spring-boot:run -Dspring.profiles.active=supabase
 ```
 
 ## ✅ Validación
 
-- [x] Compilación sin errores
-- [x] Todos los tests pasan
-- [x] Aplicación arranca correctamente
-- [x] Endpoints REST funcionan correctamente
-- [x] Serialización JSON sin loops infinitos
-- [x] Validación de duplicados en categorías y tags
-- [x] Relaciones One-to-Many funcionan (cascade)
-- [x] Relaciones Many-to-Many funcionan
-- [x] Datos iniciales se cargan correctamente
+- [x] Proyecto compila sin errores
+- [x] Flyway configurado para MySQL/Supabase
+- [x] H2 mantiene ddl-auto: create-drop (sin Flyway)
+- [x] Migraciones con Foreign Keys correctas
+- [x] flyway-mysql incluido para soporte MySQL
 
-## 🧪 Pruebas Manuales
+## 📝 Archivos
 
-### Crear Categoría
-```bash
-curl -X POST http://localhost:8080/ticket-app/categories \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Enhancement", "description": "Mejoras"}'
-```
+| Archivo | Descripción |
+|---------|-------------|
+| `pom.xml` | Dependencias Flyway |
+| `db/migration/V1__Initial_schema.sql` | Tablas users, tickets |
+| `db/migration/V2__Add_categories.sql` | Tabla categories |
+| `db/migration/V3__Add_tags.sql` | Tabla tags, ticket_tags |
+| `db/migration/V4__Add_audit_tables.sql` | Tabla ticket_history |
+| `application-h2.yml` | H2 sin Flyway (JPA crea) |
+| `application-mysql.yml` | Flyway habilitado |
+| `application-supabase.yml` | Flyway habilitado |
 
-### Crear Tag
-```bash
-curl -X POST http://localhost:8080/ticket-app/tags \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Documentation", "color": "#FFA500"}'
-```
+---
 
-### Crear Ticket con Categoría y Tags
-```bash
-curl -X POST http://localhost:8080/ticket-app/tickets \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Nuevo Ticket",
-    "description": "Con relaciones",
-    "createdBy": "admin",
-    "categoryId": 1,
-    "tagIds": [1, 2]
-  }'
-```
-
-### Listar Tickets con Relaciones
-```bash
-curl http://localhost:8080/ticket-app/tickets | jq '.[] | {id, title, category, tags}'
-```
-
-## 📝 Archivos Modificados/Creados
-
-| Archivo | Tipo | Descripción |
-|---------|------|-------------|
-| `model/Category.java` | ✨ Nuevo | Entidad One-to-Many |
-| `model/Tag.java` | ✨ Nuevo | Entidad Many-to-Many |
-| `model/Ticket.java` | 📝 Actualizado | Agregadas relaciones |
-| `respository/CategoryRepository.java` | ✨ Nuevo | JPA Repository |
-| `respository/TagRepository.java` | ✨ Nuevo | JPA Repository |
-| `service/CategoryService.java` | ✨ Nuevo | CRUD Service |
-| `service/TagService.java` | ✨ Nuevo | CRUD Service |
-| `service/TicketService.java` | 📝 Actualizado | Manejo de relaciones |
-| `controller/CategoryController.java` | ✨ Nuevo | REST Controller |
-| `controller/TagController.java` | ✨ Nuevo | REST Controller |
-| `dto/CategoryRequest.java` | ✨ Nuevo | Request DTO |
-| `dto/TagRequest.java` | ✨ Nuevo | Request DTO |
-| `dto/TicketRequest.java` | 📝 Actualizado | Agregados IDs |
-| `config/DataInitializer.java` | 📝 Actualizado | Datos de prueba |
-
-## 🚀 Próximo Paso
-
-Lección 13: Auditoría (TicketAudit, @CreationTimestamp, endpoint de historial)
+**Base**: Lección 13 (Historial y Auditoría)  
+**Stack**: Spring Boot 4.0.5, Java 21, JPA/Hibernate, Flyway, H2, MySQL, PostgreSQL  
+**Estado**: ✅ Completada
