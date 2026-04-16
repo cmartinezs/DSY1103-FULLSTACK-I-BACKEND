@@ -59,13 +59,12 @@ Usa esta lista para verificar que implementaste correctamente el DTO y las valid
 
 ## Checklist de pruebas
 
-- ☐ `POST /tickets` con `"title": ""` → `400 Bad Request` + `{"message": "title: El título no puede estar vacío"}`
+- ☐ `POST /tickets` con `"title": ""` → `400 Bad Request` + `{"message": "title: El titulo es requerido"}`
 - ☐ `POST /tickets` con `"title": "   "` → `400 Bad Request` (blanco)
 - ☐ `POST /tickets` sin campo `title` → `400 Bad Request`
-- ☐ `PUT /tickets/1` con `"title": ""` → `400 Bad Request`
-- ☐ `POST /tickets` con `"id": 99, "status": "RESOLVED", "title": "Test"` → `201 Created` con status `NEW` (el id y status del cliente son ignorados)
-- ☐ `POST /tickets` válido → `201 Created` con ticket completo (flujo feliz no se rompió)
-- ☐ `GET /tickets`, `GET /tickets/1`, `DELETE /tickets/1` siguen funcionando correctamente (no se rompió nada)
+- ☐ `PUT /tickets/by-id/1` con `"title": ""` → `400 Bad Request`
+- ☐ `POST /tickets` válido → `201 Created` + `"Ticket Creado"` (flujo feliz no se rompió)
+- ☐ `GET /tickets`, `GET /tickets/by-id/1`, `DELETE /tickets/by-id/1` siguen funcionando correctamente (no se rompió nada)
 
 ---
 

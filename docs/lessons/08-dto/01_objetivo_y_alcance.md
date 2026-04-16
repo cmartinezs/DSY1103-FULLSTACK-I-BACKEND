@@ -34,8 +34,8 @@ Esta lección existe para resolver eso.
 
 Al terminar esta lección tendrás:
 
-1. Un **DTO de entrada** (`TicketRequest`) que declara explícitamente los campos que el cliente puede enviar
-2. **Validación automática** del título con `@NotBlank`: si viene vacío, la API responde `400 Bad Request` con `{"message": "título: El título no puede estar vacío"}`
+1. Un **DTO de entrada** (`TicketRequest`) implementado como un **Java `record`** — una característica de Java 21 que genera automáticamente constructor, getters, `equals()`, `hashCode()` y `toString()`
+2. **Validación automática** del título con `@NotBlank`: si viene vacío, la API responde `400 Bad Request` con `{"message": "título: El titulo es requerido"}`
 3. Un `@ExceptionHandler` en el controlador que convierte los errores de validación al formato `ErrorResponse`
 
 ### Lo que vas a ser capaz de explicar
@@ -44,6 +44,7 @@ Al terminar deberías poder responder:
 
 - ¿Qué es un DTO y para qué sirve?
 - ¿Por qué el modelo de dominio no debería ser la forma de entrada de la API?
+- ¿Qué es un `record` en Java y por qué es ideal para DTOs?
 - ¿Qué hace `@NotBlank` y en qué se diferencia de `@NotNull` y `@NotEmpty`?
 - ¿Qué hace `@Valid` en el parámetro del controlador?
 - ¿Qué excepción lanza Spring cuando la validación falla y cómo se captura?
@@ -58,7 +59,7 @@ Al terminar deberías poder responder:
 | Requerimiento | Lo que construimos |
 |---|---|
 | **REQ-12** — Título no puede estar vacío | La anotación `@NotBlank` en `TicketRequest.title` + respuesta `400` |
-| **REQ-13** — DTO separado del modelo | La clase `TicketRequest` en el paquete `dto` |
+| **REQ-13** — DTO separado del modelo | El `record TicketRequest` en el paquete `dto` |
 
 ---
 
@@ -99,14 +100,13 @@ src/main/java/cl/duoc/fullstack/tickets/
 ├── controller/
 │   └── TicketController.java   ← acepta @Valid @RequestBody TicketRequest + @ExceptionHandler
 ├── dto/
-│   └── TicketRequest.java      ← nueva: DTO de entrada con @NotBlank
+│   └── TicketRequest.java      ← nueva: record de entrada con @NotBlank
 ├── model/
-│   ├── Ticket.java
+│   ├── Ticket.java             ← sin anotaciones de validación (modelo puro)
 │   └── ErrorResponse.java
 ├── respository/
 │   └── TicketRepository.java
 ├── service/
-│   └── TicketService.java      ← create(TicketRequest request), update(Long id, TicketRequest request)
+│   └── TicketService.java      ← create(TicketRequest request), updateById(Long id, TicketRequest request)
 └── TicketsApplication.java
 ```
-

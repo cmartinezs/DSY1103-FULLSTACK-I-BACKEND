@@ -78,9 +78,9 @@ Usa esta lista para verificar que implementaste correctamente el Repository con 
 - ☐ `GET /tickets?status=NEW` → `200 OK` con solo los tickets en estado `NEW`
 - ☐ `GET /tickets?status=new` (minúsculas) → mismo resultado que `?status=NEW`
 - ☐ `GET /tickets?status=RESOLVED` cuando no hay tickets resueltos → `200 OK` con `[]`
-- ☐ `GET /tickets/1` → `200 OK` + ticket 1 (findById O(1) funciona)
-- ☐ `GET /tickets/999` → `404 Not Found` + `{"message": "Ticket con ID 999 no encontrado"}`
-- ☐ `POST /tickets` + `PUT /tickets/{id}` + `DELETE /tickets/{id}` siguen funcionando igual
+- ☐ `GET /tickets/by-id/1` → `200 OK` + ticket 1 (findById O(1) funciona)
+- ☐ `GET /tickets/by-id/999` → `404 Not Found`
+- ☐ `POST /tickets` + `PUT /tickets/by-id/{id}` + `DELETE /tickets/by-id/{id}` siguen funcionando igual
 - ☐ `POST /tickets` con título vacío → `400 Bad Request` (validaciones de lección 08 no se rompieron)
 - ☐ `POST /tickets` con título duplicado → `409 Conflict` (errores de lección 07 no se rompieron)
 

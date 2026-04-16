@@ -56,11 +56,11 @@ Usa esta lista para verificar que implementaste correctamente la estructura de e
 Hiciste las siguientes pruebas en Postman / Thunder Client:
 
 - ☐ `POST /tickets` con título existente → `409 Conflict` + `Content-Type: application/json` + `{"message": "..."}`
-- ☐ `GET /tickets/999` → `404 Not Found` + `Content-Type: application/json` + `{"message": "Ticket con ID 999 no encontrado"}`
-- ☐ `PUT /tickets/999` → `404 Not Found` + body JSON
-- ☐ `DELETE /tickets/999` → `404 Not Found` + body JSON
-- ☐ `GET /tickets/1` → `200 OK` + ticket completo (el body exitoso no se rompió)
-- ☐ `POST /tickets` con título nuevo → `201 Created` + ticket completo (el flujo feliz no se rompió)
+- ☐ `GET /tickets/by-id/999` → `404 Not Found`
+- ☐ `PUT /tickets/by-id/999` → `404 Not Found`
+- ☐ `DELETE /tickets/by-id/999` → `404 Not Found`
+- ☐ `GET /tickets/by-id/1` → `200 OK` + ticket completo (el body exitoso no se rompió)
+- ☐ `POST /tickets` con título nuevo → `201 Created` + `"Ticket Creado"` (el flujo feliz no se rompió)
 
 ---
 

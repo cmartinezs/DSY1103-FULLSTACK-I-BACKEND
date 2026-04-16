@@ -4,6 +4,19 @@ Sigue esta guía en orden. Vas a agregar validaciones de negocio en `TicketServi
 
 ---
 
+## Paso 0: agregar la dependencia de validación
+
+Para usar `@NotBlank`, `@Valid` y otras anotaciones de Bean Validation necesitas la dependencia en `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+```
+
+---
+
 ## Paso 1: agregar campos `createdBy` y `assignedTo` al modelo
 
 Abre `model/Ticket.java` y añade dos campos nuevos:
@@ -77,14 +90,16 @@ public Ticket create(Ticket ticket) {
 
 ## Paso 3: agregar validación en `TicketService.updateById()`
 
-Actualiza el método `updateById()`:
+Actualiza el método `updateById()` para usar `Optional`:
 
 ```java
-public Ticket updateById(Long id, Ticket ticket) {
-    Ticket toUpdate = this.repository.getById(id);
-    if (toUpdate == null) {
-        return null;
+public Optional<Ticket> updateById(Long id, Ticket ticket) {
+    Optional<Ticket> found = this.repository.findById(id);
+    if (found.isEmpty()) {
+        return Optional.empty();
     }
+
+    Ticket toUpdate = found.get();
 
     // Validación: Si se intenta cambiar el asignado, verifica que ≠ creador
     if (ticket.getAssignedTo() != null && 
@@ -100,7 +115,7 @@ public Ticket updateById(Long id, Ticket ticket) {
         toUpdate.setAssignedTo(ticket.getAssignedTo());
     }
     this.repository.update(toUpdate);
-    return toUpdate;
+    return Optional.of(toUpdate);
 }
 ```
 
@@ -112,35 +127,39 @@ Envuelve el `service.create()` en try/catch para capturar la excepción:
 
 ```java
 @PostMapping
-public ResponseEntity<?> create(@Valid @RequestBody Ticket ticket) {
+public ResponseEntity<Object> create(@Valid @RequestBody Ticket ticket) {
     try {
-        Ticket created = this.service.create(ticket);
+        this.service.create(ticket);
         return ResponseEntity.status(HttpStatus.CREATED).body("Ticket Creado");
     } catch (IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        return ResponseEntity.status(HttpStatus.CONFLICT)
             .body(new ErrorResponse(e.getMessage()));
     }
 }
 ```
 
+> **¿Por qué `409 Conflict` y no `400 Bad Request`?**
+> El estándar HTTP define `409 Conflict` para situaciones donde la petición entra en conflicto con el estado actual del recurso (por ejemplo, un título duplicado o un creador que es el mismo que el asignado). `400 Bad Request` se reserva para problemas de formato o validación del request en sí.
+
 ---
 
-## Paso 5: actualizar `TicketController.updateById()`
+## Paso 5: actualizar `TicketController.updateTicketById()`
 
-Envuelve el `service.updateById()` en try/catch:
+Envuelve el `service.updateById()` en try/catch y usa `Optional`:
 
 ```java
 @PutMapping("/by-id/{id}")
-public ResponseEntity<?> updateById(@PathVariable Long id, @RequestBody Ticket ticket) {
+public ResponseEntity<Object> updateTicketById(
+        @PathVariable Long id,
+        @Valid @RequestBody Ticket ticket) {
     try {
-        Ticket updated = this.service.updateById(id, ticket);
-        if (updated != null) {
-            return ResponseEntity.status(200).body(updated);
+        Optional<Ticket> updated = this.service.updateById(id, ticket);
+        if (updated.isPresent()) {
+            return ResponseEntity.ok(updated.get());
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(new ErrorResponse("Ticket con ID " + id + " no encontrado"));
+        return ResponseEntity.notFound().build();
     } catch (IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        return ResponseEntity.status(HttpStatus.CONFLICT)
             .body(new ErrorResponse(e.getMessage()));
     }
 }
@@ -193,7 +212,7 @@ Content-Type: application/json
 }
 ```
 
-**Resultado:** `400 Bad Request` con:
+**Resultado:** `409 Conflict` con:
 
 ```json
 {
@@ -231,5 +250,5 @@ Content-Type: application/json
 }
 ```
 
-**Resultado:** `400 Bad Request` con el mismo error.
+**Resultado:** `409 Conflict` con el mismo error.
 

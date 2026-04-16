@@ -1,12 +1,18 @@
 package cl.duoc.fullstack.tickets.controller;
 
+import cl.duoc.fullstack.tickets.dto.TicketRequest;
+import cl.duoc.fullstack.tickets.model.ErrorResponse;
 import cl.duoc.fullstack.tickets.model.Ticket;
 import cl.duoc.fullstack.tickets.service.TicketService;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/tickets")
 public class TicketController {
 
-  private TicketService service;
+  private final TicketService service;
 
   public TicketController(TicketService service) {
     this.service = service;
@@ -29,53 +35,57 @@ public class TicketController {
   @GetMapping
   public ResponseEntity<List<Ticket>> getAllTickets(
       @RequestParam(required = false) String status) {
-    List<Ticket> tickets = status != null 
-        ? this.service.getTickets(status) 
+    List<Ticket> tickets = status != null
+        ? this.service.getTickets(status)
         : this.service.getTickets();
     return ResponseEntity.ok(tickets);
   }
 
   @PostMapping
-  public ResponseEntity<Object> create(@Valid @RequestBody Ticket ticket) {
+  public ResponseEntity<Object> create(@Valid @RequestBody TicketRequest request) {
     try {
-      Ticket created = this.service.create(ticket);
+      this.service.create(request);
       return ResponseEntity.status(HttpStatus.CREATED).body("Ticket Creado");
     } catch (IllegalArgumentException e) {
-      return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(e.getMessage()));
     }
   }
 
   @GetMapping("/by-id/{id}")
   public ResponseEntity<Ticket> getTicketById(@PathVariable Long id) {
-    Ticket found = this.service.getById(id);
-    if (found != null) {
-      return ResponseEntity.status(200).body(found);
-    }
-    return ResponseEntity.notFound().build();
+    return this.service.getById(id)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
   }
 
   @PutMapping("/by-id/{id}")
   public ResponseEntity<Object> updateTicketById(
       @PathVariable Long id,
-      @Valid @RequestBody Ticket ticket) {
+      @Valid @RequestBody TicketRequest request) {
     try {
-      Ticket updated = this.service.updateById(id, ticket);
-      if (updated != null) {
-        return ResponseEntity.status(200).body(updated);
+      Optional<Ticket> updated = this.service.updateById(id, request);
+      if (updated.isPresent()) {
+        return ResponseEntity.ok(updated.get());
       }
       return ResponseEntity.notFound().build();
     } catch (IllegalArgumentException e) {
-      return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(e.getMessage()));
     }
   }
 
   @DeleteMapping("/by-id/{id}")
-  public ResponseEntity<Ticket> deleteTicketById(@PathVariable Long id) {
-    Ticket found = this.service.deleteById(id);
-    if (found != null) {
-      return ResponseEntity.status(200).body(found);
+  public ResponseEntity<Void> deleteTicketById(@PathVariable Long id) {
+    if (!this.service.deleteById(id)) {
+      return ResponseEntity.notFound().build();
     }
-    return ResponseEntity.notFound().build();
+    return ResponseEntity.noContent().build();
+  }
+
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException e) {
+    String message = e.getBindingResult().getFieldErrors().stream()
+        .map(err -> err.getField() + ": " + err.getDefaultMessage())
+        .collect(Collectors.joining(", "));
+    return ResponseEntity.badRequest().body(new ErrorResponse(message));
   }
 }
-

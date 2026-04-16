@@ -1,16 +1,18 @@
 package cl.duoc.fullstack.tickets.service;
 
+import cl.duoc.fullstack.tickets.dto.TicketRequest;
 import cl.duoc.fullstack.tickets.model.Ticket;
 import cl.duoc.fullstack.tickets.respository.TicketRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TicketService {
 
-  private TicketRepository repository;
+  private final TicketRepository repository;
 
   public TicketService(TicketRepository repository) {
     this.repository = repository;
@@ -24,55 +26,60 @@ public class TicketService {
     return this.repository.getAll(statusFilter);
   }
 
-  public Ticket create(Ticket ticket) {
-    boolean exists = this.repository.existsByTitle(ticket.getTitle());
+  public Ticket create(TicketRequest request) {
+    boolean exists = this.repository.existsByTitle(request.title());
     if (exists) {
       throw new IllegalArgumentException(
-          "Ya existe un ticket con el título: \"" + ticket.getTitle() + "\"");
+          "Ya existe un ticket con el título: \"" + request.title() + "\"");
     }
 
-    if (ticket.getAssignedTo() != null 
-        && ticket.getAssignedTo().equals(ticket.getCreatedBy())) {
+    if (request.assignedTo() != null
+        && request.assignedTo().equals(request.createdBy())) {
       throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
     }
 
-    LocalDateTime now = LocalDateTime.now();
-    LocalDate ldNow = LocalDate.now();
-    LocalDate estimated = ldNow.plusDays(5L);
-
+    Ticket ticket = new Ticket();
+    ticket.setTitle(request.title());
+    ticket.setDescription(request.description());
+    ticket.setCreatedBy(request.createdBy());
+    ticket.setAssignedTo(request.assignedTo());
     ticket.setStatus("NEW");
-    ticket.setCreatedAt(now);
-    ticket.setEstimatedResolutionDate(estimated);
+    ticket.setCreatedAt(LocalDateTime.now());
+    ticket.setEstimatedResolutionDate(LocalDate.now().plusDays(5));
     return this.repository.save(ticket);
   }
 
-  public Ticket getById(Long id) {
-    return repository.getById(id);
+  public Optional<Ticket> getById(Long id) {
+    return this.repository.findById(id);
   }
 
-  public Ticket deleteById(Long id) {
-    return repository.deleteById(id);
+  public boolean deleteById(Long id) {
+    return this.repository.deleteById(id);
   }
 
-  public Ticket updateById(Long id, Ticket ticket) {
-    Ticket toUpdate = this.repository.getById(id);
-    if (toUpdate == null) {
-      return null;
+  public Optional<Ticket> updateById(Long id, TicketRequest request) {
+    Optional<Ticket> found = this.repository.findById(id);
+    if (found.isEmpty()) {
+      return Optional.empty();
     }
 
-    if (ticket.getAssignedTo() != null 
-        && ticket.getAssignedTo().equals(toUpdate.getCreatedBy())) {
+    Ticket toUpdate = found.get();
+
+    if (request.assignedTo() != null
+        && request.assignedTo().equals(toUpdate.getCreatedBy())) {
       throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
     }
 
-    toUpdate.setTitle(ticket.getTitle());
-    toUpdate.setDescription(ticket.getDescription());
-    toUpdate.setStatus(ticket.getStatus());
-    toUpdate.setEffectiveResolutionDate(ticket.getEffectiveResolutionDate());
-    if (ticket.getAssignedTo() != null) {
-      toUpdate.setAssignedTo(ticket.getAssignedTo());
+    toUpdate.setTitle(request.title());
+    toUpdate.setDescription(request.description());
+    if (request.status() != null && !request.status().isBlank()) {
+      toUpdate.setStatus(request.status());
+    }
+    toUpdate.setEffectiveResolutionDate(request.effectiveResolutionDate());
+    if (request.assignedTo() != null) {
+      toUpdate.setAssignedTo(request.assignedTo());
     }
     this.repository.update(toUpdate);
-    return toUpdate;
+    return Optional.of(toUpdate);
   }
 }

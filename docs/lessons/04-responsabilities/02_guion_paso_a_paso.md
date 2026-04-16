@@ -25,10 +25,10 @@ La solución es **separar responsabilidades**: cada parte del sistema hace una s
 El patrón que vamos a usar se llama **CSR** (Controller - Service - Repository). Antes de escribir ninguna clase, crea los siguientes paquetes dentro de `cl.duoc.fullstack.tickets`:
 
 ```
-controller/   → recibe y responde peticiones HTTP
-service/      → contiene la lógica de negocio
-repository/   → accede y almacena los datos
-model/        → define la forma de los datos (las "entidades")
+controller/    → recibe y responde peticiones HTTP
+service/       → contiene la lógica de negocio
+respository/   → accede y almacena los datos (nota: el nombre conserva la errata intencionalmente)
+model/         → define la forma de los datos (las "entidades")
 ```
 
 > **¿Por qué paquetes separados?** En Java, los paquetes son más que carpetas: comunican intención. Cuando alguien abre tu proyecto y ve estos cuatro paquetes, inmediatamente sabe que sigues una arquitectura por capas. Es un lenguaje común entre desarrolladores.
@@ -82,7 +82,7 @@ public class Ticket {
 
 El `Repository` es la capa que se encarga de **almacenar y recuperar datos**. Hoy usamos una `List` en memoria para simular una base de datos. Cuando en lecciones futuras conectemos una base de datos real, solo tendrás que cambiar esta capa: el resto del código no sabrá la diferencia.
 
-Crea la clase `TicketRepository` en el paquete `repository`:
+Crea la clase `TicketRepository` en el paquete `respository`:
 
 ```java
 import org.springframework.stereotype.Repository;

@@ -185,7 +185,7 @@ public class TicketService {
 
         ticket.setStatus("NEW");
         ticket.setCreatedAt(LocalDateTime.now());
-        ticket.setEstimatedResolutionDate(LocalDate.now().plusDays(7));
+        ticket.setEstimatedResolutionDate(LocalDate.now().plusDays(5));
         ticket.setEffectiveResolutionDate(null);
 
         return this.repository.save(ticket);
@@ -200,7 +200,7 @@ public class TicketService {
 > Porque "un ticket recién creado siempre empieza como `NEW`" es una **regla de negocio**. Si el cliente pudiera mandar `"status": "RESOLVED"` y el servidor lo aceptara, cualquier usuario podría resolver un ticket sin haberlo trabajado. El servidor tiene la autoridad sobre su propio estado interno.
 
 > **¿Por qué el `Service` calcula la fecha estimada (y no el cliente)?**
-> Por el mismo principio: la regla "la resolución estimada es 7 días después de la creación" es lógica de negocio. Si el cliente calculara esa fecha, cada cliente podría mandar una fecha diferente. Centralizar el cálculo en el `Service` garantiza que la regla se aplique de forma consistente sin importar desde dónde se cree el ticket.
+> Por el mismo principio: la regla "la resolución estimada es 5 días después de la creación" es lógica de negocio. Si el cliente calculara esa fecha, cada cliente podría mandar una fecha diferente. Centralizar el cálculo en el `Service` garantiza que la regla se aplique de forma consistente sin importar desde dónde se cree el ticket.
 
 > **¿Por qué `effectiveResolutionDate` se asigna como `null`?**
 > Porque en el momento de la creación el ticket aún no está resuelto. Esta fecha se asignará en el futuro, cuando se implemente el endpoint de actualización de estado (`PUT /tickets/{id}`). Por ahora, dejarla como `null` es el estado correcto para un ticket nuevo.
@@ -241,8 +241,8 @@ public class TicketController {
     @PostMapping
     public ResponseEntity<Object> create(@RequestBody Ticket ticket) {
         try {
-            Ticket saved = service.create(ticket);
-            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+            service.create(ticket);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Ticket Creado");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
@@ -285,24 +285,14 @@ Con el siguiente body. **Nota:** solo mandas `title` y `description`. El servido
 
 Resultado esperado (`201 Created`):
 
-```json
-{
-  "id": 3,
-  "title": "Login falla con usuario especial",
-  "description": "El sistema no permite el acceso con caracteres especiales en el nombre de usuario",
-  "status": "NEW",
-  "createdAt": "2026-03-19T17:30:00",
-  "estimatedResolutionDate": "2026-03-26",
-  "effectiveResolutionDate": null
-}
+```
+Ticket Creado
 ```
 
 Observa que:
-- `id` fue asignado por el servidor (`3`)
-- `status` es siempre `"NEW"`, sin importar lo que mandaste (o no mandaste)
-- `createdAt` es el momento exacto en que se procesó la petición
-- `estimatedResolutionDate` es exactamente 7 días después de `createdAt`
-- `effectiveResolutionDate` es `null` porque el ticket está recién creado
+- La respuesta es un texto plano confirmando la creación, no el objeto completo
+- Internamente, el servidor asignó `id`, `status = "NEW"`, `createdAt` y `estimatedResolutionDate` (5 días después)
+- Puedes verificar el ticket creado con `GET /tickets`
 
 ### Prueba 2: intentar crear un ticket con el mismo título
 
@@ -329,7 +319,7 @@ El servidor rechaza la creación porque ya existe un ticket con ese título. El 
 GET http://localhost:8080/tickets
 ```
 
-Deberías ver los 3 tickets: los 2 semilla (uno `NEW`, uno `RESOLVED`) más el que acabas de crear. Observa la diferencia entre el Ticket 2 (resuelto, con `effectiveResolutionDate` con valor) y el nuevo (sin resolver, con `effectiveResolutionDate: null`).
+Deberías ver los 3 tickets: los 2 semilla más el que acabas de crear. Los semilla tienen `status = "NEW"` y el nuevo también.
 
 ---
 
@@ -338,7 +328,7 @@ Deberías ver los 3 tickets: los 2 semilla (uno `NEW`, uno `RESOLVED`) más el q
 Antes de pasar a la actividad, respóndete estas preguntas:
 
 1. El cliente mandó un JSON sin el campo `status`. ¿Qué valor tiene `status` en el objeto `Ticket` cuando llega al `Service`? ¿Qué pasa si el cliente sí lo manda con `"status": "RESOLVED"`?
-2. Si mañana la regla de negocio cambia y la fecha estimada pasa de 7 días a 10 días hábiles, ¿qué archivo modificarías? ¿Tendrías que tocar el `Controller` o el `Repository`?
+2. Si mañana la regla de negocio cambia y la fecha estimada pasa de 5 días a 10 días hábiles, ¿qué archivo modificarías? ¿Tendrías que tocar el `Controller` o el `Repository`?
 3. ¿Por qué el `try/catch` está en el `Controller` y no en el `Service`? ¿Qué pasaría si lo pusieras en el `Service`?
 
 ---
@@ -348,7 +338,7 @@ Antes de pasar a la actividad, respóndete estas preguntas:
 Si terminaste todo lo anterior y quieres ir un paso más, implementa el endpoint de resolución de un ticket:
 
 ```
-PUT /tickets/{id}/resolve
+PUT /tickets/by-id/{id}/resolve
 ```
 
 - Busca el ticket por `id` en el `Repository`

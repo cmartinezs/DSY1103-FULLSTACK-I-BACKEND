@@ -4,11 +4,9 @@ Sigue esta guía en orden. Vas a separar la entrada de la API del modelo de domi
 
 ---
 
-## Paso 1: agregar la dependencia de validación
+## Paso 1: verificar la dependencia de validación
 
-Bean Validation (`@NotBlank`, `@Valid`, etc.) no está incluido en el starter web de Spring Boot. Necesitas agregar su dependencia explícitamente.
-
-Abre `pom.xml` y agrega dentro del bloque `<dependencies>`:
+En la lección anterior ya agregaste la dependencia de Bean Validation en `pom.xml`. Verifica que esté presente:
 
 ```xml
 <dependency>
@@ -17,10 +15,7 @@ Abre `pom.xml` y agrega dentro del bloque `<dependencies>`:
 </dependency>
 ```
 
-Guarda el archivo. Maven descargará la librería automáticamente.
-
-> **¿Qué es Bean Validation?**
-> Es una especificación de Java (JSR-380) que define anotaciones para validar campos: `@NotBlank`, `@NotNull`, `@Size`, `@Min`, `@Max`, `@Pattern`, entre otras. Spring Boot integra Hibernate Validator como implementación de referencia. La dependencia que agregaste trae todo lo necesario.
+Esta dependencia trae Hibernate Validator (la implementación de referencia de Bean Validation / JSR-380), que provee anotaciones como `@NotBlank`, `@NotNull`, `@Size`, `@Min`, `@Max` y `@Pattern`.
 
 ---
 
@@ -53,7 +48,7 @@ La solución: un DTO que declara **solo** lo que el cliente puede enviar.
 
 ---
 
-## Paso 3: crear el paquete `dto` y la clase `TicketRequest`
+## Paso 3: crear el paquete `dto` y el `record TicketRequest`
 
 Crea el directorio `dto` dentro de `cl/duoc/fullstack/tickets/` y luego el archivo:
 
@@ -65,23 +60,35 @@ src/main/java/cl/duoc/fullstack/tickets/dto/TicketRequest.java
 package cl.duoc.fullstack.tickets.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Size;
+import java.time.LocalDateTime;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class TicketRequest {
-
-    @NotBlank(message = "El título no puede estar vacío")
-    private String title;
-
-    private String description;
-
-    private String status;
-}
+public record TicketRequest(
+    @NotBlank(message = "El titulo es requerido")
+    @Size(min = 1, max = 50)
+    String title,
+    @NotBlank(message = "La descripción es requerida")
+    String description,
+    @NotBlank(message = "El creador es requerido")
+    String createdBy,
+    String assignedTo,
+    String status,
+    LocalDateTime effectiveResolutionDate
+) {}
 ```
+
+> **¿Qué es un `record` en Java?**
+> Un `record` es una clase especial introducida en Java 16 que genera automáticamente:
+> - Un constructor con todos los campos como parámetros
+> - Métodos de acceso por nombre de campo (ej: `title()`, `description()`)
+> - `equals()`, `hashCode()` y `toString()` basados en todos los campos
+>
+> Los records son **inmutables**: una vez creados, sus valores no pueden cambiar. Esto los hace ideales para DTOs, donde solo necesitas transportar datos de un lugar a otro sin modificarlos.
+
+> **¿Por qué un `record` y no una clase con Lombok?**
+> Para el modelo `Ticket` usamos Lombok porque necesitamos setters (mutabilidad) — el `Service` modifica campos como `status`, `createdAt`, etc. Pero un DTO de entrada no necesita setters: Jackson lo crea una vez a partir del JSON y nadie lo modifica después. El `record` expresa esa intención con menos código y sin dependencias externas.
+>
+> Jackson (la librería de serialización que usa Spring) soporta records de forma nativa desde la versión 2.12 — no necesitas `@JsonCreator` ni configuración adicional.
 
 > **¿Por qué `@NotBlank` y no `@NotNull`?**
 > `@NotNull` solo verifica que el campo no sea `null`. `@NotBlank` es más estricto: verifica que no sea null, no sea una cadena vacía `""`, y no sea solo espacios en blanco `"   "`. Para un título de ticket, `"   "` es tan inválido como `null`, por eso usamos `@NotBlank`.
@@ -89,17 +96,41 @@ public class TicketRequest {
 > **Diferencias resumidas:**
 > - `@NotNull` → `null` falla; `""` y `"   "` pasan
 > - `@NotEmpty` → `null` y `""` fallan; `"   "` pasa
-> - `@NotBlank` → `null`, `""` y `"   "` fallan ✅
+> - `@NotBlank` → `null`, `""` y `"   "` fallan
 
-> **¿Por qué Lombok `@Getter @NoArgsConstructor @AllArgsConstructor` y no un `record`?**
-> Jackson necesita un constructor sin argumentos para deserializar JSON en objetos Java (al menos cuando no hay configuración adicional). Los `record` en Java no tienen constructor vacío por defecto — por eso usamos una clase normal con Lombok. Si quisieras usar un `record`, necesitarías `@JsonCreator` y configuración adicional.
-
-> **¿Por qué incluir `status` en el DTO si el servidor lo asigna en el `create`?**
-> Porque el mismo `TicketRequest` se reutiliza para el `PUT /tickets/{id}`, donde el cliente sí puede actualizar el estado. Un campo `required = false` en el DTO es válido: simplemente se ignora si no viene.
+> **¿Por qué incluir `status` y `effectiveResolutionDate` en el DTO si el servidor los controla en el `create`?**
+> Porque el mismo `TicketRequest` se reutiliza para el `PUT /tickets/by-id/{id}`, donde el cliente sí puede actualizar el estado y la fecha de resolución. Un campo opcional en el DTO es válido: simplemente se ignora si no viene.
 
 ---
 
-## Paso 4: actualizar `TicketService.create()` para aceptar `TicketRequest`
+## Paso 4: quitar las anotaciones de validación del modelo `Ticket`
+
+Ahora que la validación vive en el DTO, el modelo `Ticket` queda como un POJO puro de Lombok — sin anotaciones de Jakarta Validation:
+
+```java
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class Ticket {
+  private Long id;
+  private String title;
+  private String description;
+  private String status;
+  private LocalDateTime createdAt;
+  private LocalDate estimatedResolutionDate;
+  private LocalDateTime effectiveResolutionDate;
+  private String createdBy;
+  private String assignedTo;
+}
+```
+
+> **¿Por qué quitamos las anotaciones del modelo?**
+> Porque la validación de entrada es responsabilidad del DTO, no del modelo de dominio. El `Ticket` representa lo que el sistema almacena internamente — el `TicketRequest` representa lo que el cliente puede enviar. Mezclar ambas responsabilidades en la misma clase fue exactamente el problema que identificamos al principio.
+
+---
+
+## Paso 5: actualizar `TicketService.create()` para aceptar `TicketRequest`
 
 El `Service` recibe el DTO y construye el `Ticket` internamente. Esta transformación es responsabilidad del `Service`: es el puente entre la capa de entrada y el modelo de dominio.
 
@@ -107,9 +138,7 @@ El `Service` recibe el DTO y construye el `Ticket` internamente. Esta transforma
 
 ```java
 public Ticket create(Ticket ticket) {
-    if (this.repository.existsByTitle(ticket.getTitle())) {
-        throw new IllegalArgumentException("Ya existe un ticket con el título '" + ticket.getTitle() + "'");
-    }
+    // validaciones...
     ticket.setStatus("NEW");
     ticket.setCreatedAt(LocalDateTime.now());
     ticket.setEstimatedResolutionDate(LocalDate.now().plusDays(5));
@@ -121,13 +150,21 @@ public Ticket create(Ticket ticket) {
 
 ```java
 public Ticket create(TicketRequest request) {
-    if (this.repository.existsByTitle(request.getTitle())) {
-        throw new IllegalArgumentException("Ya existe un ticket con el título '" + request.getTitle() + "'");
+    if (this.repository.existsByTitle(request.title())) {
+        throw new IllegalArgumentException(
+            "Ya existe un ticket con el título: \"" + request.title() + "\"");
+    }
+
+    if (request.assignedTo() != null
+        && request.assignedTo().equals(request.createdBy())) {
+        throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
     }
 
     Ticket ticket = new Ticket();
-    ticket.setTitle(request.getTitle());
-    ticket.setDescription(request.getDescription());
+    ticket.setTitle(request.title());
+    ticket.setDescription(request.description());
+    ticket.setCreatedBy(request.createdBy());
+    ticket.setAssignedTo(request.assignedTo());
     ticket.setStatus("NEW");
     ticket.setCreatedAt(LocalDateTime.now());
     ticket.setEstimatedResolutionDate(LocalDate.now().plusDays(5));
@@ -138,59 +175,45 @@ public Ticket create(TicketRequest request) {
 
 La diferencia clave: el `Service` **construye** el `Ticket` a partir del DTO. El cliente nunca puede inyectar un `Ticket` preformado con campos no permitidos.
 
+> **¿Por qué se accede a los campos con `request.title()` y no `request.getTitle()`?**
+> Los records en Java generan métodos de acceso con el mismo nombre que el campo, sin el prefijo `get`. Es una convención del lenguaje para records.
+
 > **¿Por qué crear `new Ticket()` en el Service y no en el Repository?**
 > El `Service` tiene la responsabilidad de aplicar las reglas de negocio: qué campos asigna el servidor, cuáles vienen del cliente, cuáles se calculan. El `Repository` solo guarda. Si el `Repository` construyera el `Ticket`, mezclaría lógica de negocio con lógica de persistencia.
 
 ---
 
-## Paso 5: actualizar `TicketService.update()` para aceptar `TicketRequest`
+## Paso 6: actualizar `TicketService.updateById()` para aceptar `TicketRequest`
 
 ```java
-public Optional<Ticket> update(Long id, TicketRequest request) {
-    return this.repository.update(id, request);
-}
-```
+public Optional<Ticket> updateById(Long id, TicketRequest request) {
+    Optional<Ticket> found = this.repository.findById(id);
+    if (found.isEmpty()) {
+        return Optional.empty();
+    }
 
-El `Repository` también necesita actualizarse. Veremos eso en el siguiente paso.
+    Ticket toUpdate = found.get();
 
----
+    if (request.assignedTo() != null
+        && request.assignedTo().equals(toUpdate.getCreatedBy())) {
+        throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
+    }
 
-## Paso 6: actualizar `TicketRepository.update()` para aceptar `TicketRequest`
-
-**Antes:**
-
-```java
-public Optional<Ticket> update(Long id, Ticket updatedTicket) {
-    Optional<Ticket> found = findById(id);
-    found.ifPresent(ticket -> {
-        ticket.setTitle(updatedTicket.getTitle());
-        ticket.setDescription(updatedTicket.getDescription());
-        ticket.setStatus(updatedTicket.getStatus());
-    });
-    return found;
-}
-```
-
-**Después:**
-
-```java
-public Optional<Ticket> update(Long id, TicketRequest request) {
-    Optional<Ticket> found = findById(id);
-    found.ifPresent(ticket -> {
-        ticket.setTitle(request.getTitle());
-        ticket.setDescription(request.getDescription());
-        if (request.getStatus() != null && !request.getStatus().isBlank()) {
-            ticket.setStatus(request.getStatus());
-        }
-    });
-    return found;
+    toUpdate.setTitle(request.title());
+    toUpdate.setDescription(request.description());
+    if (request.status() != null && !request.status().isBlank()) {
+        toUpdate.setStatus(request.status());
+    }
+    toUpdate.setEffectiveResolutionDate(request.effectiveResolutionDate());
+    if (request.assignedTo() != null) {
+        toUpdate.setAssignedTo(request.assignedTo());
+    }
+    this.repository.update(toUpdate);
+    return Optional.of(toUpdate);
 }
 ```
 
 El `status` en el `PUT` es opcional: si el cliente no lo envía (llega como `null`), el status del ticket no cambia. Si lo envía, sí se actualiza.
-
-> **¿No viola esto la separación de capas que el Repository conozca el DTO?**
-> Esta es una decisión de diseño pragmática. En una API con JPA, el `Repository` trabajaría directamente con el modelo de base de datos y el `Service` haría el mapeo completo. Con un almacenamiento en memoria, aceptar el DTO en el Repository simplifica el código sin perder claridad. Cuando migremos a JPA, el `Service` será quien mapee el DTO a la entidad antes de llamar al Repository.
 
 ---
 
@@ -200,20 +223,20 @@ El `status` en el `PUT` es opcional: si el cliente no lo envía (llega como `nul
 
 ```java
 // Antes:
-public ResponseEntity<?> create(@RequestBody Ticket ticket) { ... }
+public ResponseEntity<Object> create(@RequestBody Ticket ticket) { ... }
 
 // Después:
-public ResponseEntity<?> create(@Valid @RequestBody TicketRequest request) { ... }
+public ResponseEntity<Object> create(@Valid @RequestBody TicketRequest request) { ... }
 ```
 
 **PUT — antes y después:**
 
 ```java
 // Antes:
-public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Ticket ticket) { ... }
+public ResponseEntity<Object> updateTicketById(@PathVariable Long id, @RequestBody Ticket ticket) { ... }
 
 // Después:
-public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody TicketRequest request) { ... }
+public ResponseEntity<Object> updateTicketById(@PathVariable Long id, @Valid @RequestBody TicketRequest request) { ... }
 ```
 
 > **¿Qué hace `@Valid`?**
@@ -270,27 +293,27 @@ public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotVal
 ### Prueba 1: título vacío
 
 ```
-POST http://localhost:8080/tickets
+POST http://localhost:8080/ticket-app/tickets
 Content-Type: application/json
 
-{ "title": "", "description": "Descripción" }
+{ "title": "", "description": "Descripción", "createdBy": "juan" }
 ```
 
 Resultado esperado (`400 Bad Request`):
 
 ```json
 {
-  "message": "title: El título no puede estar vacío"
+  "message": "title: El titulo es requerido"
 }
 ```
 
 ### Prueba 2: título con solo espacios
 
 ```
-POST http://localhost:8080/tickets
+POST http://localhost:8080/ticket-app/tickets
 Content-Type: application/json
 
-{ "title": "   ", "description": "Descripción" }
+{ "title": "   ", "description": "Descripción", "createdBy": "juan" }
 ```
 
 Resultado esperado: `400 Bad Request` con el mismo mensaje de error.
@@ -298,10 +321,10 @@ Resultado esperado: `400 Bad Request` con el mismo mensaje de error.
 ### Prueba 3: título ausente (null)
 
 ```
-POST http://localhost:8080/tickets
+POST http://localhost:8080/ticket-app/tickets
 Content-Type: application/json
 
-{ "description": "Sin título" }
+{ "description": "Sin título", "createdBy": "juan" }
 ```
 
 Resultado esperado: `400 Bad Request` con mensaje de validación.
@@ -309,21 +332,21 @@ Resultado esperado: `400 Bad Request` con mensaje de validación.
 ### Prueba 4: creación válida (el flujo feliz no se rompió)
 
 ```
-POST http://localhost:8080/tickets
+POST http://localhost:8080/ticket-app/tickets
 Content-Type: application/json
 
-{ "title": "Bug en facturación", "description": "El sistema falla al generar PDF" }
+{ "title": "Bug en facturación", "description": "El sistema falla al generar PDF", "createdBy": "juan" }
 ```
 
-Resultado esperado: `201 Created` con el ticket completo (id, status=NEW, createdAt, estimatedResolutionDate asignados por el servidor).
+Resultado esperado: `201 Created` con `"Ticket Creado"`.
 
 ### Prueba 5: validación en PUT también funciona
 
 ```
-PUT http://localhost:8080/tickets/1
+PUT http://localhost:8080/ticket-app/tickets/by-id/1
 Content-Type: application/json
 
-{ "title": "" }
+{ "title": "", "description": "Descripción", "createdBy": "juan" }
 ```
 
 Resultado esperado: `400 Bad Request` con mensaje de validación.
@@ -332,8 +355,7 @@ Resultado esperado: `400 Bad Request` con mensaje de validación.
 
 ## Paso 10: reflexiona antes de cerrar
 
-1. Si el cliente envía `{"id": 99, "title": "Test", "status": "RESOLVED"}` al `POST /tickets`, ¿qué ocurre con el `id` y el `status` que envió? ¿El servidor los usa o los descarta?
-2. ¿Por qué el `Service` construye el `Ticket` a partir del `TicketRequest` en lugar de recibirlo directamente? ¿Qué pasaría si un futuro desarrollador agrega `ticket.setStatus(request.getStatus())` al service?
+1. Si el cliente envía `{"id": 99, "title": "Test", "status": "RESOLVED", "createdBy": "juan"}` al `POST /tickets`, ¿qué ocurre con el `id` y el `status` que envió? ¿El servidor los usa o los descarta?
+2. ¿Por qué el `Service` construye el `Ticket` a partir del `TicketRequest` en lugar de recibirlo directamente? ¿Qué pasaría si un futuro desarrollador agrega `ticket.setStatus(request.status())` al service?
 3. Si agregas `@NotBlank` en `description` también, ¿qué cambiaría en la respuesta de error si ambos campos son inválidos?
-4. ¿Qué tiene que ocurrir para que `@Valid` no haga nada? (pista: no es un error de código)
-
+4. ¿Qué diferencia hay entre un `record` de Java y una clase con Lombok? ¿Cuándo preferirías uno sobre otro?

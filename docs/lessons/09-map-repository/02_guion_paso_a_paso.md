@@ -65,25 +65,25 @@ long currentId = 0L;
 
 public TicketRepository() {
     tickets = new ArrayList<>();
-    tickets.add(new Ticket(currentId++, "Ticket 1", "Ticket 1", "NEW", LocalDateTime.now(), null, null));
-    tickets.add(new Ticket(currentId++, "Ticket 2", "Ticket 2", "NEW", LocalDateTime.now(), null, null));
+    tickets.add(new Ticket(currentId++, "Ticket 1", "Ticket 1", "NEW", LocalDateTime.now(), null, null, "admin", null));
+    tickets.add(new Ticket(currentId++, "Ticket 2", "Ticket 2", "NEW", LocalDateTime.now(), null, null, "admin", null));
 }
 ```
 
 **Después:**
 
 ```java
-private Map<Long, Ticket> db = new HashMap<>();
+private final Map<Long, Ticket> db = new HashMap<>();
 private long currentId = 1L;
 
 public TicketRepository() {
     LocalDateTime now = LocalDateTime.now();
     LocalDate estimated = LocalDate.now().plusDays(5);
 
-    Ticket t1 = new Ticket(currentId, "Ticket 1", "Descripción del ticket 1", "NEW", now, estimated, null);
+    Ticket t1 = new Ticket(currentId, "Ticket 1", "Descripción del ticket 1", "NEW", now, estimated, null, "admin", null);
     db.put(currentId++, t1);
 
-    Ticket t2 = new Ticket(currentId, "Ticket 2", "Descripción del ticket 2", "NEW", now, estimated, null);
+    Ticket t2 = new Ticket(currentId, "Ticket 2", "Descripción del ticket 2", "NEW", now, estimated, null, "admin", null);
     db.put(currentId++, t2);
     // currentId queda en 3, listo para el siguiente ticket nuevo
 }
@@ -95,26 +95,28 @@ public TicketRepository() {
 > **¿Por qué `Map<Long, Ticket>` y no `Map<Integer, Ticket>`?**
 > El campo `id` del `Ticket` es `Long`. Si usáramos `Integer`, habría que convertir constantemente entre tipos, lo que añade ruido sin valor. La clave del Map debe ser del mismo tipo que el ID del modelo.
 
+> **¿Por qué `final` en la declaración del mapa?**
+> `private final Map<Long, Ticket> db` no significa que el mapa sea inmutable — puedes seguir agregando y eliminando entradas. Significa que la referencia `db` no se puede reasignar a otro objeto. Es una buena práctica en Java: si la referencia no necesita cambiar, márcala como `final`.
+
 ---
 
 ## Paso 3: refactorizar `getAll()` y agregar `getAll(String statusFilter)`
 
 ```java
 public List<Ticket> getAll() {
-    List<Ticket> all = new ArrayList<>(db.values());
-    all.sort(Comparator.comparing(Ticket::getCreatedAt));
-    return all;
+    return db.values().stream()
+        .sorted(Comparator.comparing(Ticket::getCreatedAt))
+        .toList();
 }
 
 public List<Ticket> getAll(String statusFilter) {
-    List<Ticket> all = new ArrayList<>(db.values());
-    all.sort(Comparator.comparing(Ticket::getCreatedAt));
-    if (statusFilter != null && !statusFilter.isBlank()) {
-        return all.stream()
-            .filter(t -> t.getStatus().equalsIgnoreCase(statusFilter))
-            .collect(Collectors.toList());
+    if (statusFilter == null || statusFilter.isBlank()) {
+        return getAll();
     }
-    return all;
+    return db.values().stream()
+        .filter(t -> t.getStatus().equalsIgnoreCase(statusFilter))
+        .sorted(Comparator.comparing(Ticket::getCreatedAt))
+        .toList();
 }
 ```
 
@@ -142,11 +144,11 @@ public List<Ticket> getAll(String statusFilter) {
 > **¿Por qué `equalsIgnoreCase` y no `equals`?**
 > Para que `?status=new`, `?status=NEW` y `?status=New` funcionen igual. Las APIs bien diseñadas son flexibles con los parámetros de consulta: el cliente no debería tener que saber si el estado es en mayúsculas o minúsculas.
 
-> **¿Por qué ordenamos antes de filtrar?**
-> Porque la lista resultante (filtrada o no) siempre debe estar ordenada por `createdAt`. Si ordenáramos después del filtro, el resultado sería el mismo, pero si ordenáramos antes, garantizamos que el orden es siempre consistente, incluso si el filtro no se aplica.
+> **¿Por qué `.toList()` y no `.collect(Collectors.toList())`?**
+> `.toList()` es un método disponible desde Java 16 que devuelve una lista inmodificable. Es más conciso que `collect(Collectors.toList())` y comunica la intención más claramente. La lista devuelta no necesita ser modificable: solo se usa para serializar a JSON en la respuesta.
 
-> **¿Por qué `new ArrayList<>(db.values())` y no `db.values()` directamente?**
-> `db.values()` devuelve una **vista** de los valores del mapa — una colección que no tiene orden garantizado y no puede ordenarse directamente. Al convertirla a `ArrayList`, tienes una copia independiente que puedes ordenar y modificar sin afectar el mapa original.
+> **¿Por qué ordenamos por `createdAt`?**
+> `db.values()` devuelve los valores del mapa en un orden no garantizado (depende de la implementación interna del `HashMap`). Ordenar por `createdAt` asegura que el cliente siempre reciba los tickets en un orden consistente y predecible.
 
 ---
 
@@ -192,10 +194,10 @@ public Ticket save(Ticket newTicket) {
 **Después:**
 
 ```java
-public Ticket save(Ticket ticket) {
-    ticket.setId(currentId);
-    db.put(currentId++, ticket);
-    return ticket;
+public Ticket save(Ticket newTicket) {
+    newTicket.setId(currentId);
+    db.put(currentId++, newTicket);
+    return newTicket;
 }
 ```
 
@@ -211,7 +213,7 @@ Primero asignamos el ID al ticket (para que el objeto devuelto ya tenga su ID), 
 public Optional<Ticket> update(Long id, TicketRequest request) {
     Optional<Ticket> found = findById(id); // O(n)
     found.ifPresent(ticket -> {
-        ticket.setTitle(request.getTitle());
+        ticket.setTitle(request.title());
         // ...
     });
     return found;
@@ -220,28 +222,20 @@ public Optional<Ticket> update(Long id, TicketRequest request) {
 
 **Después (con Map):**
 
+La lógica de actualización se mueve al `Service` (donde pertenece según CSR), y el `Repository` solo se encarga de persistir:
+
 ```java
-public Optional<Ticket> update(Long id, TicketRequest request) {
-    Optional<Ticket> found = findById(id); // O(1) ahora
-    found.ifPresent(ticket -> {
-        ticket.setTitle(request.getTitle());
-        ticket.setDescription(request.getDescription());
-        if (request.getStatus() != null && !request.getStatus().isBlank()) {
-            ticket.setStatus(request.getStatus());
-        }
-    });
-    return found;
+public void update(Ticket toUpdate) {
+    db.put(toUpdate.getId(), toUpdate);
 }
 ```
 
-La lógica no cambia — lo que cambia es que `findById(id)` ahora es O(1) en lugar de O(n). El beneficio es transparente para quien llama al método.
-
-> **¿Por qué no necesitamos `db.put()` después del `ifPresent`?**
-> Porque `db.get(id)` devuelve una **referencia** al mismo objeto `Ticket` que está en el mapa. Cuando llamamos a `ticket.setTitle(...)`, estamos modificando directamente el objeto que ya está almacenado. No necesitamos "guardarlo de nuevo" — ya está ahí.
+> **¿Por qué la lógica de mapeo se mueve al Service?**
+> En la versión anterior, el `Repository` aplicaba los campos del DTO al ticket. Eso mezclaba lógica de transformación (responsabilidad del `Service`) con lógica de persistencia (responsabilidad del `Repository`). Con el `Map`, el `Service` ya tiene el ticket (obtenido con `findById`), lo modifica, y llama a `repository.update(toUpdate)` solo para persistir.
 
 ---
 
-## Paso 7: refactorizar `delete()`
+## Paso 7: refactorizar `deleteById()`
 
 **Antes:**
 
@@ -254,7 +248,7 @@ public boolean delete(Long id) {
 **Después:**
 
 ```java
-public boolean delete(Long id) {
+public boolean deleteById(Long id) {
     return db.remove(id) != null;
 }
 ```
@@ -272,6 +266,19 @@ public boolean delete(Long id) {
 public boolean existsByTitle(String title) {
     return db.values().stream()
         .anyMatch(t -> t.getTitle().equalsIgnoreCase(title));
+}
+```
+
+**Código equivalente sin expresiones lambda:**
+
+```java
+public boolean existsByTitle(String title) {
+    for (Ticket ticket : db.values()) {
+        if (ticket.getTitle().equalsIgnoreCase(title)) {
+            return true;
+        }
+    }
+    return false;
 }
 ```
 
@@ -312,7 +319,10 @@ public ResponseEntity<List<Ticket>> getAllTickets() {
 @GetMapping
 public ResponseEntity<List<Ticket>> getAllTickets(
         @RequestParam(required = false) String status) {
-    return ResponseEntity.ok(service.getTickets(status));
+    List<Ticket> tickets = status != null
+        ? this.service.getTickets(status)
+        : this.service.getTickets();
+    return ResponseEntity.ok(tickets);
 }
 ```
 
@@ -328,7 +338,7 @@ public ResponseEntity<List<Ticket>> getAllTickets(
 ### Prueba 1: filtrar por estado existente
 
 ```
-GET http://localhost:8080/tickets?status=NEW
+GET http://localhost:8080/ticket-app/tickets?status=NEW
 ```
 
 Resultado esperado: `200 OK` con la lista de tickets cuyo status es `NEW`, ordenados por `createdAt`.
@@ -336,7 +346,7 @@ Resultado esperado: `200 OK` con la lista de tickets cuyo status es `NEW`, orden
 ### Prueba 2: filtrar insensible a mayúsculas
 
 ```
-GET http://localhost:8080/tickets?status=new
+GET http://localhost:8080/ticket-app/tickets?status=new
 ```
 
 Resultado esperado: el mismo que `?status=NEW`.
@@ -344,7 +354,7 @@ Resultado esperado: el mismo que `?status=NEW`.
 ### Prueba 3: sin parámetro — todos los tickets
 
 ```
-GET http://localhost:8080/tickets
+GET http://localhost:8080/ticket-app/tickets
 ```
 
 Resultado esperado: `200 OK` con todos los tickets, ordenados por `createdAt`.
@@ -352,14 +362,14 @@ Resultado esperado: `200 OK` con todos los tickets, ordenados por `createdAt`.
 ### Prueba 4: estado que no existe
 
 ```
-GET http://localhost:8080/tickets?status=UNKNOWN
+GET http://localhost:8080/ticket-app/tickets?status=UNKNOWN
 ```
 
 Resultado esperado: `200 OK` con lista vacía `[]`. No es un error — simplemente no hay tickets con ese estado.
 
 ### Prueba 5: operaciones CRUD siguen funcionando
 
-Confirma que `POST`, `GET/{id}`, `PUT/{id}` y `DELETE/{id}` siguen respondiendo igual que antes. La refactorización interna no debe cambiar el comportamiento observable de la API.
+Confirma que `POST`, `GET /by-id/{id}`, `PUT /by-id/{id}` y `DELETE /by-id/{id}` siguen respondiendo igual que antes. La refactorización interna no debe cambiar el comportamiento observable de la API.
 
 ---
 
@@ -369,4 +379,4 @@ Confirma que `POST`, `GET/{id}`, `PUT/{id}` y `DELETE/{id}` siguen respondiendo 
 2. Después de llamar a `db.get(id)` y obtener un `Ticket`, ¿por qué modificar ese objeto con `ticket.setTitle(...)` también modifica lo que está guardado en el mapa?
 3. Si agregas 1.000.000 de tickets al mapa, ¿cuánto tarda `findById(id)`? ¿Eso cambiaría si fuera una `List`?
 4. ¿Por qué `existsByTitle()` sigue siendo O(n) incluso con el mapa? ¿Qué cambio harías para que fuera O(1)?
-
+5. ¿Qué ventaja tiene `.toList()` sobre `.collect(Collectors.toList())`?

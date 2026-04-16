@@ -16,11 +16,11 @@ POST /tickets        → crea un ticket nuevo        (ya existe)
 Y lo que necesita tener al final de esta lección:
 
 ```
-GET    /tickets        → devuelve la lista completa    (ya existe)
-POST   /tickets        → crea un ticket nuevo          (ya existe)
-GET    /tickets/{id}   → busca un ticket por ID        (lo que vamos a construir)
-PUT    /tickets/{id}   → actualiza un ticket           (lo que vamos a construir)
-DELETE /tickets/{id}   → elimina un ticket             (lo que vamos a construir)
+GET    /tickets             → devuelve la lista completa    (ya existe)
+POST   /tickets             → crea un ticket nuevo          (ya existe)
+GET    /tickets/by-id/{id}  → busca un ticket por ID        (lo que vamos a construir)
+PUT    /tickets/by-id/{id}  → actualiza un ticket           (lo que vamos a construir)
+DELETE /tickets/by-id/{id}  → elimina un ticket             (lo que vamos a construir)
 ```
 
 Para que los tres nuevos endpoints funcionen, necesitas modificar **tres capas**:
@@ -110,14 +110,14 @@ Ambas versiones son correctas y producen exactamente el mismo resultado. La vers
 
 ---
 
-## Paso 4: agregar `findById()` al Service
+## Paso 4: agregar `getById()` al Service
 
 El `Service` delega al `Repository` y propaga el `Optional` hacia arriba, sin desnudarlo. No hay reglas de negocio que aplicar en una simple búsqueda por ID.
 
 Abre `TicketService` y agrega:
 
 ```java
-public Optional<Ticket> findById(Long id) {
+public Optional<Ticket> getById(Long id) {
     return this.repository.findById(id);
 }
 ```
@@ -127,14 +127,14 @@ public Optional<Ticket> findById(Long id) {
 
 ---
 
-## Paso 5: agregar `GET /tickets/{id}` al Controller
+## Paso 5: agregar `GET /tickets/by-id/{id}` al Controller
 
 Abre `TicketController` y agrega el endpoint:
 
 ```java
-@GetMapping("/{id}")
-public ResponseEntity<Ticket> getById(@PathVariable Long id) {
-    return service.findById(id)
+@GetMapping("/by-id/{id}")
+public ResponseEntity<Ticket> getTicketById(@PathVariable Long id) {
+    return service.getById(id)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
 }
@@ -143,9 +143,9 @@ public ResponseEntity<Ticket> getById(@PathVariable Long id) {
 **Código equivalente sin expresiones lambda:**
 
 ```java
-@GetMapping("/{id}")
-public ResponseEntity<Ticket> getById(@PathVariable Long id) {
-    Optional<Ticket> found = service.findById(id);
+@GetMapping("/by-id/{id}")
+public ResponseEntity<Ticket> getTicketById(@PathVariable Long id) {
+    Optional<Ticket> found = service.getById(id);
     if (found.isPresent()) {
         return ResponseEntity.ok(found.get());
     }
@@ -156,7 +156,7 @@ public ResponseEntity<Ticket> getById(@PathVariable Long id) {
 Ambas versiones hacen exactamente lo mismo. El `.get()` es seguro aquí porque está protegido por `isPresent()` en la línea anterior.
 
 > **¿Qué hace `@PathVariable`?**
-> Captura el valor dinámico que viene en la URL. Si el cliente llama a `GET /tickets/3`, Spring extrae el `3` de la URL y lo asigna a la variable `id`. Sin `@PathVariable`, el controlador no sabría qué ID está buscando el cliente.
+> Captura el valor dinámico que viene en la URL. Si el cliente llama a `GET /tickets/by-id/3`, Spring extrae el `3` de la URL y lo asigna a la variable `id`. Sin `@PathVariable`, el controlador no sabría qué ID está buscando el cliente.
 
 > **¿En qué se diferencia `@PathVariable` de `@RequestParam`?**
 > `@PathVariable` extrae valores que forman parte de la estructura de la URL: `/tickets/3`. `@RequestParam` extrae parámetros del query string: `/tickets?id=3`. En REST, los identificadores de recursos van en la URL, no en el query string. Por eso usamos `@PathVariable`.
@@ -211,14 +211,14 @@ Nuevamente el `.get()` es seguro porque está dentro del bloque `if (found.isPre
 > Ejecuta el bloque de código solo si el `Optional` tiene un valor adentro. Si está vacío, no hace nada. Es el equivalente seguro de `if (found != null) { ... }`, pero sin null.
 
 > **¿Por qué no actualizamos el ID?**
-> El ID es el identificador único e inmutable del recurso. En REST, el recurso se identifica por su URL: `PUT /tickets/1` siempre modifica el ticket con ID `1`, independientemente de lo que el body diga sobre el ID.
+> El ID es el identificador único e inmutable del recurso. En REST, el recurso se identifica por su URL: `PUT /tickets/by-id/1` siempre modifica el ticket con ID `1`, independientemente de lo que el body diga sobre el ID.
 
 ---
 
-## Paso 7: agregar `update()` al Service
+## Paso 7: agregar `updateById()` al Service
 
 ```java
-public Optional<Ticket> update(Long id, Ticket updatedTicket) {
+public Optional<Ticket> updateById(Long id, Ticket updatedTicket) {
     return this.repository.update(id, updatedTicket);
 }
 ```
@@ -227,12 +227,12 @@ En esta lección el `Service` delega directamente al `Repository`. El desafío o
 
 ---
 
-## Paso 8: agregar `PUT /tickets/{id}` al Controller
+## Paso 8: agregar `PUT /tickets/by-id/{id}` al Controller
 
 ```java
-@PutMapping("/{id}")
-public ResponseEntity<Ticket> update(@PathVariable Long id, @RequestBody Ticket ticket) {
-    return service.update(id, ticket)
+@PutMapping("/by-id/{id}")
+public ResponseEntity<Ticket> updateTicketById(@PathVariable Long id, @RequestBody Ticket ticket) {
+    return service.updateById(id, ticket)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
 }
@@ -241,9 +241,9 @@ public ResponseEntity<Ticket> update(@PathVariable Long id, @RequestBody Ticket 
 **Código equivalente sin expresiones lambda:**
 
 ```java
-@PutMapping("/{id}")
-public ResponseEntity<Ticket> update(@PathVariable Long id, @RequestBody Ticket ticket) {
-    Optional<Ticket> updated = service.update(id, ticket);
+@PutMapping("/by-id/{id}")
+public ResponseEntity<Ticket> updateTicketById(@PathVariable Long id, @RequestBody Ticket ticket) {
+    Optional<Ticket> updated = service.updateById(id, ticket);
     if (updated.isPresent()) {
         return ResponseEntity.ok(updated.get());
     }
@@ -252,7 +252,7 @@ public ResponseEntity<Ticket> update(@PathVariable Long id, @RequestBody Ticket 
 ```
 
 > **¿Por qué usamos el `id` de la URL y no el que pudiera venir en el body?**
-> Porque la URL identifica el recurso de forma autoritativa. Si el cliente manda `PUT /tickets/1` con un body que tiene `"id": 99`, eso es una inconsistencia. La URL dice claramente cuál recurso se está modificando. El `id` del body se ignora: el `Repository` actualiza el ticket cuyo `id` coincide con el de la URL.
+> Porque la URL identifica el recurso de forma autoritativa. Si el cliente manda `PUT /tickets/by-id/1` con un body que tiene `"id": 99`, eso es una inconsistencia. La URL dice claramente cuál recurso se está modificando. El `id` del body se ignora: el `Repository` actualiza el ticket cuyo `id` coincide con el de la URL.
 
 > **¿Por qué `PUT` devuelve `200 OK` con el ticket actualizado y no `204 No Content`?**
 > Porque devolver el recurso actualizado le permite al cliente confirmar que los cambios se aplicaron correctamente, sin necesidad de hacer un `GET` adicional. Aunque la especificación HTTP permite `204` en un `PUT`, devolver `200` con el cuerpo actualizado es más útil en la práctica.
@@ -295,27 +295,24 @@ public boolean delete(Long id) {
 
 ---
 
-## Paso 10: agregar `delete()` al Service
+## Paso 10: agregar `deleteById()` al Service
 
 ```java
-public boolean delete(Long id) {
+public boolean deleteById(Long id) {
     return this.repository.delete(id);
 }
 ```
 
 ---
 
-## Paso 11: agregar `DELETE /tickets/{id}` al Controller
+## Paso 11: agregar `DELETE /tickets/by-id/{id}` al Controller
 
 ```java
-@DeleteMapping("/{id}")
-public ResponseEntity<Void> delete(@PathVariable Long id) {
-    boolean deleted = service.delete(id);
-
-    if (!deleted) {
+@DeleteMapping("/by-id/{id}")
+public ResponseEntity<Void> deleteTicketById(@PathVariable Long id) {
+    if (!service.deleteById(id)) {
         return ResponseEntity.notFound().build();
     }
-
     return ResponseEntity.noContent().build();
 }
 ```
@@ -357,9 +354,9 @@ public class TicketController {
         return ResponseEntity.ok(this.service.getTickets());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Ticket> getById(@PathVariable Long id) {
-        return service.findById(id)
+    @GetMapping("/by-id/{id}")
+    public ResponseEntity<Ticket> getTicketById(@PathVariable Long id) {
+        return service.getById(id)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }
@@ -367,23 +364,23 @@ public class TicketController {
     @PostMapping
     public ResponseEntity<Object> create(@RequestBody Ticket ticket) {
         try {
-            Ticket saved = service.create(ticket);
-            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+            service.create(ticket);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Ticket Creado");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Ticket> update(@PathVariable Long id, @RequestBody Ticket ticket) {
-        return service.update(id, ticket)
+    @PutMapping("/by-id/{id}")
+    public ResponseEntity<Ticket> updateTicketById(@PathVariable Long id, @RequestBody Ticket ticket) {
+        return service.updateById(id, ticket)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!service.delete(id)) {
+    @DeleteMapping("/by-id/{id}")
+    public ResponseEntity<Void> deleteTicketById(@PathVariable Long id) {
+        if (!service.deleteById(id)) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.noContent().build();
@@ -412,7 +409,7 @@ Resultado esperado: `200 OK` con la lista de 2 tickets semilla.
 ### Prueba 2: obtener un ticket existente
 
 ```
-GET http://localhost:8080/tickets/1
+GET http://localhost:8080/tickets/by-id/1
 ```
 
 Resultado esperado (`200 OK`):
@@ -434,7 +431,7 @@ Resultado esperado (`200 OK`):
 ### Prueba 3: obtener un ticket inexistente
 
 ```
-GET http://localhost:8080/tickets/999
+GET http://localhost:8080/tickets/by-id/999
 ```
 
 Resultado esperado: `404 Not Found` (sin cuerpo).
@@ -464,7 +461,7 @@ Resultado esperado: `201 Created` con el ticket creado (ID 3, status NEW, fechas
 ### Prueba 5: actualizar un ticket existente
 
 ```
-PUT http://localhost:8080/tickets/1
+PUT http://localhost:8080/tickets/by-id/1
 Content-Type: application/json
 ```
 
@@ -485,7 +482,7 @@ Resultado esperado: `200 OK` con el ticket actualizado. Observa que `createdAt` 
 ### Prueba 6: actualizar un ticket inexistente
 
 ```
-PUT http://localhost:8080/tickets/999
+PUT http://localhost:8080/tickets/by-id/999
 Content-Type: application/json
 ```
 
@@ -506,7 +503,7 @@ Resultado esperado: `404 Not Found`.
 ### Prueba 7: eliminar un ticket existente
 
 ```
-DELETE http://localhost:8080/tickets/2
+DELETE http://localhost:8080/tickets/by-id/2
 ```
 
 Resultado esperado: `204 No Content` (sin cuerpo).
@@ -518,7 +515,7 @@ Verifica con un `GET /tickets` que el ticket 2 ya no aparece en la lista.
 ### Prueba 8: eliminar un ticket inexistente
 
 ```
-DELETE http://localhost:8080/tickets/999
+DELETE http://localhost:8080/tickets/by-id/999
 ```
 
 Resultado esperado: `404 Not Found`.
@@ -529,8 +526,8 @@ Resultado esperado: `404 Not Found`.
 
 Antes de pasar a la actividad, respóndete estas preguntas:
 
-1. Si un cliente manda `PUT /tickets/1` con el body `{"id": 99, "title": "Nuevo título", ...}`, ¿qué ID usa el servidor para buscar el ticket a actualizar? ¿Por qué?
-2. Si ejecutas `DELETE /tickets/1` cinco veces seguidas, ¿qué responde el servidor la segunda, tercera, cuarta y quinta vez? ¿Eso lo hace idempotente?
+1. Si un cliente manda `PUT /tickets/by-id/1` con el body `{"id": 99, "title": "Nuevo título", ...}`, ¿qué ID usa el servidor para buscar el ticket a actualizar? ¿Por qué?
+2. Si ejecutas `DELETE /tickets/by-id/1` cinco veces seguidas, ¿qué responde el servidor la segunda, tercera, cuarta y quinta vez? ¿Eso lo hace idempotente?
 3. ¿Por qué `findById()` y `update()` devuelven `Optional<Ticket>` mientras que `delete()` devuelve `boolean`? ¿Qué comunica cada tipo de retorno al código que lo llama?
 4. ¿Qué pasaría si el `Service` llamara a `repository.findById(id).get()` sin verificar si el `Optional` está vacío? ¿Cuándo y cómo fallaría?
 

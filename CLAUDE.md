@@ -35,10 +35,10 @@ On Windows use `mvnw.cmd` instead of `./mvnw` if the shell does not support Unix
 
 ## Stack
 
-- Java 21 / Spring Boot 4.0.3
+- Java 21 / Spring Boot 4.0.5
 - Spring Web MVC (no Spring Data JPA — storage is in-memory)
 - Lombok (`@Getter`, `@Setter`, `@NoArgsConstructor`, `@AllArgsConstructor` on models)
-- Jakarta Validation (`@NotBlank`, `@Size`, `@Min`, `@Max`) with `@Valid` in controllers
+- Jakarta Validation (`@NotBlank`, `@Size`) on DTOs with `@Valid` in controllers
 - Spring Boot DevTools (hot reload during development)
 
 ## Application configuration
@@ -50,18 +50,19 @@ On Windows use `mvnw.cmd` instead of `./mvnw` if the shell does not support Unix
 
 ## Architecture
 
-The project follows a strict 4-layer separation (Controller → Service → Repository → Model):
+The project follows a strict 5-layer separation (Controller → Service → Repository → Model / DTO):
 
 | Layer | Package | Responsibility |
 |---|---|---|
-| `controller/` | `TicketController` | HTTP mapping, `ResponseEntity` responses, `@Valid` |
-| `service/` | `TicketService` | Business rules (duplicate check, auto-set `status`/`createdAt`/`estimatedResolutionDate`) |
-| `respository/` | `TicketRepository` | In-memory `ArrayList`-based store; auto-increments `id` |
-| `model/` | `Ticket` | Plain Lombok POJO with Jakarta Validation annotations |
+| `controller/` | `TicketController` | HTTP mapping, `ResponseEntity` responses, `@Valid` on DTOs |
+| `service/` | `TicketService` | Business rules (duplicate check, auto-set `status`/`createdAt`/`estimatedResolutionDate`); maps DTO → model |
+| `respository/` | `TicketRepository` | In-memory `HashMap`-based store; auto-increments `id` |
+| `model/` | `Ticket`, `ErrorResponse` | `Ticket` is a Lombok POJO; `ErrorResponse` is a Java `record` |
+| `dto/` | `TicketRequest` | Java `record` with Jakarta Validation annotations (`@NotBlank`, `@Size`) |
 
 **Note:** The package name `respository` (missing the first `o`) is intentional — match it exactly when adding new files.
 
-**Data persistence:** There is no database. `TicketRepository` holds data in a `List<Ticket>` in memory, pre-seeded with two tickets. All data resets on restart.
+**Data persistence:** There is no database. `TicketRepository` holds data in a `Map<Long, Ticket>` in memory, pre-seeded with two tickets. All data resets on restart.
 
 **Ticket lifecycle set by `TicketService.create()`:**
 - `status` → `"NEW"`
@@ -80,11 +81,18 @@ All routes are relative to `/ticket-app/tickets`:
 | `PUT` | `/tickets/by-id/{id}` | Update ticket by id |
 | `DELETE` | `/tickets/by-id/{id}` | Delete ticket by id |
 
-Controllers return `null`-guarded `ResponseEntity` responses: `404` when the service returns `null`.
+Service methods return `Optional<Ticket>` for single-entity lookups; controllers use `.map()` / `.orElse()` to convert to `ResponseEntity`. DELETE returns `boolean` → `204 No Content`.
+
+## Error handling
+
+- Business validation exceptions (`IllegalArgumentException`) are caught in the controller and returned as `409 Conflict` with an `ErrorResponse` body.
+- Bean Validation errors (`@Valid`) are handled by an `@ExceptionHandler(MethodArgumentNotValidException.class)` in the controller, returned as `400 Bad Request` with an `ErrorResponse` body.
+- `ErrorResponse` is a Java `record`: `public record ErrorResponse(String message) {}`.
 
 ## Conventions
 
 - Endpoint paths use kebab-case (e.g., `/by-id/{id}`).
 - Responses for create operations return a plain `String` body (`"Ticket Creado"`), not the created object.
-- No global exception handler exists; validation errors surface as Spring's default 400 response.
-- New domain models should use the same Lombok + Jakarta Validation pattern as `Ticket`.
+- New domain models should use the same Lombok pattern as `Ticket`.
+- DTOs, value objects, and error responses use Java `record` types.
+- Validation annotations (`@NotBlank`, `@Size`) go on DTOs, not on domain models.

@@ -3,7 +3,7 @@ package cl.duoc.fullstack.tickets.respository;
 import cl.duoc.fullstack.tickets.model.Ticket;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,13 +13,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class TicketRepository {
 
-  private Map<Long, Ticket> db;
-  private long currentId;
+  private final Map<Long, Ticket> db = new HashMap<>();
+  private long currentId = 1L;
 
   public TicketRepository() {
-    db = new HashMap<>();
-    currentId = 1L;
-    
     LocalDateTime now = LocalDateTime.now();
     LocalDate estimated = LocalDate.now().plusDays(5);
 
@@ -31,44 +28,38 @@ public class TicketRepository {
   }
 
   public List<Ticket> getAll() {
-    return new ArrayList<>(db.values());
+    return db.values().stream()
+        .sorted(Comparator.comparing(Ticket::getCreatedAt))
+        .toList();
   }
 
   public List<Ticket> getAll(String statusFilter) {
-    List<Ticket> filtered = new ArrayList<>();
-    for (Ticket ticket : db.values()) {
-      if (statusFilter == null || ticket.getStatus().equalsIgnoreCase(statusFilter)) {
-        filtered.add(ticket);
-      }
+    if (statusFilter == null || statusFilter.isBlank()) {
+      return getAll();
     }
-    return filtered;
+    return db.values().stream()
+        .filter(t -> t.getStatus().equalsIgnoreCase(statusFilter))
+        .sorted(Comparator.comparing(Ticket::getCreatedAt))
+        .toList();
   }
 
   public Ticket save(Ticket newTicket) {
-    newTicket.setId(currentId++);
-    db.put(newTicket.getId(), newTicket);
+    newTicket.setId(currentId);
+    db.put(currentId++, newTicket);
     return newTicket;
   }
 
-  public boolean existsByTitle(String aTitle) {
-    for (Ticket ticket : db.values()) {
-      if (ticket.getTitle().equalsIgnoreCase(aTitle)) {
-        return true;
-      }
-    }
-    return false;
+  public boolean existsByTitle(String title) {
+    return db.values().stream()
+        .anyMatch(t -> t.getTitle().equalsIgnoreCase(title));
   }
 
   public Optional<Ticket> findById(Long id) {
     return Optional.ofNullable(db.get(id));
   }
 
-  public Ticket getById(Long id) {
-    return db.get(id);
-  }
-
-  public Ticket deleteById(Long id) {
-    return db.remove(id);
+  public boolean deleteById(Long id) {
+    return db.remove(id) != null;
   }
 
   public void update(Ticket toUpdate) {

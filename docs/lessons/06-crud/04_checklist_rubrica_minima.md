@@ -64,14 +64,14 @@ Usa esta lista para verificar que implementaste correctamente el CRUD completo d
 Hiciste las siguientes pruebas en Postman/Thunder Client:
 
 - ☐ `GET /tickets` devuelve los 2 tickets semilla → `200 OK`
-- ☐ `GET /tickets/1` devuelve el primer ticket → `200 OK`
-- ☐ `GET /tickets/999` → `404 Not Found`
+- ☐ `GET /tickets/by-id/1` devuelve el primer ticket → `200 OK`
+- ☐ `GET /tickets/by-id/999` → `404 Not Found`
 - ☐ `POST /tickets` con título nuevo → `201 Created` (el servidor asignó ID, status y fechas)
 - ☐ `POST /tickets` con el mismo título → `409 Conflict`
-- ☐ `PUT /tickets/1` con datos nuevos → `200 OK` (fechas no cambiaron)
-- ☐ `PUT /tickets/999` → `404 Not Found`
-- ☐ `DELETE /tickets/2` → `204 No Content`
-- ☐ `DELETE /tickets/999` → `404 Not Found`
+- ☐ `PUT /tickets/by-id/1` con datos nuevos → `200 OK` (fechas no cambiaron)
+- ☐ `PUT /tickets/by-id/999` → `404 Not Found`
+- ☐ `DELETE /tickets/by-id/2` → `204 No Content`
+- ☐ `DELETE /tickets/by-id/999` → `404 Not Found`
 - ☐ `GET /tickets` después del DELETE → el ticket eliminado ya no aparece
 
 ---
