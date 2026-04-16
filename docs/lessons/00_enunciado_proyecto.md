@@ -41,13 +41,14 @@ Estos son los requerimientos del sistema. Están numerados para que puedas rastr
 | **REQ-09** | El sistema debe permitir eliminar un ticket |
 | **REQ-10** | Cuando se solicita un ticket que no existe, el sistema debe responder con un error claro (`404 Not Found`) |
 | **REQ-11** | Cuando ocurre un error, el sistema debe responder con un JSON que incluya un campo `message` con una descripción legible del problema |
-| **REQ-12** | El título del ticket no puede estar vacío ni en blanco; intentarlo debe devolver `400 Bad Request` |
-| **REQ-13** | La API debe aceptar un DTO de entrada (`TicketRequest`) separado del modelo de dominio (`Ticket`); el cliente solo envía lo que le corresponde |
-| **REQ-14** | `GET /tickets` debe admitir un parámetro opcional `?status=` para filtrar tickets por estado; sin el parámetro devuelve todos, ordenados por fecha de creación |
-| **REQ-15** | Los tickets deben persistirse en base de datos real: los datos sobreviven reinicios de la aplicación |
-| **REQ-16** | Cada ticket debe registrar qué usuario lo creó (usuario creador) |
-| **REQ-17** | Cada ticket puede ser asignado a un usuario técnico; la asignación puede cambiar durante la vida del ticket |
-| **REQ-18** | El sistema debe registrar automáticamente un historial de cambios de estado de cada ticket, con el estado anterior, el nuevo estado y la fecha y hora del cambio |
+| **REQ-12** | **El creador y el asignado de un ticket NO pueden ser el mismo usuario** |
+| **REQ-13** | El título del ticket no puede estar vacío ni en blanco; intentarlo debe devolver `400 Bad Request` |
+| **REQ-14** | La API debe aceptar un DTO de entrada (`TicketRequest`) separado del modelo de dominio (`Ticket`); el cliente solo envía lo que le corresponde |
+| **REQ-15** | `GET /tickets` debe admitir un parámetro opcional `?status=` para filtrar tickets por estado; sin el parámetro devuelve todos, ordenados por fecha de creación |
+| **REQ-16** | Los tickets deben persistirse en base de datos real: los datos sobreviven reinicios de la aplicación |
+| **REQ-17** | Cada ticket debe registrar qué usuario lo creó (usuario creador) |
+| **REQ-18** | Cada ticket puede ser asignado a un usuario técnico; la asignación puede cambiar durante la vida del ticket |
+| **REQ-19** | El sistema debe registrar automáticamente un historial de cambios de estado de cada ticket, con el estado anterior, el nuevo estado y la fecha y hora del cambio |
 
 ---
 
@@ -68,13 +69,14 @@ Esta tabla muestra de un vistazo cuándo se implementa cada requerimiento:
 | REQ-09 — Eliminar ticket | | | ✅ | | | | | | | |
 | REQ-10 — Error cuando no existe | | | ✅ | | | | | | | |
 | REQ-11 — Error con cuerpo JSON `{"message":"..."}` | | | | ✅ | | | | | | |
-| REQ-12 — Título no puede estar vacío | | | | | ✅ | | | | | |
-| REQ-13 — DTO separado del modelo | | | | | ✅ | | | | | |
-| REQ-14 — Filtro por estado `?status=` | | | | | | ✅ | | | | |
-| REQ-15 — Persistencia en base de datos real | | | | | | | ✅ | ✅ | | |
-| REQ-16 — Usuario creador del ticket | | | | | | | | | ✅ | |
-| REQ-17 — Usuario asignado al ticket | | | | | | | | | ✅ | |
-| REQ-18 — Historial de cambios de estado | | | | | | | | | | ✅ |
+| REQ-12 — Creador ≠ Asignado | | | | ✅ | | | | | | |
+| REQ-13 — Título no puede estar vacío | | | | | ✅ | | | | | |
+| REQ-14 — DTO separado del modelo | | | | | ✅ | | | | | |
+| REQ-15 — Filtro por estado `?status=` | | | | | | ✅ | | | | |
+| REQ-16 — Persistencia en base de datos real | | | | | | | ✅ | ✅ | | |
+| REQ-17 — Usuario creador del ticket | | | | | | | | | ✅ | |
+| REQ-18 — Usuario asignado al ticket | | | | | | | | | ✅ | |
+| REQ-19 — Historial de cambios de estado | | | | | | | | | | ✅ |
 
 ---
 

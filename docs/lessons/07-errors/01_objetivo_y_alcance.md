@@ -57,6 +57,7 @@ Al terminar deberías poder responder:
 | Requerimiento | Lo que construimos |
 |---|---|
 | **REQ-11** — Error con cuerpo JSON `{"message":"..."}` | La clase `ErrorResponse` + actualización de todos los endpoints para usarla |
+| **REQ-12** — El creador y asignado no pueden ser el mismo usuario | Validación en `create()` y `updateById()` del Service |
 
 ---
 

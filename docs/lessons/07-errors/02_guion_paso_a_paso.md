@@ -1,376 +1,235 @@
-# Lección 07 - Tutorial paso a paso: errores con estructura JSON
+# Lección 07 - Tutorial paso a paso: validaciones y errores
 
-Sigue esta guía en orden. Vas a agregar una estructura de error consistente a todos los endpoints de tickets.
-
----
-
-## Paso 1: entender qué está mal ahora
-
-Antes de tocar código, abre Postman o Thunder Client y reproduce los problemas actuales.
-
-### Problema A — el body del error POST no es JSON
-
-Envía un `POST /tickets` con un título que ya existe:
-
-```
-POST http://localhost:8080/tickets
-Content-Type: application/json
-
-{ "title": "Ticket 1", "description": "ya existe" }
-```
-
-Respuesta actual:
-
-```
-HTTP/1.1 409 Conflict
-Content-Type: text/plain;charset=UTF-8
-
-Ya existe un ticket con el título 'Ticket 1'
-```
-
-El `Content-Type` dice `text/plain`. El cliente esperaba JSON pero recibió texto plano.
-
-### Problema B — los 404 no tienen body
-
-```
-GET http://localhost:8080/tickets/999
-```
-
-Respuesta actual:
-
-```
-HTTP/1.1 404 Not Found
-(sin body)
-```
-
-El cliente no puede saber **qué** no se encontró ni **por qué**.
-
-### El efecto práctico
-
-Si el front-end intenta hacer `response.body.message` después de un error 409, obtiene `undefined` porque el body es texto, no JSON. Tiene que adivinar el formato según el endpoint. Eso es un contrato roto.
+Sigue esta guía en orden. Vas a agregar validaciones de negocio en `TicketService` y manejo de excepciones en `TicketController`.
 
 ---
 
-## Paso 2: entender `record` en Java
+## Paso 1: agregar campos `createdBy` y `assignedTo` al modelo
 
-Antes de crear `ErrorResponse`, revisa brevemente qué es un `record`.
-
-Un `record` es una clase inmutable de datos que Java genera automáticamente con:
-- Constructor con todos los parámetros
-- Getter para cada campo (sin el prefijo `get`: se accede como `response.message()`)
-- `equals()`, `hashCode()` y `toString()` incluidos
+Abre `model/Ticket.java` y añade dos campos nuevos:
 
 ```java
-// Esto:
-public record ErrorResponse(String message) {}
+@NotBlank(message = "El creador es requerido")
+private String createdBy;
 
-// Es equivalente a esta clase con Lombok:
+private String assignedTo;
+```
+
+El modelo completo debe quedar así:
+
+```java
 @Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
-@ToString
-public class ErrorResponse {
-    private final String message;
+public class Ticket {
+  @Min(5) @Max(100)
+  private Long id;
+  @NotBlank(message = "El titulo es requerido")
+  @Size(min = 1, max = 50)
+  private String title;
+  @NotBlank
+  private String description;
+  private String status;
+  private LocalDateTime createdAt;
+  private LocalDate estimatedResolutionDate;
+  private LocalDateTime effectiveResolutionDate;
+  @NotBlank(message = "El creador es requerido")
+  private String createdBy;
+  private String assignedTo;
 }
 ```
 
-Jackson (la librería que convierte objetos a JSON en Spring) puede serializar un `record` exactamente igual que una clase normal. El resultado es `{"message": "..."}`.
+---
 
-> **¿Cuándo usar `record` y cuándo una clase?**
-> Usa `record` cuando el objeto solo transporta datos y no tiene comportamiento. `ErrorResponse` es el caso perfecto: solo lleva un mensaje. Si necesitas lógica adicional o mutabilidad, usa una clase. En esta lección usaremos `record`.
+## Paso 2: agregar validación en `TicketService.create()`
+
+Abre `service/TicketService.java` y actualiza el método `create()`:
+
+```java
+public Ticket create(Ticket ticket) {
+    // Validación 1: Título duplicado
+    boolean exists = this.repository.existsByTitle(ticket.getTitle());
+    if (exists) {
+        throw new IllegalArgumentException("Ya existe un ticket con el título '" + ticket.getTitle() + "'");
+    }
+
+    // Validación 2: Creador ≠ Asignado
+    if (ticket.getAssignedTo() != null && 
+        ticket.getAssignedTo().equals(ticket.getCreatedBy())) {
+        throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
+    }
+
+    LocalDateTime now = LocalDateTime.now();
+    LocalDate ldNow = LocalDate.now();
+    LocalDate estimated = ldNow.plusDays(5L);
+
+    ticket.setStatus("NEW");
+    ticket.setCreatedAt(now);
+    ticket.setEstimatedResolutionDate(estimated);
+    return this.repository.save(ticket);
+}
+```
+
+**¿Por qué lanzar excepción?** El Service valida reglas de negocio. Si falla, lanza `IllegalArgumentException`. El Controller la capturará y convertirá a respuesta HTTP.
 
 ---
 
-## Paso 3: crear `ErrorResponse`
+## Paso 3: agregar validación en `TicketService.updateById()`
+
+Actualiza el método `updateById()`:
+
+```java
+public Ticket updateById(Long id, Ticket ticket) {
+    Ticket toUpdate = this.repository.getById(id);
+    if (toUpdate == null) {
+        return null;
+    }
+
+    // Validación: Si se intenta cambiar el asignado, verifica que ≠ creador
+    if (ticket.getAssignedTo() != null && 
+        ticket.getAssignedTo().equals(toUpdate.getCreatedBy())) {
+        throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
+    }
+
+    toUpdate.setTitle(ticket.getTitle());
+    toUpdate.setDescription(ticket.getDescription());
+    toUpdate.setStatus(ticket.getStatus());
+    toUpdate.setEffectiveResolutionDate(ticket.getEffectiveResolutionDate());
+    if (ticket.getAssignedTo() != null) {
+        toUpdate.setAssignedTo(ticket.getAssignedTo());
+    }
+    this.repository.update(toUpdate);
+    return toUpdate;
+}
+```
+
+---
+
+## Paso 4: actualizar `TicketController.create()`
+
+Envuelve el `service.create()` en try/catch para capturar la excepción:
+
+```java
+@PostMapping
+public ResponseEntity<?> create(@Valid @RequestBody Ticket ticket) {
+    try {
+        Ticket created = this.service.create(ticket);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Ticket Creado");
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(new ErrorResponse(e.getMessage()));
+    }
+}
+```
+
+---
+
+## Paso 5: actualizar `TicketController.updateById()`
+
+Envuelve el `service.updateById()` en try/catch:
+
+```java
+@PutMapping("/by-id/{id}")
+public ResponseEntity<?> updateById(@PathVariable Long id, @RequestBody Ticket ticket) {
+    try {
+        Ticket updated = this.service.updateById(id, ticket);
+        if (updated != null) {
+            return ResponseEntity.status(200).body(updated);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ErrorResponse("Ticket con ID " + id + " no encontrado"));
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(new ErrorResponse(e.getMessage()));
+    }
+}
+```
+
+---
+
+## Paso 6: crear `ErrorResponse`
 
 Crea el archivo `model/ErrorResponse.java`:
 
 ```java
 package cl.duoc.fullstack.tickets.model;
 
-public record ErrorResponse(String message) {
-}
+public record ErrorResponse(String message) {}
 ```
 
-Es todo lo que necesita este archivo. Jackson lo convierte automáticamente a `{"message": "..."}` cuando lo pones como body de una `ResponseEntity`.
-
----
-
-## Paso 4: actualizar el endpoint `POST /tickets`
-
-Abre `TicketController` y localiza el método `create()`. El cambio es mínimo: reemplaza `body(e.getMessage())` por `body(new ErrorResponse(e.getMessage()))`.
-
-**Antes:**
-
-```java
-@PostMapping
-public ResponseEntity<Object> create(@RequestBody Ticket ticket) {
-    try {
-        Ticket saved = service.create(ticket);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-    } catch (IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage()); // ← texto plano
-    }
-}
-```
-
-**Después:**
-
-```java
-@PostMapping
-public ResponseEntity<?> create(@RequestBody Ticket ticket) {
-    try {
-        Ticket saved = service.create(ticket);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-    } catch (IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(new ErrorResponse(e.getMessage())); // ← JSON {"message": "..."}
-    }
-}
-```
-
-El tipo del retorno cambia de `ResponseEntity<Object>` a `ResponseEntity<?>`. El `?` (wildcard) le dice al compilador que este método puede devolver diferentes tipos según el caso: `Ticket` en éxito, `ErrorResponse` en error.
-
-> **¿Por qué `ResponseEntity<?>` y no `ResponseEntity<Object>`?**
-> Ambos funcionan, pero `ResponseEntity<?>` comunica mejor la intención: "este método puede devolver distintos tipos, y es intencional". `ResponseEntity<Object>` funciona pero puede dar falsa sensación de que el tipo de retorno está definido.
-
----
-
-## Paso 5: actualizar los endpoints que devuelven 404 vacío
-
-Los tres endpoints que buscan por ID (`getById`, `update`, `delete`) actualmente devuelven un `404` sin body. Hay que agregarles el cuerpo de error.
-
-### `GET /tickets/{id}` — antes y después
-
-**Antes:**
-
-```java
-@GetMapping("/{id}")
-public ResponseEntity<Ticket> getById(@PathVariable Long id) {
-    return service.findById(id)
-        .map(ResponseEntity::ok)
-        .orElse(ResponseEntity.notFound().build()); // sin body
-}
-```
-
-**Después:**
-
-```java
-@GetMapping("/{id}")
-public ResponseEntity<?> getById(@PathVariable Long id) {
-    return service.findById(id)
-        .<ResponseEntity<?>>map(ResponseEntity::ok)
-        .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(new ErrorResponse("Ticket con ID " + id + " no encontrado")));
-}
-```
-
-> **¿Qué hace `.<ResponseEntity<?>>map(ResponseEntity::ok)`?**
-> La anotación de tipo `<ResponseEntity<?>>` antes de `.map()` le indica al compilador cuál es el tipo del `Optional` que estamos transformando. Es necesaria porque el `Optional<Ticket>` se transforma en `ResponseEntity<?>` — y sin la anotación el compilador no puede inferir los tipos correctamente cuando el `.orElse()` devuelve un tipo diferente al que produciría `.map(ResponseEntity::ok)` sin ella.
-
-> **¿Por qué incluir el ID en el mensaje?**
-> El mensaje `"Ticket con ID 999 no encontrado"` le dice al cliente exactamente qué buscó y que no existía. Un mensaje como `"no encontrado"` es ambiguo — ¿no encontrado dónde? ¿qué? Siempre incluye el valor que buscaste.
-
-### `PUT /tickets/{id}` — antes y después
-
-**Antes:**
-
-```java
-@PutMapping("/{id}")
-public ResponseEntity<Ticket> update(@PathVariable Long id, @RequestBody Ticket ticket) {
-    return service.update(id, ticket)
-        .map(ResponseEntity::ok)
-        .orElse(ResponseEntity.notFound().build()); // sin body
-}
-```
-
-**Después:**
-
-```java
-@PutMapping("/{id}")
-public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Ticket ticket) {
-    return service.update(id, ticket)
-        .<ResponseEntity<?>>map(ResponseEntity::ok)
-        .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(new ErrorResponse("Ticket con ID " + id + " no encontrado")));
-}
-```
-
-### `DELETE /tickets/{id}` — antes y después
-
-**Antes:**
-
-```java
-@DeleteMapping("/{id}")
-public ResponseEntity<Void> delete(@PathVariable Long id) {
-    if (!service.delete(id)) {
-        return ResponseEntity.notFound().build(); // sin body
-    }
-    return ResponseEntity.noContent().build();
-}
-```
-
-**Después:**
-
-```java
-@DeleteMapping("/{id}")
-public ResponseEntity<?> delete(@PathVariable Long id) {
-    if (!service.delete(id)) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(new ErrorResponse("Ticket con ID " + id + " no encontrado"));
-    }
-    return ResponseEntity.noContent().build();
-}
-```
-
----
-
-## Paso 6: el controlador completo después de esta lección
-
-```java
-package cl.duoc.fullstack.tickets.controller;
-
-import cl.duoc.fullstack.tickets.model.ErrorResponse;
-import cl.duoc.fullstack.tickets.model.Ticket;
-import cl.duoc.fullstack.tickets.service.TicketService;
-import java.util.List;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-@RestController
-@RequestMapping("/tickets")
-public class TicketController {
-
-    private TicketService service;
-
-    public TicketController(TicketService service) {
-        this.service = service;
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Ticket>> getAllTickets() {
-        return ResponseEntity.ok(service.getTickets());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
-        return service.findById(id)
-            .<ResponseEntity<?>>map(ResponseEntity::ok)
-            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("Ticket con ID " + id + " no encontrado")));
-    }
-
-    @PostMapping
-    public ResponseEntity<?> create(@RequestBody Ticket ticket) {
-        try {
-            Ticket saved = service.create(ticket);
-            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ErrorResponse(e.getMessage()));
-        }
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Ticket ticket) {
-        return service.update(id, ticket)
-            .<ResponseEntity<?>>map(ResponseEntity::ok)
-            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("Ticket con ID " + id + " no encontrado")));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        if (!service.delete(id)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("Ticket con ID " + id + " no encontrado"));
-        }
-        return ResponseEntity.noContent().build();
-    }
-}
-```
+Jackson convierte automáticamente a JSON: `{"message": "..."}`
 
 ---
 
 ## Paso 7: verificar que todo funciona
 
-Levanta la aplicación y prueba cada caso de error.
-
-### Prueba 1: POST con título duplicado
+### Prueba 1: crear ticket sin asignar (válido)
 
 ```
-POST http://localhost:8080/tickets
-Content-Type: application/json
-
-{ "title": "Ticket 1", "description": "ya existe" }
-```
-
-**Resultado esperado:**
-
-```
-HTTP/1.1 409 Conflict
+POST http://localhost:8080/ticket-app/tickets
 Content-Type: application/json
 
 {
-  "message": "Ya existe un ticket con el título 'Ticket 1'"
+  "title": "Ticket A",
+  "description": "Descripción",
+  "createdBy": "juan"
 }
 ```
 
-Observa que ahora el `Content-Type` es `application/json`, no `text/plain`.
+**Resultado:** `201 Created` con `"Ticket Creado"`
 
-### Prueba 2: GET con ID inexistente
-
-```
-GET http://localhost:8080/tickets/999
-```
-
-**Resultado esperado:**
+### Prueba 2: crear ticket con creador = asignado (inválido)
 
 ```
-HTTP/1.1 404 Not Found
+POST http://localhost:8080/ticket-app/tickets
 Content-Type: application/json
 
 {
-  "message": "Ticket con ID 999 no encontrado"
+  "title": "Ticket B",
+  "description": "Descripción",
+  "createdBy": "juan",
+  "assignedTo": "juan"
 }
 ```
 
-### Prueba 3: PUT con ID inexistente
+**Resultado:** `400 Bad Request` con:
+
+```json
+{
+  "message": "El creador y el asignado no pueden ser el mismo usuario"
+}
+```
+
+### Prueba 3: crear ticket con creador ≠ asignado (válido)
 
 ```
-PUT http://localhost:8080/tickets/999
+POST http://localhost:8080/ticket-app/tickets
 Content-Type: application/json
 
-{ "title": "X", "description": "Y" }
+{
+  "title": "Ticket C",
+  "description": "Descripción",
+  "createdBy": "juan",
+  "assignedTo": "maria"
+}
 ```
 
-**Resultado esperado:** `404 Not Found` con `{"message": "Ticket con ID 999 no encontrado"}`.
+**Resultado:** `201 Created`
 
-### Prueba 4: DELETE con ID inexistente
-
-```
-DELETE http://localhost:8080/tickets/999
-```
-
-**Resultado esperado:** `404 Not Found` con `{"message": "Ticket con ID 999 no encontrado"}`.
-
-### Prueba 5: GET exitoso (verificar que el cuerpo correcto no se rompió)
+### Prueba 4: modificar ticket a asignado = creador (inválido)
 
 ```
-GET http://localhost:8080/tickets/1
+PUT http://localhost:8080/ticket-app/tickets/by-id/1
+Content-Type: application/json
+
+{
+  "title": "Ticket C",
+  "description": "Nueva descripción",
+  "status": "IN_PROGRESS",
+  "assignedTo": "juan"
+}
 ```
 
-**Resultado esperado:** `200 OK` con el ticket completo en JSON (no `ErrorResponse`).
-
----
-
-## Paso 8: reflexiona antes de cerrar
-
-Antes de pasar a la actividad, respóndete estas preguntas:
-
-1. ¿Por qué devolver `body(e.getMessage())` produce `Content-Type: text/plain` y `body(new ErrorResponse(e.getMessage()))` produce `Content-Type: application/json`?
-2. Si el front-end hace `const data = await response.json()` y recibe texto plano, ¿qué ocurre?
-3. ¿Por qué todos los errores deben tener la misma estructura? Piensa en un cliente que consume tu API y maneja errores.
-4. ¿Qué ventaja tiene centralizar la estructura de errores en una sola clase vs escribir el objeto de error en cada lugar?
+**Resultado:** `400 Bad Request` con el mismo error.
 
