@@ -1,6 +1,10 @@
 package cl.duoc.fullstack.tickets.service;
 
 import cl.duoc.fullstack.tickets.dto.TicketRequest;
+import cl.duoc.fullstack.tickets.dto.TicketResult;
+import cl.duoc.fullstack.tickets.dto.CategoryResult;
+import cl.duoc.fullstack.tickets.dto.TagResult;
+import cl.duoc.fullstack.tickets.dto.UserResult;
 import cl.duoc.fullstack.tickets.model.Category;
 import cl.duoc.fullstack.tickets.model.Tag;
 import cl.duoc.fullstack.tickets.model.Ticket;
@@ -35,18 +39,22 @@ public class TicketService {
     this.userRepository = userRepository;
   }
 
-  public List<Ticket> getTickets() {
-    return this.repository.findAllOrderByCreatedAt();
+  public List<TicketResult> getTickets() {
+    return this.repository.findAllOrderByCreatedAt().stream()
+        .map(this::toResult)
+        .toList();
   }
 
-  public List<Ticket> getTickets(String statusFilter) {
+  public List<TicketResult> getTickets(String statusFilter) {
     if (statusFilter == null || statusFilter.isBlank()) {
       return getTickets();
     }
-    return this.repository.findAllByStatusIgnoreCase(statusFilter);
+    return this.repository.findAllByStatusIgnoreCase(statusFilter).stream()
+        .map(this::toResult)
+        .toList();
   }
 
-  public Ticket create(TicketRequest request) {
+  public TicketResult create(TicketRequest request) {
     boolean exists = this.repository.existsByTitleIgnoreCase(request.title());
     if (exists) {
       throw new IllegalArgumentException(
@@ -94,11 +102,12 @@ public class TicketService {
       ticket.setTags(new ArrayList<>());
     }
 
-    return this.repository.save(ticket);
+    Ticket saved = this.repository.save(ticket);
+    return toResult(saved);
   }
 
-  public Optional<Ticket> getById(Long id) {
-    return this.repository.findById(id);
+  public Optional<TicketResult> getById(Long id) {
+    return this.repository.findById(id).map(this::toResult);
   }
 
   public boolean deleteById(Long id) {
@@ -109,7 +118,7 @@ public class TicketService {
     return false;
   }
 
-  public Optional<Ticket> updateById(Long id, TicketRequest request) {
+  public Optional<TicketResult> updateById(Long id, TicketRequest request) {
     Optional<Ticket> found = this.repository.findById(id);
     if (found.isEmpty()) {
       return Optional.empty();
@@ -149,7 +158,38 @@ public class TicketService {
       toUpdate.setTags(tags);
     }
 
-    this.repository.save(toUpdate);
-    return Optional.of(toUpdate);
+    Ticket saved = this.repository.save(toUpdate);
+    return Optional.of(toResult(saved));
+  }
+
+  private TicketResult toResult(Ticket ticket) {
+    UserResult createdBy = ticket.getCreatedBy() != null
+        ? new UserResult(ticket.getCreatedBy().getId(), ticket.getCreatedBy().getName(), ticket.getCreatedBy().getEmail())
+        : null;
+    UserResult assignedTo = ticket.getAssignedTo() != null
+        ? new UserResult(ticket.getAssignedTo().getId(), ticket.getAssignedTo().getName(), ticket.getAssignedTo().getEmail())
+        : null;
+    CategoryResult category = ticket.getCategory() != null
+        ? new CategoryResult(ticket.getCategory().getId(), ticket.getCategory().getName(), ticket.getCategory().getDescription())
+        : null;
+    List<TagResult> tags = ticket.getTags() != null
+        ? ticket.getTags().stream()
+            .map(tag -> new TagResult(tag.getId(), tag.getName(), tag.getColor()))
+            .toList()
+        : List.of();
+
+    return new TicketResult(
+        ticket.getId(),
+        ticket.getTitle(),
+        ticket.getDescription(),
+        ticket.getStatus(),
+        ticket.getCreatedAt(),
+        ticket.getEstimatedResolutionDate(),
+        ticket.getEffectiveResolutionDate(),
+        createdBy,
+        assignedTo,
+        category,
+        tags
+    );
   }
 }

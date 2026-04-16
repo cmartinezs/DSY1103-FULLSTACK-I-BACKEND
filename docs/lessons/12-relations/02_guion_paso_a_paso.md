@@ -404,3 +404,102 @@ Content-Type: application/json
 ### Verificar en la base de datos
 
 En phpMyAdmin o el Table Editor de Supabase, la tabla `tickets` debería mostrar las columnas `created_by_id` y `assigned_to_id` con los IDs correspondientes.
+
+---
+
+## El patrón `*Result` con entidades Relacionadas
+
+Cuando hay relaciones `@ManyToOne`, el `*Result` debe incluir objetos anidados pero como datos planos, no como entidades JPA:
+
+```java
+// TicketResult con relaciones a User
+public record TicketResult(
+    Long id,
+    String title,
+    String description,
+    String status,
+    UserResult createdBy,      // ← No es la entidad User, es UserResult
+    UserResult assignedTo,     // ← Cada UserResult es un POJO plano
+    CategoryResult category,
+    List<TagResult> tags
+) {}
+
+// UserResult — solo datos, sin JPA
+public record UserResult(
+    Long id,
+    String name,
+    String email
+) {}
+
+// CategoryResult
+public record CategoryResult(
+    Long id,
+    String name,
+    String description
+) {}
+
+// TagResult
+public record TagResult(
+    Long id,
+    String name,
+    String color
+) {}
+```
+
+### Transformación en el Service
+
+```java
+private TicketResult toResult(Ticket ticket) {
+  UserResult createdBy = ticket.getCreatedBy() != null
+      ? new UserResult(
+          ticket.getCreatedBy().getId(),
+          ticket.getCreatedBy().getName(),
+          ticket.getCreatedBy().getEmail())
+      : null;
+
+  UserResult assignedTo = ticket.getAssignedTo() != null
+      ? new UserResult(
+          ticket.getAssignedTo().getId(),
+          ticket.getAssignedTo().getName(),
+          ticket.getAssignedTo().getEmail())
+      : null;
+
+  CategoryResult category = ticket.getCategory() != null
+      ? new CategoryResult(
+          ticket.getCategory().getId(),
+          ticket.getCategory().getName(),
+          ticket.getCategory().getDescription())
+      : null;
+
+  List<TagResult> tags = ticket.getTags() != null
+      ? ticket.getTags().stream()
+          .map(tag -> new TagResult(
+              tag.getId(),
+              tag.getName(),
+              tag.getColor()))
+          .toList()
+      : List.of();
+
+  return new TicketResult(
+      ticket.getId(),
+      ticket.getTitle(),
+      ticket.getDescription(),
+      ticket.getStatus(),
+      createdBy,
+      assignedTo,
+      category,
+      tags
+  );
+}
+```
+
+### Por qué no usar la entidad directamente
+
+| En Entity (`Ticket`) | En Result (`TicketResult`) |
+|---|---|
+| `@ManyToOne User createdBy` | `UserResult createdBy` |
+| JPA proxy lazy | Datos planos |
+| Serialización circular | Sin relaciones bidireccionales |
+| Expone internals de Hibernate | Solo lo que quieres mostrar |
+
+**Conclusión:** El Service transforma cada entidad a su `*Result` correspondiente. Nunca retornas una entidad JPA por `ResponseEntity`.

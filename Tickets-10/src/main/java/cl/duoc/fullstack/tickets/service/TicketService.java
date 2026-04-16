@@ -1,6 +1,7 @@
 package cl.duoc.fullstack.tickets.service;
 
 import cl.duoc.fullstack.tickets.dto.TicketRequest;
+import cl.duoc.fullstack.tickets.dto.TicketResult;
 import cl.duoc.fullstack.tickets.model.Ticket;
 import cl.duoc.fullstack.tickets.respository.TicketRepository;
 import java.time.LocalDate;
@@ -18,18 +19,22 @@ public class TicketService {
     this.repository = repository;
   }
 
-  public List<Ticket> getTickets() {
-    return this.repository.findAllOrderByCreatedAt();
+  public List<TicketResult> getTickets() {
+    return this.repository.findAllOrderByCreatedAt().stream()
+        .map(this::toResult)
+        .toList();
   }
 
-  public List<Ticket> getTickets(String statusFilter) {
+  public List<TicketResult> getTickets(String statusFilter) {
     if (statusFilter == null || statusFilter.isBlank()) {
       return getTickets();
     }
-    return this.repository.findAllByStatusIgnoreCase(statusFilter);
+    return this.repository.findAllByStatusIgnoreCase(statusFilter).stream()
+        .map(this::toResult)
+        .toList();
   }
 
-  public Ticket create(TicketRequest request) {
+  public TicketResult create(TicketRequest request) {
     boolean exists = this.repository.existsByTitleIgnoreCase(request.title());
     if (exists) {
       throw new IllegalArgumentException(
@@ -49,11 +54,12 @@ public class TicketService {
     ticket.setStatus("NEW");
     ticket.setCreatedAt(LocalDateTime.now());
     ticket.setEstimatedResolutionDate(LocalDate.now().plusDays(5));
-    return this.repository.save(ticket);
+    Ticket saved = this.repository.save(ticket);
+    return toResult(saved);
   }
 
-  public Optional<Ticket> getById(Long id) {
-    return this.repository.findById(id);
+  public Optional<TicketResult> getById(Long id) {
+    return this.repository.findById(id).map(this::toResult);
   }
 
   public boolean deleteById(Long id) {
@@ -64,7 +70,7 @@ public class TicketService {
     return false;
   }
 
-  public Optional<Ticket> updateById(Long id, TicketRequest request) {
+  public Optional<TicketResult> updateById(Long id, TicketRequest request) {
     Optional<Ticket> found = this.repository.findById(id);
     if (found.isEmpty()) {
       return Optional.empty();
@@ -86,7 +92,21 @@ public class TicketService {
     if (request.assignedTo() != null) {
       toUpdate.setAssignedTo(request.assignedTo());
     }
-    this.repository.save(toUpdate);
-    return Optional.of(toUpdate);
+    Ticket saved = this.repository.save(toUpdate);
+    return Optional.of(toResult(saved));
+  }
+
+  private TicketResult toResult(Ticket ticket) {
+    return new TicketResult(
+        ticket.getId(),
+        ticket.getTitle(),
+        ticket.getDescription(),
+        ticket.getStatus(),
+        ticket.getCreatedAt(),
+        ticket.getEstimatedResolutionDate(),
+        ticket.getEffectiveResolutionDate(),
+        ticket.getCreatedBy(),
+        ticket.getAssignedTo()
+    );
   }
 }

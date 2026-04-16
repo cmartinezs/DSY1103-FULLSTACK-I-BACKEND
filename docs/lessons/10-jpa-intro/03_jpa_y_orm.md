@@ -189,3 +189,101 @@ El Map que usabas antes y JPA comparten el mismo concepto fundamental: acceso po
 | Dónde viven los datos | RAM (se pierden al reiniciar) | Disco (persisten para siempre) |
 
 El cambio conceptual es mínimo. El beneficio es enorme.
+
+---
+
+## El patrón `*Result` — por qué no retornamos entidades JPA
+
+Cuando desarrollas una API REST, el Service retorna datos al Controller, quien los pone en `ResponseEntity`. **NUNCA retorno una entidad JPA directamente**. ¿Por qué?
+
+### El problema: entidad JPA vs mundo exterior
+
+Una entidad JPA como `Ticket` tiene muchas responsabilidades que no queremos exponer:
+
+```java
+@Entity
+public class Ticket {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;           // 🔴 JPA internals
+
+  @ManyToOne(fetch = LAZY)
+  @JoinColumn(name = "created_by_id")
+  private User createdBy;     // 🔴 Relación JPA — serialization circular
+
+  @Entity
+  public class User {
+    @OneToMany(mappedBy = "createdBy")
+    private List<Ticket> ticketsCreated; // 🔴 Relación inversa
+  }
+}
+```
+
+| Problema | Qué pasa |
+|---|---|
+| Proxies JPA lazy | Al serializar a JSON, falla si el proxy no está inicializado |
+| Serialización circular | `Ticket` → `User` → `Ticket` → ... → `StackOverflowError` |
+| Exposición de internals | El cliente ve campos como `hibernateLazyInitializer` |
+| Acoplamiento con BD | Cambiar la entidad rompe la API pública |
+
+### La solución: transformar a `*Result`
+
+Creamos un DTO de salida (data transfer object) que solo contiene datos:
+
+```java
+public record TicketResult(
+    Long id,
+    String title,
+    String description,
+    String status,
+    // Solo datos planos, sin relaciones JPA
+    String createdBy,
+    String assignedTo
+) {}
+```
+
+El Service transforma la entidad a Result:
+
+```java
+public List<TicketResult> getTickets() {
+  return repository.findAll().stream()
+      .map(ticket -> new TicketResult(
+          ticket.getId(),
+          ticket.getTitle(),
+          ticket.getDescription(),
+          ticket.getStatus(),
+          ticket.getCreatedBy(),   // String, no User
+          ticket.getAssignedTo()      // String, no User
+      ))
+      .toList();
+}
+```
+
+### El flujo completo
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Request          Entity JPA           Result           │
+│  (DTO input)  →  (Repository)  →  (DTO output)  →  JSON  │
+│                             ↓                            │
+│                       Service transforma              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+| Capa | Qué usa | Por qué |
+|---|---|---|
+| Controller | Recibe `*Request` | Valida input con `@Valid` |
+| Service | Recibe y retorna entidades | Necesita JPA para operar |
+| Controller | Retorna `*Result` | Solo datos planos, sin JPA |
+| HTTP Response | Serializa a JSON | El cliente recibe datos limpios |
+
+### ¿Cuándo agregar `*Result`?
+
+A partir de esta lección, todo endpoint que retorna datos debe usar el patrón `*Result`:
+
+- `GET /tickets` → `List<TicketResult>`
+- `GET /tickets/{id}` → `TicketResult`
+- `POST /tickets` → `TicketResult`
+- `PUT /tickets/{id}` → `TicketResult`
+
+El `*Request` sigue siendo para entrada; el `*Result` para salida.

@@ -417,3 +417,16 @@ Si quieres comprobar que las credenciales son correctas antes de arrancar Spring
 
 - **MySQL (XAMPP):** host `localhost`, puerto `3306`, usuario `root`, password vacío
 - **Supabase:** usa la cadena de conexión de la sección "Database" → "Connection string" → pestaña "URI"
+
+---
+
+## El patrón `*Result` — Referencia
+
+A partir de esta lección, el código usa el patrón `*Result` para retornar datos. El motivo y la implementación estándocumentados en **Lección 10 — JPA y ORM, sección "El patrón `*Result` — por qué no retornamos entidades JPA"**.
+
+| DTO | Uso |
+|---|---|
+| `*Request` | Input: el Controller lo recibe y el Service lo procesa |
+| `*Result` | Output: el Service transforma la entidad y el Controller la retorna |
+
+**Regla de oro:** Una entidad JPA (`@Entity`) nunca sale del Service. Siempre se convierte a `*Result` primero.

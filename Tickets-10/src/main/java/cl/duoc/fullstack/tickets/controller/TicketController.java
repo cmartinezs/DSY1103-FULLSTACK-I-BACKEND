@@ -1,8 +1,8 @@
 package cl.duoc.fullstack.tickets.controller;
 
 import cl.duoc.fullstack.tickets.dto.TicketRequest;
+import cl.duoc.fullstack.tickets.dto.TicketResult;
 import cl.duoc.fullstack.tickets.model.ErrorResponse;
-import cl.duoc.fullstack.tickets.model.Ticket;
 import cl.duoc.fullstack.tickets.service.TicketService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -33,9 +33,9 @@ public class TicketController {
   }
 
   @GetMapping
-  public ResponseEntity<List<Ticket>> getAllTickets(
+  public ResponseEntity<List<TicketResult>> getAllTickets(
       @RequestParam(required = false) String status) {
-    List<Ticket> tickets = status != null
+    List<TicketResult> tickets = status != null
         ? this.service.getTickets(status)
         : this.service.getTickets();
     return ResponseEntity.ok(tickets);
@@ -44,15 +44,15 @@ public class TicketController {
   @PostMapping
   public ResponseEntity<Object> create(@Valid @RequestBody TicketRequest request) {
     try {
-      this.service.create(request);
-      return ResponseEntity.status(HttpStatus.CREATED).body("Ticket Creado");
+      TicketResult result = this.service.create(request);
+      return ResponseEntity.status(HttpStatus.CREATED).body(result);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(e.getMessage()));
     }
   }
 
   @GetMapping("/by-id/{id}")
-  public ResponseEntity<Ticket> getTicketById(@PathVariable Long id) {
+  public ResponseEntity<TicketResult> getTicketById(@PathVariable Long id) {
     return this.service.getById(id)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
@@ -63,7 +63,7 @@ public class TicketController {
       @PathVariable Long id,
       @Valid @RequestBody TicketRequest request) {
     try {
-      Optional<Ticket> updated = this.service.updateById(id, request);
+      Optional<TicketResult> updated = this.service.updateById(id, request);
       if (updated.isPresent()) {
         return ResponseEntity.ok(updated.get());
       }
