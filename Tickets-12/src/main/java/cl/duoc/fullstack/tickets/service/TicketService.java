@@ -2,20 +2,13 @@ package cl.duoc.fullstack.tickets.service;
 
 import cl.duoc.fullstack.tickets.dto.TicketRequest;
 import cl.duoc.fullstack.tickets.dto.TicketResult;
-import cl.duoc.fullstack.tickets.dto.CategoryResult;
-import cl.duoc.fullstack.tickets.dto.TagResult;
 import cl.duoc.fullstack.tickets.dto.UserResult;
-import cl.duoc.fullstack.tickets.model.Category;
-import cl.duoc.fullstack.tickets.model.Tag;
 import cl.duoc.fullstack.tickets.model.Ticket;
 import cl.duoc.fullstack.tickets.model.User;
-import cl.duoc.fullstack.tickets.respository.CategoryRepository;
-import cl.duoc.fullstack.tickets.respository.TagRepository;
 import cl.duoc.fullstack.tickets.respository.TicketRepository;
 import cl.duoc.fullstack.tickets.respository.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -25,18 +18,10 @@ public class TicketService {
 
   private final TicketRepository repository;
   private final UserRepository userRepository;
-  private final CategoryRepository categoryRepository;
-  private final TagRepository tagRepository;
 
-  public TicketService(
-      TicketRepository repository,
-      UserRepository userRepository,
-      CategoryRepository categoryRepository,
-      TagRepository tagRepository) {
+  public TicketService(TicketRepository repository, UserRepository userRepository) {
     this.repository = repository;
     this.userRepository = userRepository;
-    this.categoryRepository = categoryRepository;
-    this.tagRepository = tagRepository;
   }
 
   public List<TicketResult> getTickets() {
@@ -74,23 +59,11 @@ public class TicketService {
       }
     }
 
-    Category category = null;
-    if (request.categoryId() != null) {
-      category = categoryRepository.findById(request.categoryId()).orElse(null);
-    }
-
-    List<Tag> tags = new ArrayList<>();
-    if (request.tagIds() != null) {
-      tags = tagRepository.findAllById(request.tagIds());
-    }
-
     Ticket ticket = new Ticket();
     ticket.setTitle(request.title());
     ticket.setDescription(request.description());
     ticket.setCreatedBy(creator);
     ticket.setAssignedTo(assignedTo);
-    ticket.setCategory(category);
-    ticket.setTags(tags);
     ticket.setStatus("NEW");
     ticket.setCreatedAt(LocalDateTime.now());
     ticket.setEstimatedResolutionDate(LocalDate.now().plusDays(5));
@@ -127,16 +100,6 @@ public class TicketService {
       toUpdate.setAssignedTo(assignedTo);
     }
 
-    if (request.categoryId() != null) {
-      Category category = categoryRepository.findById(request.categoryId()).orElse(null);
-      toUpdate.setCategory(category);
-    }
-
-    if (request.tagIds() != null) {
-      List<Tag> tags = tagRepository.findAllById(request.tagIds());
-      toUpdate.setTags(tags);
-    }
-
     toUpdate.setTitle(request.title());
     toUpdate.setDescription(request.description());
     if (request.status() != null && !request.status().isBlank()) {
@@ -166,22 +129,6 @@ public class TicketService {
       );
     }
 
-    CategoryResult categoryResult = null;
-    if (ticket.getCategory() != null) {
-      categoryResult = new CategoryResult(
-          ticket.getCategory().getId(),
-          ticket.getCategory().getName(),
-          ticket.getCategory().getDescription()
-      );
-    }
-
-    List<TagResult> tagResults = null;
-    if (ticket.getTags() != null && !ticket.getTags().isEmpty()) {
-      tagResults = ticket.getTags().stream()
-          .map(tag -> new TagResult(tag.getId(), tag.getName(), tag.getColor()))
-          .toList();
-    }
-
     return new TicketResult(
         ticket.getId(),
         ticket.getTitle(),
@@ -191,9 +138,7 @@ public class TicketService {
         ticket.getEstimatedResolutionDate(),
         ticket.getEffectiveResolutionDate(),
         createdByResult,
-        assignedToResult,
-        categoryResult,
-        tagResults
+        assignedToResult
     );
   }
 }

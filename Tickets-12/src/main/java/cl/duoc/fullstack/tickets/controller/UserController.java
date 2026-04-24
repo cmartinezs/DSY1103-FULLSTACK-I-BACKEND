@@ -4,53 +4,70 @@ import cl.duoc.fullstack.tickets.dto.UserRequest;
 import cl.duoc.fullstack.tickets.dto.UserResult;
 import cl.duoc.fullstack.tickets.model.ErrorResponse;
 import cl.duoc.fullstack.tickets.service.UserService;
-import jakarta.validation.Valid;
-import java.util.List;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/ticket-app/users")
+@RequestMapping("/users")
 public class UserController {
 
-  private final UserService userService;
+  private final UserService service;
 
-  public UserController(UserService userService) {
-    this.userService = userService;
+  public UserController(UserService service) {
+    this.service = service;
   }
 
   @GetMapping
-  public List<UserResult> getAll() {
-    return userService.getAll();
+  public ResponseEntity<Object> getAllUsers() {
+    return ResponseEntity.ok(this.service.getUsers());
   }
 
   @PostMapping
-  public ResponseEntity<?> create(@Valid @RequestBody UserRequest request) {
+  public ResponseEntity<Object> create(@RequestBody UserRequest request) {
     try {
-      UserResult created = userService.create(request);
-      return ResponseEntity.status(HttpStatus.CREATED).body(created);
+      UserResult result = this.service.create(request);
+      return ResponseEntity.status(HttpStatus.CREATED).body(result);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(e.getMessage()));
     }
   }
 
   @GetMapping("/by-id/{id}")
-  public ResponseEntity<UserResult> getById(@PathVariable Long id) {
-    return userService.getById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+  public ResponseEntity<UserResult> getUserById(@PathVariable Long id) {
+    return this.service.getById(id)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
   }
 
-  @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<ErrorResponse> handleValidationError(MethodArgumentNotValidException e) {
-    String message = e.getBindingResult().getAllErrors().get(0).getDefaultMessage();
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(message));
+  @PutMapping("/by-id/{id}")
+  public ResponseEntity<Object> updateUserById(
+      @PathVariable Long id,
+      @RequestBody UserRequest request) {
+    try {
+      Optional<UserResult> updated = this.service.updateById(id, request);
+      if (updated.isPresent()) {
+        return ResponseEntity.ok(updated.get());
+      }
+      return ResponseEntity.notFound().build();
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(e.getMessage()));
+    }
+  }
+
+  @DeleteMapping("/by-id/{id}")
+  public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
+    if (!this.service.deleteById(id)) {
+      return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.noContent().build();
   }
 }
