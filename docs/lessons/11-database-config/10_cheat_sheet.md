@@ -1,125 +1,141 @@
 # 🚀 Cheat Sheet — Referencia Rápida Lección 11
 
-## Tres comandos para arrancar
+## Perfiles vs Entornos
+
+| Concepto | Descripción |
+|----------|-------------|
+| **Perfil** | Archivo YAML (`application-{profile}.yml`) |
+| **Entorno** | Valores de variables para ese perfil |
+
+### Relación Perfil-Entorno
+
+| Entorno | Perfil | Base de Datos |
+|--------|-------|-------------|
+| local | h2 | H2 (memoria) |
+| dev | mysql | MySQL (XAMPP) |
+| test | supabase | Supabase (PostgreSQL) |
+| prod | supabase | Supabase (PostgreSQL) |
+
+---
+
+## Cuatro Comandos para Arrancar
 
 ```bash
-# H2 (en memoria, rápido, sin BD)
-./mvnw spring-boot:run
+# Entorno LOCAL (H2)
+copy .env.local .env
+./mvnw.cmd spring-boot:run
 
-# MySQL (local con XAMPP)
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=mysql"
+# Entorno DEV (MySQL/XAMPP)
+copy .env.dev .env
+./mvnw.cmd spring-boot:run
 
-# Supabase (nube)
-export SPRING_PROFILES_ACTIVE=supabase && ./mvnw spring-boot:run
+# Entorno TEST (Supabase)
+copy .env.test .env
+./mvnw.cmd spring-boot:run
+
+# Entorno PROD (Supabase)
+copy .env.prod .env
+./mvnw.cmd spring-boot:run
+```
+
+O directamente con perfil:
+```bash
+./mvnw.cmd spring-boot:run -Dspring.profiles.active=h2
+./mvnw.cmd spring-boot:run -Dspring.profiles.active=mysql
+./mvnw.cmd spring-boot:run -Dspring.profiles.active=supabase
 ```
 
 ---
 
-## Estructura de archivos (qué va dónde)
+## Estructura de Archivos
 
-```yaml
-# application.yml — Todas las apps
-spring:
-  profiles:
-    active: h2          # Default
-  jpa:
-    hibernate:
-      ddl-auto: update
+```
+src/main/resources/
+├── application.yml              ← Base (común a todos)
+├── application-h2.yml        ← Perfil: h2
+├── application-mysql.yml     ← Perfil: mysql
+└── application-supabase.yml ← Perfil: supabase
 
-# application-h2.yml — Solo para perfil h2
-spring:
-  datasource:
-    url: jdbc:h2:mem:ticketsdb
-    driver-class-name: org.h2.Driver
-
-# application-mysql.yml — Solo para perfil mysql
-spring:
-  datasource:
-    url: ${MYSQL_URL:...}
-    username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:}
-
-# application-supabase.yml — Solo para perfil supabase
-spring:
-  datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+.env.local                  ← Entorno: local (perfil: h2)
+.env.dev                  ← Entorno: dev (perfil: mysql)
+.env.test                 ← Entorno: test (perfil: supabase)
+.env.prod                 ← Entorno: prod (perfil: supabase)
+.env.example               ← Plantilla
 ```
 
 ---
 
-## Variables de Entorno (`.env`)
+## Variables por Entorno
 
+### LOCAL (no necesita variables)
 ```env
-# Perfil
+SPRING_PROFILES_ACTIVE=h2
+```
+
+### DEV
+```env
 SPRING_PROFILES_ACTIVE=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=tickets_db
+DB_USER=root
+DB_PASSWORD=
+```
 
-# Para MySQL
-MYSQL_URL=jdbc:mysql://localhost:3306/tickets_db?useSSL=false&serverTimezone=America/Santiago
-MYSQL_USERNAME=root
-MYSQL_PASSWORD=
-
-# Para Supabase
-DB_HOST=db.xxxx.supabase.co
+### TEST / PROD
+```env
+SPRING_PROFILES_ACTIVE=supabase
+DB_HOST=db.xxx.supabase.co
 DB_PORT=5432
 DB_NAME=postgres
 DB_USER=postgres
-DB_PASSWORD=your-password
+DB_PASSWORD=tu-password
 ```
-
----
-
-## Cargar `.env` desde IntelliJ
-
-1. **Plugin:** Instala "EnvFile"
-2. **Run** → **Edit Configurations**
-3. **EnvFile** tab → ✅ Enable → Selecciona `.env`
-4. ▶️ Ejecuta
 
 ---
 
 ## Matriz de Decisión
 
-| Caso | Perfil | Comando |
-|------|--------|---------|
-| Tests rápidos | h2 | `./mvnw spring-boot:run` |
-| Desarrollo local | mysql | `-Dspring-boot.run.arguments="--spring.profiles.active=mysql"` |
-| Entrega final | supabase | `export SPRING_PROFILES_ACTIVE=supabase` |
+| Caso | Entorno | Perfil | Cuándo |
+|------|--------|-------|--------|
+| Tests rápidos | local | h2 | Sin persistencia |
+| Desarrollo diario | dev | mysql | Con XAMPP |
+| Pruebas en nube | test | supabase | Supabase test |
+| Entrega final | prod | supabase | Supabase prod |
 
 ---
 
-## Cómo sé que funcionó?
+## Cómo Sé que Funcionó?
 
 Busca en los logs:
 ```
-The following profiles are active: [tu-perfil]
+The following profile is active: "[tu-perfil]"
 HikariPool-1 - Connection is working...
 ```
 
-Luego: http://localhost:8080/ticket-app/tickets
+Luego prueba: http://localhost:8080/ticket-app/tickets
 
 ---
 
 ## Seguridad
 
-✅ `.env.example` → commitear  
-❌ `.env` → NO commitear (en `.gitignore`)  
-🔒 Credenciales reales → solo en `.env` local  
+- ✅ `.env.example` → commitear
+- ❌ `.env`, `.env.local`, `.env.dev`, `.env.test`, `.env.prod` → NO commitear
+- 🔒 Credenciales reales → solo en `.env` local
 
 ---
 
 ## Troubleshooting
 
 **"Connection refused"**
-→ Verifica que BD está corriendo y credenciales son correctas
+→ Verifica que la base de datos esté corriendo y credenciales sean correctas
 
-**"Variables vacías"**
-→ Instala plugin EnvFile en IntelliJ o define manualmente en Edit Configurations
+**"No profile is active"**
+→ Define `SPRING_PROFILES_ACTIVE` en variable de entorno o `.env`
 
 **"¿Cuál perfil estoy usando?"**
-→ Mira los logs al arrancar: `The following profiles are active: ...`
+→ Mira los logs: `The following profile is active: ...`
 
 ---
 
-*Más detalles: [Lección 11](00_indice.md)*
+*[← Volver a Lección 11](01_objetivo_y_alcance.md)*

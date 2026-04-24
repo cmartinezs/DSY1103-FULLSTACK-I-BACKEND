@@ -1,4 +1,4 @@
-# Lección 11 — Tutorial paso a paso: XAMPP y Supabase
+# Lección 11 — Tutorial paso a paso: Perfiles de base de datos
 
 ---
 
@@ -6,25 +6,56 @@
 
 Spring Boot permite gestionar múltiples configuraciones de base de datos usando **perfiles** (profiles). Esto evita cambiar manualmente `application.yml` cada vez que cambias de entorno.
 
-### Archivos de configuración
+### Archivos de perfil (configuración)
 
-- **`application.yml`** — Configuración común (puerto, contexto, perfil activo por defecto)
-- **`application-h2.yml`** — BD en memoria (desarrollo/testing)
-- **`application-mysql.yml`** — MySQL local (XAMPP)
-- **`application-supabase.yml`** — Supabase PostgreSQL en la nube
+| Archivo | Perfil | Base de Datos |
+|--------|-------|--------------|
+| `application-h2.yml` | `h2` | H2 (memoria) |
+| `application-mysql.yml` | `mysql` | MySQL (XAMPP) |
+| `application-supabase.yml` | `supabase` | Supabase (PostgreSQL) |
+
+### Archivos de entorno (valores)
+
+| Archivo | Perfil | Entorno | Cuándo usarlo |
+|--------|-------|--------|--------|-------------|
+| `.env.local` | `h2` | local | Desarrollo rápido |
+| `.env.dev` | `mysql` | dev | Desarrollo con MySQL |
+| `.env.test` | `supabase` | test | Pruebas en Supabase |
+| `.env.prod` | `supabase` | prod | Producción |
+
+**Nota:** Los entornos `test` y `prod` comparten el perfil `supabase` (misma configuración), pero tienen diferentes valores de conexión.
 
 ### Activar un perfil
 
-**Opción 1: Desde la línea de comandos**
+**Opción 1: Copiar archivo de entorno**
 ```bash
-# H2 (por defecto)
-./mvnw spring-boot:run
+# Desarrollo rápido (H2)
+copy .env.local .env
+./mvnw.cmd spring-boot:run
+
+# Desarrollo con MySQL
+copy .env.dev .env
+./mvnw.cmd spring-boot:run
+
+# Pruebas en Supabase
+copy .env.test .env
+./mvnw.cmd spring-boot:run
+
+# Producción
+copy .env.prod .env
+./mvnw.cmd spring-boot:run
+```
+
+**Opción 2: Perfil por línea de comandos**
+```bash
+# H2
+./mvnw.cmd spring-boot:run -Dspring.profiles.active=h2
 
 # MySQL
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=mysql"
+./mvnw.cmd spring-boot:run -Dspring.profiles.active=mysql
 
 # Supabase
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=supabase"
+./mvnw.cmd spring-boot:run -Dspring.profiles.active=supabase
 ```
 
 **Opción 2: Variable de entorno**

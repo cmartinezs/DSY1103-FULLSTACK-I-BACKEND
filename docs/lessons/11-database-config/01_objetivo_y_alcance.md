@@ -1,13 +1,13 @@
-# Lección 11 — Configurar bases de datos reales: XAMPP y Supabase
+# Lección 11 — Configurar bases de datos reales: H2, MySQL y Supabase
 
 ## ¿De dónde venimos?
 
-En la lección 10 migraste el proyecto a JPA. Tu aplicación ahora persiste tickets en MySQL local (XAMPP). Todo funciona en tu computador.
+En la lección 10 migraste el proyecto a JPA con H2 (base de datos en memoria). Tu aplicación ahora persiste tickets, pero los datos se pierden al cerrar la aplicación.
 
-Pero hay dos escenarios que necesitas manejar:
+Hay dos escenarios que necesitas manejar:
 
-1. **Colaboración y entrega:** tu proyecto debe poder conectarse a una base de datos accesible desde cualquier lugar, no solo desde tu máquina
-2. **Entornos distintos:** necesitas poder cambiar de base de datos (local o nube) sin modificar el código
+1. **Persistencia real:** necesitas que los datos sobrevivan entre ejecuciones (MySQL, PostgreSQL)
+2. **Entornos distintos:** necesitas poder cambiar de base de datos sin modificar el código
 
 Esta lección resuelve ambos con **perfiles de Spring Boot** y **variables de entorno**.
 
@@ -23,6 +23,8 @@ Esta lección resuelve ambos con **perfiles de Spring Boot** y **variables de en
 
 Los tres usan SQL estándar y funcionan perfectamente con JPA/Hibernate. La única diferencia está en los archivos de configuración.
 
+**Nota:** Aunque usamos la misma base de datos (Supabase) para test y prod, los entornos son diferentes (distinto proyecto, distintas credenciales).
+
 ---
 
 ## ¿Qué vas a construir?
@@ -30,7 +32,8 @@ Los tres usan SQL estándar y funcionan perfectamente con JPA/Hibernate. La úni
 Al terminar esta lección podrás:
 
 1. Entender cómo usar **perfiles de Spring Boot** para manejar múltiples configuraciones
-2. Configurar variables de entorno para no hardcodear credenciales
+2. Configurar **entornos** con diferentes valores de variables para cada perfil
+3. Configurar variables de entorno para no hardcodear credenciales
 3. Conectar la aplicación a **H2** (desarrollo rápido)
 4. Conectar la aplicación a **MySQL local** (XAMPP) con la configuración correcta
 5. Crear un proyecto en **Supabase** y obtener la URL de conexión

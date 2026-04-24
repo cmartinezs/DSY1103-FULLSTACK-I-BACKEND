@@ -64,13 +64,16 @@ export SPRING_PROFILES_ACTIVE=supabase
 Tickets/
 ├── src/main/resources/
 │   ├── application.yml              ← Base común (todos los perfiles)
-│   ├── application-h2.yml           ← BD en memoria
-│   ├── application-mysql.yml        ← MySQL local con variables de entorno
+│   ├── application-h2.yml           ← H2 en memoria
+│   ├── application-mysql.yml        ← MySQL local
 │   └── application-supabase.yml     ← Supabase PostgreSQL
 │
 ├── .env.example                     ← Plantilla (subir a Git ✅)
-├── .env                             ← Tu config local (NO subir a Git ❌)
-└── .gitignore                       ← Incluye .env
+├── .env.local                      ← Ambiente local (H2)
+├── .env.dev                        ← Ambiente dev (MySQL)
+├── .env.test                       ← Ambiente test (Supabase)
+├── .env.prod                       ← Ambiente prod (Supabase)
+└── .gitignore                     ← Incluye .env
 ```
 
 ---
@@ -79,37 +82,63 @@ Tickets/
 
 | Perfil | BD | Dónde | Cuándo Usar | Arranca | Requiere |
 |--------|-----|-------|------------|---------|----------|
-| **h2** | En memoria | Tu PC | Tests, desarrollo rápido | `./mvnw spring-boot:run` | - |
-| **mysql** | MySQL | Tu PC | Desarrollo con datos | `-Dspring-boot.run.arguments="--spring.profiles.active=mysql"` | XAMPP |
-| **supabase** | PostgreSQL | Nube | Entrega final, equipo | `export SPRING_PROFILES_ACTIVE=supabase; ./mvnw spring-boot:run` | Variables de entorno |
+| **h2** | H2 (memoria) | Tu PC | Desarrollo rápido | `./mvnw spring-boot:run` | - |
+| **mysql** | MySQL | Tu PC | Desarrollo con datos | `-Dspring.profiles.active=mysql` | XAMPP |
+| **supabase** | PostgreSQL | Nube | Test/Producción | `-Dspring.profiles.active=supabase` | Variables de entorno |
+
+---
+
+## 🏠 Ambientes (Environments)
+
+Cada ambiente usa un perfil diferente y tiene su propio archivo `.env`:
+
+| Ambiente | Perfil | BD | Archivo .env |
+|----------|--------|-----|--------------|
+| **local** | h2 | H2 (memoria) | `.env.local` |
+| **dev** | mysql | MySQL (XAMPP) | `.env.dev` |
+| **test** | supabase | Supabase | `.env.test` |
+| **prod** | supabase | Supabase | `.env.prod` |
+
+### Cómo usar
+
+```bash
+# Copiar el archivo de ambiente que necesites
+cp .env.local .env    # Para desarrollo rápido
+cp .env.dev .env       # Para desarrollo con MySQL
+cp .env.test .env     # Para pruebas
+cp .env.prod .env     # Para producción
+
+# Ejecutar la aplicación
+./mvnw spring-boot:run
+```
 
 ---
 
 ## 🔐 Variables de Entorno
 
-```env
-# .env (tu configuración local, NO commitar)
+Cada archivo `.env` incluye el perfil a usar:
 
-# Para MySQL
-MYSQL_URL=jdbc:mysql://localhost:3306/tickets_db?useSSL=false&serverTimezone=America/Santiago
-MYSQL_USERNAME=root
-MYSQL_PASSWORD=
+```bash
+# .env.local (desarrollo rápido)
+SPRING_PROFILES_ACTIVE=h2
 
-# Para Supabase
-DB_HOST=db.xxxxxxxxxxxx.supabase.co
-DB_PORT=5432
-DB_NAME=postgres
-DB_USER=postgres
-DB_PASSWORD=tu-password-real
-
-# Perfil activo
+# .env.dev (desarrollo con MySQL)
 SPRING_PROFILES_ACTIVE=mysql
+DB_URL=jdbc:mysql://localhost:3306/tickets_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+DB_USER=root
+DB_PASSWORD=
+
+# .env.test / .env.prod (Supabase)
+SPRING_PROFILES_ACTIVE=supabase
+DB_URL=jdbc:postgresql://[HOST]:5432/postgres
+DB_USER=postgres
+DB_PASSWORD=[TU_PASSWORD]
 ```
 
 **Protección:**
-- ✅ `.env.example` → commitear (plantilla)
-- ❌ `.env` → NO commitear (credenciales reales)
-- ✅ `.gitignore` → contiene `.env`
+- ✅ `.env.*` → NO commitear (contienen credenciales)
+- ✅ `.gitignore` → incluye `.env*`
+- ✅ Solo `.env.example` → commitear (plantilla sin datos reales)
 
 ---
 

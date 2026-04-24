@@ -1,158 +1,208 @@
-# 📝 Ejemplo: Archivo `.env` Completado
+# 📝 Ejemplo: Archivos de Entorno
 
-## Escenario 1: Desarrollo Local con MySQL
+## Conceptos Clave
 
-```env
-# .env — Desarrollo local con XAMPP
+| Concepto | Descripción |
+|----------|-------------|
+| **Perfil** | Archivo YAML (`application-{profile}.yml`) con configuración de BD |
+| **Entorno** | Valores de las variables para un perfil específico |
 
-# Perfil activo
-SPRING_PROFILES_ACTIVE=mysql
+### Relación Perfil-Entorno
 
-# MySQL Configuration
-MYSQL_URL=jdbc:mysql://localhost:3306/tickets_db?useSSL=false&serverTimezone=America/Santiago
-MYSQL_USERNAME=root
-MYSQL_PASSWORD=
-
-# Supabase Configuration (vacío, no lo usamos ahora)
-DB_HOST=
-DB_PORT=5432
-DB_NAME=
-DB_USER=
-DB_PASSWORD=
-```
-
-**Cómo usar:**
-```bash
-cd Tickets
-
-# Opción A: Exportar variables (Linux/macOS)
-export SPRING_PROFILES_ACTIVE=mysql
-./mvnw spring-boot:run
-
-# Opción B: En PowerShell (Windows)
-$env:SPRING_PROFILES_ACTIVE="mysql"
-./mvnw spring-boot:run
-
-# Opción C: IntelliJ IDEA (con plugin EnvFile)
-# → Run → Edit Configurations → Enable EnvFile → Select .env
-# → Clic en ▶ para ejecutar
-```
+| Entorno | Perfil | Base de Datos |
+|--------|-------|-------------|
+| local | h2 | H2 (memoria) |
+| dev | mysql | MySQL (XAMPP) |
+| test | supabase | Supabase (PostgreSQL) |
+| prod | supabase | Supabase (PostgreSQL) |
 
 ---
 
-## Escenario 2: Desarrollo Local con H2
+## Entorno 1: LOCAL (Perfil: h2)
 
+**Cuándo usarlo:** Desarrollo rápido, tests, sin persistencia de datos.
+
+### Archivo: `.env.local`
 ```env
-# .env — Tests rápidos, sin BD
-
-# Perfil activo
+# Ambiente LOCAL - desarrollo rápido
+# Perfil: h2
 SPRING_PROFILES_ACTIVE=h2
-
-# MySQL Configuration (vacío, no lo usamos)
-MYSQL_URL=
-MYSQL_USERNAME=
-MYSQL_PASSWORD=
-
-# Supabase Configuration (vacío, no lo usamos)
-DB_HOST=
-DB_PORT=5432
-DB_NAME=
-DB_USER=
-DB_PASSWORD=
 ```
 
-**Cómo usar:**
+**Sin variables adicionales** — el perfil h2 no necesita credenciales.
+
+### Cómo ejecutarlo
 ```bash
-cd Tickets
-./mvnw spring-boot:run
-# Ya está en H2 por defecto, no necesitas hacer nada más
-```
-
----
-
-## Escenario 3: Entrega Final con Supabase
-
-```env
-# .env — Producción/Entrega en Supabase
-
-# Perfil activo
-SPRING_PROFILES_ACTIVE=supabase
-
-# MySQL Configuration (vacío, no lo usamos)
-MYSQL_URL=
-MYSQL_USERNAME=
-MYSQL_PASSWORD=
-
-# Supabase Configuration (¡VALORES REALES!)
-DB_HOST=db.xyzabcdefgh.supabase.co
-DB_PORT=5432
-DB_NAME=postgres
-DB_USER=postgres
-DB_PASSWORD=pbkdf2$260000$2a3f5c8d9e1b4c2f$a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t
-```
-
-### ¿De dónde sacas estos valores?
-
-1. **DB_HOST**: Ve a Supabase → tu proyecto → Settings → Database → Connection string → copia el host
-   ```
-   DB_HOST=db.xyzabcdefgh.supabase.co
-   ```
-
-2. **DB_PORT**: Siempre es `5432` para Supabase
-
-3. **DB_NAME**: Siempre es `postgres`
-
-4. **DB_USER**: Siempre es `postgres` (a menos que hayas creado otro usuario)
-
-5. **DB_PASSWORD**: La contraseña que creaste cuando hiciste el proyecto en Supabase
-
-### Ejemplo completo de Connection String de Supabase
-
-```
-jdbc:postgresql://db.xyzabcdefgh.supabase.co:5432/postgres
-```
-
-**Lo que extraes para `.env`:**
-```env
-DB_HOST=db.xyzabcdefgh.supabase.co
-DB_PORT=5432
-DB_NAME=postgres
-DB_USER=postgres
-DB_PASSWORD=tu-password-aqui
-```
-
-**Cómo usar:**
-```bash
-cd Tickets
-
-# Opción A: Exportar variables (Linux/macOS)
-export SPRING_PROFILES_ACTIVE=supabase
+# Opción A: Copiar .env.local a .env
+copy .env.local .env
 ./mvnw spring-boot:run
 
-# Opción B: En PowerShell (Windows)
-$env:SPRING_PROFILES_ACTIVE="supabase"
-./mvnw spring-boot:run
-
-# Opción C: IntelliJ IDEA (con plugin EnvFile)
-# → Run → Edit Configurations → Enable EnvFile → Select .env
-# → Clic en ▶ para ejecutar
+# Opción B: Variable de entorno
+$env:SPRING_PROFILES_ACTIVE="h2"
+./mvnw.cmd spring-boot:run
 ```
 
----
-
-## ⚠️ Validación
-
-Después de completar tu `.env`, verifica en los logs:
-
+### Resultado esperado en logs
 ```
-The following profiles are active: mysql
-The following 1 profile is active: "mysql"
-
+The following profile is active: "h2"
 HikariPool-1 - Starting...
 HikariPool-1 - Connection is working...
 ```
 
-Si ves esto, ¡todo funciona! 🎉
+---
+
+## Entorno 2: DEV (Perfil: mysql)
+
+**Cuándo usarlo:** Desarrollo diario con datos persistentes (XAMPP).
+
+### Archivo: `.env.dev`
+```env
+# Ambiente DEV - MySQL local
+# Perfil: mysql
+SPRING_PROFILES_ACTIVE=mysql
+
+# MySQL Configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=tickets_db
+DB_USER=root
+DB_PASSWORD=
+```
+
+### Prerequisites
+1. XAMPP instalado y MySQL corriendo
+2. Base de datos `tickets_db` creada en phpMyAdmin
+
+### Cómo ejecutarlo
+```bash
+# Opción A: Copiar .env.dev a .env
+copy .env.dev .env
+./mvnw spring-boot:run
+
+# Opción B: Variable de entorno
+$env:SPRING_PROFILES_ACTIVE="mysql"
+./mvnw.cmd spring-boot:run
+```
+
+### Resultado esperado en logs
+```
+The following profile is active: "mysql"
+HikariPool-1 - Starting...
+HikariPool-1 - Connection is working...
+```
+
+---
+
+## Entorno 3: TEST (Perfil: supabase)
+
+**Cuándo usarlo:** Pruebas con base de datos en la nube (Supabase).
+
+### Archivo: `.env.test`
+```env
+# Ambiente TEST - Supabase (pruebas)
+# Perfil: supabase
+SPRING_PROFILES_ACTIVE=supabase
+
+# Supabase Configuration
+DB_HOST=db.xxxxxxxxxxxx.supabase.co
+DB_PORT=5432
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=your-test-password
+```
+
+### Dónde obtener los valores
+
+1. **DB_HOST**: Supabase → Settings → Database → Connection string
+2. **DB_PORT**: Siempre `5432`
+3. **DB_NAME**: Siempre `postgres`
+4. **DB_USER**: Siempre `postgres`
+5. **DB_PASSWORD**: La que creaste en Supabase
+
+### Cómo ejecutarlo
+```bash
+# Opción A: Copiar .env.test a .env
+copy .env.test .env
+./mvnw spring-boot:run
+
+# Opción B: Variable de entorno
+$env:SPRING_PROFILES_ACTIVE="supabase"
+./mvnw.cmd spring-boot:run
+```
+
+### Resultado esperado en logs
+```
+The following profile is active: "supabase"
+HikariPool-1 - Starting...
+HikariPool-1 - Connection is working...
+```
+
+---
+
+## Entorno 4: PROD (Perfil: supabase)
+
+**Cuándo usarlo:** Entrega final, producción.
+
+### Archivo: `.env.prod`
+```env
+# Ambiente PROD - Supabase (producción)
+# Perfil: supabase (mismo que test, valores diferentes)
+SPRING_PROFILES_ACTIVE=supabase
+
+# Supabase Configuration
+DB_HOST=db.yyyyyyyyyyyy.supabase.co
+DB_PORT=5432
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=your-prod-password
+```
+
+**Nota:** Usa el mismo perfil `supabase` que test, pero con diferentes valores de conexión.
+
+### Cómo ejecutarlo
+```bash
+# Opción A: Copiar .env.prod a .env
+copy .env.prod .env
+./mvnw spring-boot:run
+
+# Opción B: Variable de entorno
+$env:SPRING_PROFILES_ACTIVE="supabase"
+./mvnw.cmd spring-boot:run
+```
+
+---
+
+## 🎯 Cómo Cambiar de Entilibrio
+
+### Cambiar solo el archivo .env
+```bash
+# Desarrollo rápido
+copy .env.local .env
+
+# Desarrollo con MySQL
+copy .env.dev .env
+
+# Pruebas en Supabase
+copy .env.test .env
+
+# Producción
+copy .env.prod .env
+
+./mvnw spring-boot:run
+```
+
+### Cambiar perfil sin editar .env
+Edita la línea `SPRING_PROFILES_ACTIVE`:
+```env
+# Perfil: h2
+SPRING_PROFILES_ACTIVE=h2
+
+# Perfil: mysql
+SPRING_PROFILES_ACTIVE=mysql
+
+# Perfil: supabase
+SPRING_PROFILES_ACTIVE=supabase
+```
 
 ---
 
@@ -161,43 +211,16 @@ Si ves esto, ¡todo funciona! 🎉
 **Antes de hacer commit:**
 
 - ✅ `.env` **no está** en el repositorio (verificar `.gitignore`)
-- ✅ `.env.example` **sí está** en el repositorio (plantilla pública)
-- ✅ Tu archivo `.env` local contiene credenciales reales, pero solo en tu PC
-- ✅ Si el `.env` se subió accidentalmente, **cambia todos los passwords inmediatamente**
+- ✅ `.env.example` **sí está** en el repositorio
+- ✅ `.env.local`, `.env.dev`, `.env.test`, `.env.prod` están en `.gitignore`
+- ✅ Nunca subas credenciales reales
 
 **Comando para verificar:**
 ```bash
 git status .env
 # Debería mostrar: .env (not tracked)
-
-git status .env.example
-# Debería mostrar: .env.example (tracked)
 ```
 
 ---
 
-## 🔄 Cambiar Entre Perfiles sin Editar `.env`
-
-También puedes cambiar el perfil simplemente editando esta línea en `.env`:
-
-```env
-# Opción 1: H2
-SPRING_PROFILES_ACTIVE=h2
-
-# Opción 2: MySQL
-SPRING_PROFILES_ACTIVE=mysql
-
-# Opción 3: Supabase
-SPRING_PROFILES_ACTIVE=supabase
-```
-
-Y luego arrancas:
-```bash
-./mvnw spring-boot:run
-```
-
-El perfil se cargará automáticamente desde `.env`. 🚀
-
----
-
-*[← Volver a Lección 11](00_indice.md)*
+*[← Volver a Lección 11](01_objetivo_y_alcance.md)*

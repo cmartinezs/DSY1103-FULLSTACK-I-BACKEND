@@ -11,82 +11,110 @@ Perfiles de Spring Boot para múltiples bases de datos (H2, MySQL, PostgreSQL/Su
 ## 🔄 Cambios desde Lección 10
 
 ### 1. Dependencias (pom.xml)
-- ✅ Agregadas: `mysql-connector-j`, `postgresql`
+- ✅ `mysql-connector-j`
+- ✅ `postgresql`
+- ✅ `spring-dotenv` para cargar .env
+- ✅ `spring-boot-h2console`
 
-### 2. Perfiles de Configuración
+### 2. Perfiles vs Entornos
 
-#### application-h2.yml (Desarrollo)
-```yaml
-spring:
-  datasource:
-    url: jdbc:h2:mem:tickets_db
-    driverClassName: org.h2.Driver
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-```
+| Concepto | Descripción |
+|----------|-------------|
+| **Perfil** | Archivo de configuración (`application-{profile}.yml`) |
+| **Entorno** | Valores de las variables para ese perfil |
 
-#### application-mysql.yml (MySQL local XAMPP)
-```yaml
-spring:
-  datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/tickets_db}
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-```
+| Perfil | Archivo | Entornos que lo usan |
+|--------|---------|---------------------|
+| `h2` | `application-h2.yml` | local |
+| `mysql` | `application-mysql.yml` | dev |
+| `supabase` | `application-supabase.yml` | test, prod |
 
-#### application-supabase.yml (PostgreSQL en la nube)
-```yaml
-spring:
-  datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/tickets_db}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-```
+### 3. Archivos de Perfil
 
-### 3. Variables de Entorno (.env.example)
-- ✅ Plantilla para configuración de BD
-- ✅ Sin credenciales hardcodeadas
+| Archivo | Perfil | Base de Datos |
+|---------|-------|--------------|
+| `application-h2.yml` | `h2` | H2 (memoria) |
+| `application-mysql.yml` | `mysql` | MySQL (XAMPP) |
+| `application-supabase.yml` | `supabase` | Supabase (PostgreSQL) |
 
-### 4. application.yml (Base)
+### 4. Archivos de Entorno
+
+| Archivo | Perfil | Entorno | Descripción |
+|---------|-------|---------|-------------|
+| `.env.local` | `h2` | local | Desarrollo rápido |
+| `.env.dev` | `mysql` | dev | Desarrollo con MySQL |
+| `.env.test` | `supabase` | test | Pruebas en Supabase |
+| `.env.prod` | `supabase` | prod | Producción (mismo perfil, diferentes valores) |
+
+### 5. application.yml (Base)
 - ✅ Configuración base sin credenciales
 - ✅ Niveles de logging por perfil
 
-### 5. Carga de Variables de Entorno (.env)
+### 6. Carga de Variables de Entorno (.env)
 - ✅ Dependencia `spring-dotenv` para cargar `.env` automáticamente
 - ✅ Archivo `.env.example` con plantilla
 - ⚠️ **Variables sensibles**: NUNCA hacer commit de `.env` con credenciales reales
 
 ---
 
-## 🧪 Uso de Perfiles
+## 🌍 Cómo Usar Perfiles y Entornos
+
+### Opción 1: Copiar archivo .env
 
 ```bash
-# H2 (desarrollo, por defecto)
+# Elegir el entorno que necesitas
+copy .env.local .env    # Perfil: h2
+copy .env.dev .env      # Perfil: mysql
+copy .env.test .env     # Perfil: supabase
+copy .env.prod .env     # Perfil: supabase (valores diferentes)
+
+# Ejecutar la aplicación
 ./mvnw spring-boot:run
+```
 
-# MySQL local
+### Opción 2: Con variable de entorno
+
+```bash
+# PowerShell (Windows)
+$env:SPRING_PROFILES_ACTIVE="mysql"
+./mvnw.cmd spring-boot:run
+
+# bash/Linux/macOS
+SPRING_PROFILES_ACTIVE=mysql ./mvnw spring-boot:run
+```
+
+### Opción 3: Por línea de comandos
+
+```bash
+./mvnw spring-boot:run -Dspring.profiles.active=h2
 ./mvnw spring-boot:run -Dspring.profiles.active=mysql
-
-# Supabase (PostgreSQL cloud)
 ./mvnw spring-boot:run -Dspring.profiles.active=supabase
 ```
+
+---
 
 ## 📝 Archivos de Configuración
 
 | Archivo | Descripción |
 |---------|-------------|
 | `application.yml` | Configuración base |
-| `application-h2.yml` | Perfil H2 (desarrollo) |
+| `application-h2.yml` | Perfil H2 |
 | `application-mysql.yml` | Perfil MySQL |
-| `application-supabase.yml` | Perfil PostgreSQL/Supabase |
-| `.env.example` | Plantilla de variables de entorno |
+| `application-supabase.yml` | Perfil Supabase |
+| `.env.local` | Entorno local (perfil h2) |
+| `.env.dev` | Entorno dev (perfil mysql) |
+| `.env.test` | Entorno test (perfil supabase) |
+| `.env.prod` | Entorno prod (perfil supabase) |
+| `.env.example` | Plantilla de variables |
+
+---
+
+## 🧪 Validación
+
+- [x] Perfil h2 funciona con entorno local
+- [x] Perfil mysql funciona con entorno dev
+- [x] Perfil supabase funciona con entorno test
+- [x] Perfil supabase funciona con entorno prod (mismos valores de perfil, diferentes variables)
 
 ---
 

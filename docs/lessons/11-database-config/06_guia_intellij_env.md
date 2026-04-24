@@ -1,4 +1,4 @@
-# 🚀 Guía Rápida: Cargar Variables de Entorno en IntelliJ IDEA
+# 🚀 Guía: Cargar Variables de Entorno en IntelliJ IDEA
 
 ## El Problema
 
@@ -6,60 +6,111 @@ Cuando ejecutas tu aplicación desde IntelliJ, Spring Boot no carga automáticam
 
 ---
 
-## Solución Rápida en IntelliJ IDEA
+## Conceptos Clave
 
-### Paso 1: Instala el plugin EnvFile
+| Concepto | Descripción |
+|----------|-------------|
+| **Perfil** | Archivo YAML (`application-{profile}.yml`) con configuración |
+| **Entorno** | Valores de variables para ese perfil |
 
-1. Abre IntelliJ IDEA
-2. Ve a **File** → **Settings** (o **Preferences** en macOS)
-3. Busca **Plugins** en el buscador
-4. Escribe `"EnvFile"` y busca
-5. Haz clic en **Install** en el resultado `"EnvFile"`
-6. Reinicia IntelliJ
+### Relación Perfil-Entorno
 
-### Paso 2: Configura tu Run Configuration
-
-1. En IntelliJ, ve a **Run** → **Edit Configurations...**
-2. Busca la configuración de Spring Boot (probablemente se llama `TicketsApplication`)
-3. Si no existe, haz clic en `+` → busca `Spring Boot` → llámalo `TicketsApplication`
-4. En la ventana de configuración, busca la pestaña **"EnvFile"** (debería aparecer después de instalar el plugin)
-5. Haz clic en el checkbox **"Enable EnvFile"**
-6. Haz clic en el botón `+` verde
-7. Selecciona tu archivo `.env` (en la raíz del proyecto `Tickets/`)
-8. Haz clic en **Apply** → **OK**
-
-### Paso 3: Ejecuta la aplicación
-
-Ahora cuando ejecutes desde IntelliJ (botón ▶ verde o Shift+F10), las variables de `.env` estarán disponibles.
+| Entorno | Perfil | Archivo |
+|--------|-------|---------|
+| local | h2 | `.env.local` |
+| dev | mysql | `.env.dev` |
+| test | supabase | `.env.test` |
+| prod | supabase | `.env.prod` |
 
 ---
 
-## Solución Alternativa: Definir Variables Manualmente
+## Solución: Plugin EnvFile
 
-Si el plugin no funciona o prefieres no instalarlo:
+### Paso 1: Instala el plugin
+
+1. **File** → **Settings** → **Plugins**
+2. Busca "EnvFile" e instala
+3. Reinicia IntelliJ
+
+### Paso 2: Configura Run Configuration
 
 1. **Run** → **Edit Configurations...**
-2. En el campo **"Environment variables"**, haz clic en el ícono de editar (📋)
-3. Agrega manualmente cada variable. Ejemplo:
+2. Selecciona la configuración de Spring Boot
+3. En la pestaña **"EnvFile"**, habilita **"Enable EnvFile"**
+4. Selecciona el archivo `.env` que corresponda:
+   - `.env.local` → desarrollo rápido
+   - `.env.dev` → MySQL
+   - `.env.test` → Supabase (pruebas)
+   - `.env.prod` → Supabase (producción)
+5. **Apply** → **OK**
 
+### Paso 3: Ejecuta
+
+Usa el botón ▶ o Shift+F10
+
+Verifica en los logs:
 ```
-SPRING_PROFILES_ACTIVE=mysql
-MYSQL_USERNAME=root
-MYSQL_PASSWORD=
-DB_HOST=db.xxxxxxxxxxxx.supabase.co
-DB_PORT=5432
+The following profile is active: "mysql"
+HikariPool-1 - Connection is working...
 ```
-
-(En Windows, separa con `;` | En Linux/macOS, separa con `:`)
-
-4. **Apply** → **OK**
 
 ---
 
-## Solución Avanzada: Usar `spring-dotenv`
+## Solución Alternativa: Variables Manuales
 
-Agrega esta dependencia al `pom.xml`:
+1. **Run** → **Edit Configurations...**
+2. En **Environment variables**, agrega:
+   ```
+   SPRING_PROFILES_ACTIVE=mysql;DB_HOST=localhost;DB_PORT=3306;DB_NAME=tickets_db;DB_USER=root;DB_PASSWORD=
+   ```
+   (Windows usa `;`, Linux/macOS usa `:`)
+3. **Apply** → **OK**
 
+---
+
+## Referencia de Variables por Entorno
+
+### LOCAL (.env.local)
+```env
+SPRING_PROFILES_ACTIVE=h2
+```
+Sin variables adicionales.
+
+### DEV (.env.dev)
+```env
+SPRING_PROFILES_ACTIVE=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=tickets_db
+DB_USER=root
+DB_PASSWORD=
+```
+
+### TEST (.env.test)
+```env
+SPRING_PROFILES_ACTIVE=supabase
+DB_HOST=db.xxx.supabase.co
+DB_PORT=5432
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=your-password
+```
+
+### PROD (.env.prod)
+```env
+SPRING_PROFILES_ACTIVE=supabase
+DB_HOST=db.yyy.supabase.co
+DB_PORT=5432
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=prod-password
+```
+
+---
+
+## Solución Automática: spring-dotenv
+
+Agrega al `pom.xml`:
 ```xml
 <dependency>
     <groupId>me.paulschwarz</groupId>
@@ -68,46 +119,18 @@ Agrega esta dependencia al `pom.xml`:
 </dependency>
 ```
 
-Con esto, Spring carga `.env` automáticamente sin necesidad de plugin. Funciona en IntelliJ, línea de comandos y en todos lados.
+Spring cargará `.env` automáticamente.
 
 ---
 
-## Verificar que Funcionó
+## Troubleshooting
 
-Ejecuta la aplicación y busca en los logs:
-
-```
-The following profiles are active: mysql
-```
-
-Si ves esto, las variables se cargaron correctamente. Luego deberías ver:
-
-```
-HikariPool-1 - Starting...
-HikariPool-1 - Connection is working...
-```
+| Error | Solución |
+|-------|----------|
+| "Connection refused" | Verifica que la BD esté corriendo |
+| "No profile active" | Define `SPRING_PROFILES_ACTIVE` |
+| "Credential errors" | Verifica usuario y password en `.env` |
 
 ---
 
-## Referencia de Variables
-
-```env
-# Perfil activo
-SPRING_PROFILES_ACTIVE=h2           # o: mysql, supabase
-
-# MySQL (si usas application-mysql.yml)
-MYSQL_URL=jdbc:mysql://localhost:3306/tickets_db?useSSL=false&serverTimezone=America/Santiago
-MYSQL_USERNAME=root
-MYSQL_PASSWORD=
-
-# Supabase (si usas application-supabase.yml)
-DB_HOST=db.xxxxxxxxxxxx.supabase.co
-DB_PORT=5432
-DB_NAME=postgres
-DB_USER=postgres
-DB_PASSWORD=tu-contraseña-supabase
-```
-
----
-
-*Para más información, ver [Variables de Entorno - Documentación Completa](../extras/env-variables/README.md)*
+*[← Volver a Lección 11](01_objetivo_y_alcance.md)*
