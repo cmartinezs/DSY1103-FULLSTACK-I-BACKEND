@@ -2,7 +2,6 @@ package cl.duoc.fullstack.tickets.dto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 public record TicketResult(
     Long id,
@@ -13,7 +12,5 @@ public record TicketResult(
     LocalDate estimatedResolutionDate,
     LocalDateTime effectiveResolutionDate,
     UserResult createdBy,
-    UserResult assignedTo,
-    CategoryResult category,
-    List<TagResult> tags
+    UserResult assignedTo
 ) {}
