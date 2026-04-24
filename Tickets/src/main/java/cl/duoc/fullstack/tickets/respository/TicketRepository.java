@@ -25,6 +25,15 @@ public class TicketRepository {
 
     Ticket t2 = new Ticket(currentId, "Ticket 2", "Descripción del ticket 2", "NEW", now, estimated, null, "admin", null);
     db.put(currentId++, t2);
+
+    Ticket t3 = new Ticket(currentId, "Ticket 3", "Descripción del ticket 3 en proceso", "IN_PROGRESS", now.minusDays(2), estimated.minusDays(2), now, "admin", "juan");
+    db.put(currentId++, t3);
+
+    Ticket t4 = new Ticket(currentId, "Ticket 4", "Descripción del ticket 4 resuelto", "RESOLVED", now.minusDays(5), estimated.minusDays(5), now.minusDays(3), "admin", "juan");
+    db.put(currentId++, t4);
+
+    Ticket t5 = new Ticket(currentId, "Ticket 5", "Descripción del ticket 5 cerrado", "CLOSED", now.minusDays(10), estimated.minusDays(8), now.minusDays(7), "admin", "juan");
+    db.put(currentId++, t5);
   }
 
   public List<Ticket> getAll() {
