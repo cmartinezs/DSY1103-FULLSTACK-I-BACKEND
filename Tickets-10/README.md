@@ -11,7 +11,9 @@ Migración del repositorio en-memoria basado en HashMap a **Spring Data JPA** co
 ## 🔄 Cambios desde Lección 09
 
 ### 1. Dependencias (pom.xml)
-- ✅ Agregadas: `spring-boot-starter-data-jpa`, `h2`
+- ✅ `spring-boot-starter-data-jpa`
+- ✅ `h2` (driver)
+- ✅ `spring-boot-h2console` (consola web)
 
 ### 2. Modelo (Ticket.java)
 - ✅ Convertida a entidad JPA con `@Entity`
@@ -34,6 +36,7 @@ Migración del repositorio en-memoria basado en HashMap a **Spring Data JPA** co
 
 ### 6. Configuración (application.yml)
 - ✅ H2 en memoria (`jdbc:h2:mem:tickets_db`)
+- ✅ Consola H2 habilitada (`/h2-console`)
 - ✅ JPA/Hibernate: `ddl-auto: create-drop`
 
 ### 7. DataInitializer

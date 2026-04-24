@@ -43,7 +43,7 @@ Al terminar esta lección tendrás:
 2. La clase `Ticket` anotada como entidad JPA (`@Entity`, `@Id`, `@GeneratedValue`, `@Column`)
 3. `TicketRepository` convertido de **clase** a **interfaz** que extiende `JpaRepository`
 4. `TicketService` actualizado para usar los métodos que Spring Data JPA provee automáticamente
-5. La aplicación funcionando con una base de datos MySQL local (XAMPP)
+5. La aplicación funcionando con base de datos H2 (en memoria)
 
 ### Lo que vas a poder explicar
 
@@ -60,30 +60,6 @@ Al terminar esta lección tendrás:
 | Requerimiento | Descripción |
 |---|---|
 | **REQ-15** | Los tickets deben persistirse en base de datos real: los datos sobreviven reinicios de la aplicación |
-
----
-
-## Caso Extendido: Sistema de Tickets con Gestión de Usuarios
-
-A partir de esta lección, el sistema incluye gestión completa de usuarios con roles.
-
-### Roles definidos
-| Rol     | Descripción              |
-|---------|--------------------------|
-| USER    | Crea tickets, ve estado  |
-| AGENT   | Recibe tickets asignados |
-| ADMIN   | Supervisa y gestiona     |
-
-### Modelo de datos requerido
-- **User**: id, name, email, role (USER/AGENT/ADMIN), active
-- **Ticket**: relaciones con User (createdBy, assignedTo)
-
-### Nuevos requerimientos del caso extendido
-| Requerimiento | Descripción |
-|---|---|
-| **REQ-16** | Agregar entidad User con roles (USER, AGENT, ADMIN) |
-| **REQ-17** | Ticket debe tener relaciones ManyToOne con User (createdBy, assignedTo) |
-| **REQ-18** | DataInitializer debe cargar usuarios iniciales con diferentes roles |
 
 ---
 
@@ -129,6 +105,7 @@ src/main/java/cl/duoc/fullstack/tickets/
 
 | Tema | ¿Cuándo se ve? |
 |---|---|
+| MySQL (XAMPP) | Lección 11 |
 | Configurar Supabase (PostgreSQL en la nube) | Lección 11 |
 | Relaciones entre tablas (`@ManyToOne`, `@OneToMany`) | Lección 12 |
 | Tabla de historial de cambios | Lección 13 |

@@ -1,6 +1,6 @@
-# Lección 10 — Tutorial paso a paso: migrar a JPA
+# Lección 10 — Tutorial paso a paso: migrar a JPA con H2
 
-Sigue esta guía en orden. Al finalizar, tu aplicación guardará los tickets en una base de datos MySQL real en lugar de un `HashMap` en memoria.
+Sigue esta guía en orden. Al finalizar, tu aplicación guardará los tickets en una base de datos H2 (en memoria para desarrollo) en lugar de un `HashMap` en memoria.
 
 ---
 
@@ -15,33 +15,20 @@ Abre `pom.xml` y agrega dentro de `<dependencies>`:
     <artifactId>spring-boot-starter-data-jpa</artifactId>
 </dependency>
 
-<!-- Driver MySQL -->
+<!-- Driver H2 (base de datos en memoria) -->
 <dependency>
-    <groupId>com.mysql</groupId>
-    <artifactId>mysql-connector-j</artifactId>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
     <scope>runtime</scope>
 </dependency>
 ```
 
-> **¿Por qué `scope runtime`?**
-> El driver MySQL solo se necesita en tiempo de ejecución, no durante la compilación. `runtime` le indica a Maven que no lo incluya en el classpath de compilación, solo en el de ejecución. El código Java nunca importa clases del driver directamente — JPA las usa por debajo.
+> **¿Por qué H2?**
+> H2 es una base de datos en memoria escrita en Java. No requiere instalación externa, es ideales para desarrollo y testing. Los datos se pierden al cerrar la aplicación (a menos que uses modo archivo).
 
 ---
 
-## Paso 2: crear la base de datos en MySQL (XAMPP)
-
-1. Abre XAMPP y pon en marcha el servicio **Apache** y **MySQL**
-2. Abre tu navegador en `http://localhost/phpmyadmin`
-3. Haz clic en **Nueva** (panel izquierdo)
-4. Nombre de la base de datos: `tickets_db`
-5. Cotejamiento: `utf8mb4_unicode_ci`
-6. Haz clic en **Crear**
-
-No necesitas crear tablas. JPA las creará automáticamente al arrancar la aplicación.
-
----
-
-## Paso 3: configurar `application.yml`
+## Paso 2: configurar `application.yml`
 
 Reemplaza el contenido de `src/main/resources/application.yml`:
 
@@ -51,18 +38,23 @@ spring:
     name: Tickets
 
   datasource:
-    url: jdbc:mysql://localhost:3306/tickets_db
-    username: root
-    password:              # En XAMPP el usuario root no tiene contraseña por defecto
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:h2:mem:tickets_db
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
 
   jpa:
     hibernate:
-      ddl-auto: update     # Crea o actualiza tablas automáticamente
-    show-sql: true         # Muestra el SQL generado en la consola (útil para aprender)
+      ddl-auto: create-drop
+    show-sql: true
     properties:
       hibernate:
-        format_sql: true   # Formatea el SQL para que sea legible
+        format_sql: true
 
 server:
   port: 8080
@@ -70,17 +62,19 @@ server:
     context-path: "/ticket-app"
 ```
 
-> **¿Qué es `ddl-auto: update`?**
-> Le indica a Hibernate que, al arrancar, compare el esquema actual de la base de datos con las entidades JPA y aplique los cambios necesarios (crear tablas que no existen, agregar columnas nuevas). No borra datos existentes.
+> **¿Qué es `ddl-auto: create-drop`?**
+> - `create`: crea las tablas al iniciar
+> - `drop`: las borra al cerrar
+> Es útil para desarrollo. Los datos no persisten entre ejecuciones (se pierden al cerrar la app).
 >
-> Otras opciones importantes:
-> - `create`: borra y recrea todas las tablas en cada arranque (útil para desarrollo, **destruye datos**)
-> - `validate`: verifica que las tablas existen pero no las modifica (para producción)
-> - `none`: no hace nada con el esquema
+> Para datos persistentes usa `jdbc:h2:file:./data/tickets_db`
+
+> **¿Para qué sirve la consola H2?**
+> Accede en `http://localhost:8080/ticket-app/h2-console` para ver la base de datos desde el navegador.Útil para debugging.
 
 ---
 
-## Paso 4: anotar `Ticket` como entidad JPA
+## Paso 3: anotar `Ticket` como entidad JPA
 
 Abre `Ticket.java` y modifícala así:
 
@@ -334,197 +328,17 @@ Resultado esperado: el ticket creado antes del reinicio aparece en la lista. Los
 
 ## Paso 9: reflexiona antes de cerrar
 
-1. ¿Qué diferencia hay entre `ddl-auto: create` y `ddl-auto: update`? ¿Cuál usarías en producción?
+1. ¿Qué diferencia hay entre `ddl-auto: create-drop` y `ddl-auto: update`? ¿Cuál usarías en producción?
 2. Antes, `TicketRepository` era una clase con 150 líneas. Ahora es una interfaz con 3 métodos. ¿Quién escribe el código que falta?
 3. ¿Qué pasa si quitas `@NoArgsConstructor` de `Ticket` y reinicias la aplicación?
 4. ¿Cómo sabe Spring Data JPA que `findByStatusIgnoreCase` busca por el campo `status` y no por `title`?
 
 ---
 
-## Caso Extendido: Sistema de Tickets con Gestión de Usuarios
+## ¿Qué sigue?
 
-### Paso 10: crear entidad User
-
-Crea `model/User.java`:
-
-```java
-package cl.duoc.fullstack.tickets.model;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-@Entity
-@Table(name = "users")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class User {
-
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-
-  @NotBlank(message = "El nombre es requerido")
-  @Column(nullable = false, length = 100)
-  private String name;
-
-  @NotBlank(message = "El email es requerido")
-  @Column(nullable = false, unique = true, length = 150)
-  private String email;
-
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 20)
-  private Role role = Role.USER;
-
-  @Column(nullable = false)
-  private boolean active = true;
-
-  public enum Role {
-    USER,
-    AGENT,
-    ADMIN
-  }
-}
-```
-
-### Paso 11: crear UserRepository
-
-Crea `respository/UserRepository.java`:
-
-```java
-package cl.duoc.fullstack.tickets.respository;
-
-import cl.duoc.fullstack.tickets.model.User;
-import java.util.Optional;
-import org.springframework.data.jpa.repository.JpaRepository;
-
-public interface UserRepository extends JpaRepository<User, Long> {
-  Optional<User> findByEmail(String email);
-  boolean existsByEmail(String email);
-}
-```
-
-### Paso 12: actualizar Ticket con relaciones a User
-
-Actualiza `model/Ticket.java` para agregar relaciones con User:
-
-```java
-// Agregar imports
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-
-// Agregar después de effectiveResolutionDate
-@ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name = "created_by_id")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-private User createdBy;
-
-@ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name = "assigned_to_id")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-private User assignedTo;
-```
-
-### Paso 13: actualizar DataInitializer
-
-Actualiza `config/DataInitializer.java` para cargar usuarios iniciales:
-
-```java
-package cl.duoc.fullstack.tickets.config;
-
-import cl.duoc.fullstack.tickets.model.Ticket;
-import cl.duoc.fullstack.tickets.model.User;
-import cl.duoc.fullstack.tickets.model.User.Role;
-import cl.duoc.fullstack.tickets.respository.TicketRepository;
-import cl.duoc.fullstack.tickets.respository.UserRepository;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
-
-@Component
-public class DataInitializer implements CommandLineRunner {
-
-  private final TicketRepository ticketRepository;
-  private final UserRepository userRepository;
-
-  public DataInitializer(TicketRepository ticketRepository, UserRepository userRepository) {
-    this.ticketRepository = ticketRepository;
-    this.userRepository = userRepository;
-  }
-
-  @Override
-  public void run(String... args) throws Exception {
-    // Cargar usuarios iniciales con diferentes roles
-    if (userRepository.count() == 0) {
-      User admin = new User();
-      admin.setName("Admin User");
-      admin.setEmail("admin@tickets.com");
-      admin.setRole(Role.ADMIN);
-      admin.setActive(true);
-      userRepository.save(admin);
-
-      User agent = new User();
-      agent.setName("Agent Smith");
-      agent.setEmail("agent@tickets.com");
-      agent.setRole(Role.AGENT);
-      agent.setActive(true);
-      userRepository.save(agent);
-
-      User user = new User();
-      user.setName("John Doe");
-      user.setEmail("john@tickets.com");
-      user.setRole(Role.USER);
-      user.setActive(true);
-      userRepository.save(user);
-    }
-
-    // Crear tickets de ejemplo
-    if (ticketRepository.count() == 0) {
-      LocalDateTime now = LocalDateTime.now();
-      LocalDate estimated = LocalDate.now().plusDays(5);
-
-      User creator = userRepository.findByEmail("john@tickets.com").orElse(null);
-      User assignee = userRepository.findByEmail("agent@tickets.com").orElse(null);
-
-      if (creator != null && assignee != null) {
-        Ticket t1 = new Ticket();
-        t1.setTitle("Ticket 1");
-        t1.setDescription("Descripción del ticket 1");
-        t1.setStatus("NEW");
-        t1.setCreatedAt(now);
-        t1.setEstimatedResolutionDate(estimated);
-        t1.setCreatedBy(creator);
-        t1.setAssignedTo(assignee);
-        ticketRepository.save(t1);
-      }
-    }
-  }
-}
-```
-
-### Resumen de archivos creados/modificados
-
-| Archivo | Acción |
-|---------|--------|
-| `model/User.java` | ✨ Nuevo - Entidad con roles |
-| `respository/UserRepository.java` | ✨ Nuevo - Repository de User |
-| `model/Ticket.java` | 📝 Modificado - Agregar relaciones ManyToOne |
-| `config/DataInitializer.java` | 📝 Modificado - Cargar usuarios iniciales |
-| `service/TicketService.java` | 📝 Modificado - Usar User entity |
-| `dto/TicketRequest.java` | 📝 Modificado - createdByName, assignedToId |
-| `dto/TicketResult.java` | 📝 Modificado - User objects |
+| Lección | Contenido |
+|---------|----------|
+| 11 | MySQL (XAMPP) y PostgreSQL (Supabase) con perfiles |
+| 12 | User entity y relaciones ManyToOne |
+| 13 | TicketHistory para historial de cambios |
