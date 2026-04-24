@@ -6,19 +6,6 @@ Este proyecto implementa la **Lección 11: Configuración de Bases de Datos** de
 
 Perfiles de Spring Boot para múltiples bases de datos (H2, MySQL, PostgreSQL/Supabase).
 
-## 🎯 Caso de Uso Extendido (Sistema de Tickets con Gestión de Usuarios)
-
-### Roles definidos
-| Rol     | Descripción              |
-|---------|--------------------------|
-| USER    | Crea tickets, ve estado  |
-| AGENT   | Recibe tickets asignados |
-| ADMIN   | Supervisa y gestiona     |
-
-### Modelo de datos
-- **User**: id, name, email, role (USER/AGENT/ADMIN), active
-- **Ticket**: id, title, description, status, createdAt, estimatedResolutionDate, effectiveResolutionDate, createdBy (User), assignedTo (User)
-
 ---
 
 ## 🔄 Cambios desde Lección 10
@@ -32,8 +19,6 @@ Perfiles de Spring Boot para múltiples bases de datos (H2, MySQL, PostgreSQL/Su
 ```yaml
 spring:
   datasource:
-    # H2 en memoria (volátil - se pierde al cerrar la app)
-    # Para H2 persistente usar: jdbc:h2:file:./data/tickets_db
     url: jdbc:h2:mem:tickets_db
     driverClassName: org.h2.Driver
   jpa:
@@ -41,13 +26,11 @@ spring:
       ddl-auto: create-drop
 ```
 
-> **Nota**: H2 puede ser volátil (`mem`) o persistente (`file`). Para hacer H2 persistente: `jdbc:h2:file:./data/tickets_db`
-
 #### application-mysql.yml (MySQL local XAMPP)
 ```yaml
 spring:
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/ticketsdb}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/tickets_db}
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:}
   jpa:
@@ -59,7 +42,7 @@ spring:
 ```yaml
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/ticketsdb}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/tickets_db}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:}
   jpa:
@@ -75,21 +58,10 @@ spring:
 - ✅ Configuración base sin credenciales
 - ✅ Niveles de logging por perfil
 
----
-
-## 📊 Requisitos del Caso Extendido por Lección
-
-| Lección | Requisitos del Caso Extendido |
-|---------|------------------------------|
-| 10 | ✅ User entity con roles, Ticket con User relaciones, seed de datos |
-| 11 | ✅ Perfiles con diferentes configs de BD para usuarios (H2, MySQL, Supabase) |
-| 12 | Category/Tag relaciones con User |
-| 13 | Historial con User |
-| 14 | Flyway migrations con Foreign Keys a users |
-| 15 | Notificaciones con User |
-| 16 | Security con 3 roles (USER/AGENT/ADMIN) |
-| 17 | Logging de operaciones de usuarios |
-| 18 | Excepciones para casos de usuarios |
+### 5. Carga de Variables de Entorno (.env)
+- ✅ Dependencia `spring-dotenv` para cargar `.env` automáticamente
+- ✅ Archivo `.env.example` con plantilla
+- ⚠️ **Variables sensibles**: NUNCA hacer commit de `.env` con credenciales reales
 
 ---
 
@@ -106,21 +78,14 @@ spring:
 ./mvnw spring-boot:run -Dspring.profiles.active=supabase
 ```
 
-## ✅ Validación
-
-- [x] Proyecto compila sin errores
-- [x] Perfil H2 funciona (desarrollo)
-- [x] MySQL configurado (requiere BD local)
-- [x] Supabase/PostgreSQL configurado (requiere cloud)
-- [x] Sin credenciales hardcodeadas
-
-## 📝 Archivos
+## 📝 Archivos de Configuración
 
 | Archivo | Descripción |
 |---------|-------------|
-| `application-h2.yml` | Configuración H2 (desarrollo) |
-| `application-mysql.yml` | Configuración MySQL |
-| `application-supabase.yml` | Configuración PostgreSQL/Supabase |
+| `application.yml` | Configuración base |
+| `application-h2.yml` | Perfil H2 (desarrollo) |
+| `application-mysql.yml` | Perfil MySQL |
+| `application-supabase.yml` | Perfil PostgreSQL/Supabase |
 | `.env.example` | Plantilla de variables de entorno |
 
 ---
