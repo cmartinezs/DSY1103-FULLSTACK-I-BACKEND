@@ -58,12 +58,36 @@ TicketController
 .\mvnw.cmd test -Dspring.profiles.active=h2
 ```
 
-## Variables de entorno (MySQL/Supabase)
+## Variables de entorno
 
+Copia `.env.example` a `.env` y ajusta los valores según tu entorno. **No commitees `.env` con credenciales reales.**
+
+### Local — perfil `h2` (sin BD externa)
+
+```env
+SPRING_PROFILES_ACTIVE=h2
 ```
-DB_URL=jdbc:mysql://localhost:3306/tickets_db
+
+### Dev — perfil `mysql` (XAMPP/MySQL)
+
+```env
+SPRING_PROFILES_ACTIVE=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=tickets_db
 DB_USER=root
-DB_PASSWORD=secret
+DB_PASSWORD=
+```
+
+### Test/Prod — perfil `supabase` (PostgreSQL)
+
+```env
+SPRING_PROFILES_ACTIVE=supabase
+DB_HOST=db.xxxxxxxxxxxx.supabase.co
+DB_PORT=5432
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=your-supabase-password
 ```
 
 ## URL base
