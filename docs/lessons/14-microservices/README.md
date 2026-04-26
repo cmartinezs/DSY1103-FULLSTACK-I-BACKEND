@@ -9,13 +9,16 @@
 | Documento | Duración | Para |
 |-----------|----------|------|
 | **01. Objetivo y Alcance** | 5 min | Entender qué aprenderás |
-| **02. Guión Paso a Paso** ⭐ | 20 min | Instrucciones prácticas |
-| **03. RestClient vs RestTemplate vs FeignClient** | 10 min | Comparación y decisión |
-| **04. Ejemplos Prácticos** | 15 min | Código completo |
-| **05. Manejo de Errores** | 10 min | Timeouts, fallbacks, resilencia |
-| **06. Debugging** | 10 min | Logs y troubleshooting |
-| **07. Checklist** | 5 min | Verificación |
-| **08. Actividad Individual** | - | Tu tarea |
+| **02. Organización de Repositorios** | 8 min | Monorepo, polyrepo y Maven multi-módulo |
+| **03. Ejecución Local** | 8 min | Correr 10 servicios con poca RAM |
+| **04. Despliegue Distribuido** | 8 min | Red local, PaaS y comparativa |
+| **05. Guión Paso a Paso** ⭐ | 20 min | Instrucciones prácticas |
+| **06. RestClient vs RestTemplate vs FeignClient** | 10 min | Comparación y decisión |
+| **07. Ejemplos Prácticos** | 15 min | Código completo |
+| **08. Manejo de Errores** | 10 min | Timeouts, fallbacks, resilencia |
+| **09. Debugging** | 10 min | Logs y troubleshooting |
+| **10. Checklist** | 5 min | Verificación |
+| **11. Actividad Individual** | - | Tu tarea |
 
 ---
 

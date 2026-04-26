@@ -53,13 +53,16 @@ Al terminar esta lección podrás:
 ## Estructura de la Lección
 
 1. **[Este documento](01_objetivo_y_alcance.md)** — Objetivo y alcance
-2. **[Guión Paso a Paso](02_guion_paso_a_paso.md)** — Instrucciones prácticas
-3. **[RestClient vs RestTemplate vs FeignClient](03_resttemplate_vs_feign.md)** — Comparación
-4. **[Ejemplos Prácticos](04_ejemplos_practicos.md)** — Código listo
-5. **[Manejo de Errores](05_manejo_errores.md)** — Timeouts, reintentos, fallbacks
-6. **[Debugging](06_debugging.md)** — Logs y troubleshooting
-7. **[Checklist](07_checklist_rubrica_minima.md)** — Verificación
-8. **[Actividad Individual](08_actividad_individual.md)** — Tu tarea
+2. **[Organización de Repositorios](02_organizacion_repositorios.md)** — Monorepo, polyrepo y Maven multi-módulo
+3. **[Ejecución Local](03_ejecucion_local.md)** — Correr 10 servicios con poca RAM (JVM flags, Docker, nativo)
+4. **[Despliegue Distribuido](04_despliegue_externo.md)** — Red local, PaaS/nube y comparativa de estrategias
+5. **[Guión Paso a Paso](05_guion_paso_a_paso.md)** — Instrucciones prácticas
+6. **[RestClient vs RestTemplate vs FeignClient](06_resttemplate_vs_feign.md)** — Comparación
+7. **[Ejemplos Prácticos](07_ejemplos_practicos.md)** — Código listo
+8. **[Manejo de Errores](08_manejo_errores.md)** — Timeouts, reintentos, fallbacks
+9. **[Debugging](09_debugging.md)** — Logs y troubleshooting
+10. **[Checklist](10_checklist_rubrica_minima.md)** — Verificación
+11. **[Actividad Individual](11_actividad_individual.md)** — Tu tarea
 
 ---
 
