@@ -39,22 +39,53 @@ Usa esta lista para verificar que la migración a JPA está completa antes de co
 
 - ☐ Es una **interfaz** (no una clase)
 - ☐ Extiende `JpaRepository<Ticket, Long>`
-- ☐ Tiene el método `boolean existsByTitle(String title)`
+- ☐ Tiene el método `boolean existsByTitleIgnoreCase(String title)`
 - ☐ Tiene el método `List<Ticket> findByStatusIgnoreCase(String status)`
 - ☐ Tiene el método `List<Ticket> findAllByOrderByCreatedAtAsc()`
 - ☐ **No** tiene campos como `Map<Long, Ticket> db` ni `long currentId` (eso era la versión manual)
 
 ---
 
+## Checklist de DTOs
+
+- ☐ Existe `TicketCommand.java` — `record` con `title`, `description`, `status`, `effectiveResolutionDate`
+- ☐ Existe `TicketResult.java` — `record` con todos los campos de `Ticket` (output del Service)
+- ☐ Existe `TicketResponse.java` — `record` con todos los campos (output HTTP al cliente)
+- ☐ `TicketRequest.java` sigue existiendo con `@NotBlank` y `@Size` (input HTTP del cliente)
+- ☐ Ningún DTO importa clases de `jakarta.persistence.*`
+
+---
+
 ## Checklist de `TicketService.java`
 
-- ☐ `getTickets(String status)` usa `findAllByOrderByCreatedAtAsc()` cuando `status` es null/blank
-- ☐ `getTickets(String status)` usa `findByStatusIgnoreCase(status)` cuando `status` tiene valor
-- ☐ `create(TicketRequest request)` verifica duplicados con `existsByTitle()` y luego llama a `save()`
-- ☐ `getById(Long id)` retorna `repository.findById(id)` (devuelve `Optional<Ticket>`)
+- ☐ Los métodos reciben `TicketCommand` (no `TicketRequest`)
+- ☐ Los métodos retornan `TicketResult` o `List<TicketResult>` (no entidades `Ticket`)
+- ☐ `getTickets()` usa `findAllByOrderByCreatedAtAsc()` cuando no hay filtro
+- ☐ `getTickets(String statusFilter)` usa `findByStatusIgnoreCase(status)` cuando hay filtro
+- ☐ `create(TicketCommand command)` verifica duplicados con `existsByTitleIgnoreCase()` y llama a `save()`
+- ☐ `getById(Long id)` retorna `repository.findById(id).map(toResult)` (devuelve `Optional<TicketResult>`)
 - ☐ `deleteById(Long id)` usa `existsById()` + `deleteById()`
-- ☐ `updateById(Long id, TicketRequest request)` usa `findById().map(...)` + `save(ticket)`
+- ☐ `updateById(Long id, TicketCommand command)` usa `findById()` + `save(ticket)` y retorna `Optional<TicketResult>`
 - ☐ El Service **no** asigna el `id` manualmente (eso lo hace la base de datos)
+- ☐ Existe el método privado `toResult(Ticket)` que convierte entidad → `TicketResult`
+
+---
+
+## Checklist de `TicketController.java`
+
+- ☐ Recibe `TicketRequest` en los endpoints (body HTTP)
+- ☐ Convierte `TicketRequest` → `TicketCommand` antes de llamar al Service (`toCommand()`)
+- ☐ Convierte `TicketResult` → `TicketResponse` antes de retornar al cliente (`toResponse()`)
+- ☐ **No** retorna entidades `Ticket` ni `TicketResult` directamente al cliente
+
+---
+
+## Checklist de `DataInitializer.java`
+
+- ☐ Existe la clase `DataInitializer` en el paquete `config/`
+- ☐ Implementa `CommandLineRunner`
+- ☐ El método `run()` usa `ticketRepository.count()` para evitar duplicar datos
+- ☐ Siembra tickets con `ticketRepository.save(ticket)`
 
 ---
 

@@ -1,6 +1,8 @@
 package cl.duoc.fullstack.tickets.controller;
 
+import cl.duoc.fullstack.tickets.dto.TicketCommand;
 import cl.duoc.fullstack.tickets.dto.TicketRequest;
+import cl.duoc.fullstack.tickets.dto.TicketResponse;
 import cl.duoc.fullstack.tickets.dto.TicketResult;
 import cl.duoc.fullstack.tickets.model.ErrorResponse;
 import cl.duoc.fullstack.tickets.service.TicketService;
@@ -33,27 +35,33 @@ public class TicketController {
   }
 
   @GetMapping
-  public ResponseEntity<List<TicketResult>> getAllTickets(
+  public ResponseEntity<List<TicketResponse>> getAllTickets(
       @RequestParam(required = false) String status) {
-    List<TicketResult> tickets = status != null
+    List<TicketResult> results = status != null
         ? this.service.getTickets(status)
         : this.service.getTickets();
-    return ResponseEntity.ok(tickets);
+    List<TicketResponse> responses = results.stream()
+        .map(this::toResponse)
+        .toList();
+    return ResponseEntity.ok(responses);
   }
 
   @PostMapping
   public ResponseEntity<Object> create(@Valid @RequestBody TicketRequest request) {
     try {
-      TicketResult result = this.service.create(request);
-      return ResponseEntity.status(HttpStatus.CREATED).body(result);
+      TicketCommand command = toCommand(request);
+      TicketResult result = this.service.create(command);
+      TicketResponse response = toResponse(result);
+      return ResponseEntity.status(HttpStatus.CREATED).body(response);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(e.getMessage()));
     }
   }
 
   @GetMapping("/by-id/{id}")
-  public ResponseEntity<TicketResult> getTicketById(@PathVariable Long id) {
+  public ResponseEntity<TicketResponse> getTicketById(@PathVariable Long id) {
     return this.service.getById(id)
+        .map(result -> toResponse(result))
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }
@@ -63,9 +71,10 @@ public class TicketController {
       @PathVariable Long id,
       @Valid @RequestBody TicketRequest request) {
     try {
-      Optional<TicketResult> updated = this.service.updateById(id, request);
-      if (updated.isPresent()) {
-        return ResponseEntity.ok(updated.get());
+      TicketCommand command = toCommand(request);
+      Optional<TicketResult> result = this.service.updateById(id, command);
+      if (result.isPresent()) {
+        return ResponseEntity.ok(toResponse(result.get()));
       }
       return ResponseEntity.notFound().build();
     } catch (IllegalArgumentException e) {
@@ -87,5 +96,26 @@ public class TicketController {
         .map(err -> err.getField() + ": " + err.getDefaultMessage())
         .collect(Collectors.joining(", "));
     return ResponseEntity.badRequest().body(new ErrorResponse(message));
+  }
+
+  private TicketCommand toCommand(TicketRequest request) {
+    return new TicketCommand(
+        request.title(),
+        request.description(),
+        request.status(),
+        request.effectiveResolutionDate()
+    );
+  }
+
+  private TicketResponse toResponse(TicketResult result) {
+    return new TicketResponse(
+        result.id(),
+        result.title(),
+        result.description(),
+        result.status(),
+        result.createdAt(),
+        result.estimatedResolutionDate(),
+        result.effectiveResolutionDate()
+    );
   }
 }
