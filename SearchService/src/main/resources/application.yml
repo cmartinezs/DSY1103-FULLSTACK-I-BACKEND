@@ -1,0 +1,10 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: search-service
+
+logging:
+  level:
+    cl.duoc.fullstack.search: INFO

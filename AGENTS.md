@@ -13,6 +13,17 @@ Proyecto educativo DSY1103 - Fullstack I
 
 Todos usan: Spring Boot 4.0.5 + Java 21
 
+## Microservicios de apoyo
+
+| Servicio | Puerto | Descripción |
+|----------|--------|-------------|
+| `NotificationService/` | 8081 | Envío de notificaciones (in-memory) |
+| `AuditService/` | 8082 | Registro de auditoría de tickets (in-memory) |
+| `SearchService/` | 8084 | Indexación y búsqueda full-text de tickets (in-memory) |
+| `SLAService/` | 8085 | Control de tiempos de resolución / SLA (in-memory) |
+
+Todos los microservicios usan Spring Boot 4.0.5 + Java 21, sin base de datos.
+
 ## Comandos (Windows)
 
 ```bash

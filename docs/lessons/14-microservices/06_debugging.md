@@ -1,4 +1,4 @@
-# Lección 13 — Debugging y Troubleshooting
+# Lección 14 — Debugging y Troubleshooting
 
 ## Error 1: "Connection refused"
 
@@ -14,11 +14,17 @@ java.net.ConnectException: Connection refused
 
 **Solución:**
 ```bash
-# Verificar que el servicio está corriendo
-lsof -i :8081  # Ver qué está en puerto 8081
+# Linux/macOS: verificar que los servicios están corriendo
+lsof -i :8081  # NotificationService
+lsof -i :8082  # AuditService
+
+# Windows: equivalente
+netstat -aon | findstr :8081
+netstat -aon | findstr :8082
 
 # Probar conexión manualmente
-curl http://localhost:8081/users/1
+curl http://localhost:8081/api/notifications
+curl http://localhost:8082/api/audit
 ```
 
 ---
@@ -49,7 +55,7 @@ spring:
     openfeign:
       client:
         config:
-          users-service:
+          audit-service:
             read-timeout: 30000  # Aumentar a 30 segundos
 ```
 
@@ -75,8 +81,8 @@ Error creating bean with name 'restClientBuilder'
 
 **Síntoma (FeignClient):**
 ```
-Error creating bean with name 'userServiceClient'
-No bean of type 'UserServiceClient' found
+Error creating bean with name 'auditServiceClient'
+No bean of type 'AuditServiceClient' found
 ```
 
 **Causa FeignClient:** `@EnableFeignClients` no está en la app principal.
@@ -108,7 +114,8 @@ Could not deserialize response body of type [class UserDTO]
 1. Verificar que el servicio devuelve `Content-Type: application/json`
 2. Probar manualmente:
 ```bash
-curl -v http://localhost:8081/users/1
+curl -v http://localhost:8081/api/notifications
+curl -v http://localhost:8082/api/audit
 # Ver headers en respuesta
 ```
 
@@ -140,13 +147,13 @@ logging:
 
 **Verás en logs:**
 ```
-[UserServiceClient#getUserById] ---> GET http://localhost:8081/users/1 HTTP/1.1
-[UserServiceClient#getUserById] Accept: application/json
-[UserServiceClient#getUserById] ---> END HTTP (0-byte body)
-[UserServiceClient#getUserById] <--- HTTP/1.1 200 OK (45ms)
-[UserServiceClient#getUserById] Content-Type: application/json
-[UserServiceClient#getUserById] {"id":1,"name":"John","email":"john@example.com"}
-[UserServiceClient#getUserById] <--- END HTTP (65-byte body)
+[AuditServiceClient#logEvent] ---> POST http://localhost:8082/api/audit HTTP/1.1
+[AuditServiceClient#logEvent] Content-Type: application/json
+[AuditServiceClient#logEvent] ---> END HTTP (87-byte body)
+[AuditServiceClient#logEvent] <--- HTTP/1.1 200 OK (45ms)
+[AuditServiceClient#logEvent] Content-Type: application/json
+[AuditServiceClient#logEvent] {"id":1,"action":"STATUS_CHANGE","entityType":"Ticket"}
+[AuditServiceClient#logEvent] <--- END HTTP (102-byte body)
 ```
 
 ---
@@ -158,45 +165,42 @@ logging:
 public class TicketServiceTest {
     
     @MockBean
-    private UserServiceClient userClient;  // Funciona para RestClient o Feign
+    private AuditServiceClient auditClient;  // Funciona para FeignClient
+    
+    @MockBean
+    private NotificationClient notificationClient;  // Funciona para RestClient
     
     @Autowired
     private TicketService ticketService;
     
     @Test
-    public void testGetTicketDetail() {
+    public void testUpdateById_registersAuditEvent() {
         // Mock del servicio remoto
-        UserDTO mockUser = UserDTO.builder()
-            .id(1L)
-            .name("Test User")
-            .build();
+        AuditEvent mockEvent = new AuditEvent(1L, "STATUS_CHANGE", "Ticket", 1L, null, "system", "NEW → IN_PROGRESS", 0L);
         
-        when(userClient.getUserById(1L))
-            .thenReturn(mockUser);
+        when(auditClient.logEvent(any()))
+            .thenReturn(mockEvent);
         
         // Ejecutar
-        TicketDetailDTO result = ticketService.getTicketDetail(1L);
+        ticketService.updateById(1L, request);
         
-        // Verificar
-        assertEquals("Test User", result.getCreator().getName());
-        verify(userClient).getUserById(1L);
+        // Verificar que se llamó a AuditService
+        verify(auditClient).logEvent(any(AuditRequest.class));
     }
     
     @Test
-    public void testGetTicketDetailWhenUserServiceFails() {
-        // Simular fallo
-        when(userClient.getUserById(1L))
-            .thenThrow(new FeignException.ServiceUnavailable(
-                "Server is down", null, null, null
-            ));
+    public void testGetAuditTrailWhenAuditServiceFails() {
+        // Simular fallo — el fallback retorna lista vacía
+        when(auditClient.getAuditByTicket(1L))
+            .thenReturn(List.of());
         
-        // Debe devolver resultado con fallback
-        TicketDetailDTO result = ticketService.getTicketDetail(1L);
+        List<AuditEvent> result = ticketService.getAuditTrail(1L);
         assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 }
 ```
 
 ---
 
-*[← Volver a Lección 13](01_objetivo_y_alcance.md)*
+*[← Volver a Lección 14](01_objetivo_y_alcance.md)*

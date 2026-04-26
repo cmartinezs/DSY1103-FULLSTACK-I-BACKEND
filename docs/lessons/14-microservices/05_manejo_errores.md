@@ -1,4 +1,4 @@
-# Lección 13 — Manejo de Errores y Resiliencia
+# Lección 14 — Manejo de Errores y Resiliencia
 
 ## Timeouts
 
@@ -9,10 +9,13 @@ public class RestClientConfig {
     
     @Bean
     public RestClient.Builder restClientBuilder() {
+        // Configuramos la request factory con timeouts para todos los clientes
+        var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(java.time.Duration.ofSeconds(5));   // tiempo máximo para establecer conexión
+        factory.setReadTimeout(java.time.Duration.ofSeconds(10));     // tiempo máximo para recibir respuesta
+        
         return RestClient.builder()
-            .requestInitializer(request -> {
-                // Configurar timeouts a nivel de HTTPClient si es necesario
-            });
+            .requestFactory(factory);  // todos los clientes construidos con este builder heredan los timeouts
     }
 }
 ```
@@ -24,7 +27,7 @@ spring:
     openfeign:
       client:
         config:
-          users-service:
+          audit-service:
             connect-timeout: 5000     # 5 segundos
             read-timeout: 10000       # 10 segundos
 ```
@@ -56,15 +59,20 @@ public class RestTemplateConfig {
 ```java
 @Service
 @Slf4j
-public class UserServiceClient {
+public class NotificationClient {
     
     private final RestClient restClient;
     
-    public UserDTO getUserById(Long id) {
-        return retry(() -> restClient.get()
-            .uri("/users/{id}", id)
-            .retrieve()
-            .body(UserDTO.class), 3);
+    public void sendWithRetry(String title, String message, String type, String recipient) {
+        retry(() -> {
+            NotificationRequest req = new NotificationRequest(title, message, type, recipient);
+            restClient.post()
+                .uri("/api/notifications")
+                .body(req)
+                .retrieve()
+                .toBodilessEntity();
+            return null;
+        }, 3);
     }
     
     private <T> T retry(Supplier<T> supplier, int maxAttempts) {
@@ -75,7 +83,7 @@ public class UserServiceClient {
                 if (attempt == maxAttempts) throw e;
                 log.warn("Attempt {} failed, retrying...", attempt);
                 try {
-                    Thread.sleep(1000 * attempt);  // Backoff exponencial
+                    Thread.sleep(1000L * attempt);  // espera incremental: 1s, 2s, 3s… (backoff lineal)
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                     throw new RuntimeException(ie);
@@ -94,7 +102,7 @@ spring:
     openfeign:
       client:
         config:
-          users-service:
+          audit-service:
             # Reintentos
             max-attempts: 3
             retry-delay: 1000  # 1 segundo entre intentos
@@ -119,23 +127,20 @@ spring:
 @Slf4j
 public class TicketService {
     
-    private final UserServiceClient userClient;
+    private final AuditServiceClient auditClient;
     
     @CircuitBreaker(
-        name = "users-service",
-        fallbackMethod = "getUserFallback"
+        name = "audit-service",
+        fallbackMethod = "getAuditFallback"
     )
-    public UserDTO getUser(Long userId) {
-        return userClient.getUserById(userId);
+    public List<AuditEvent> getAuditTrail(Long ticketId) {
+        return auditClient.getAuditByTicket(ticketId);
     }
     
     // Fallback: ejecutarse si circuit abre
-    private UserDTO getUserFallback(Long userId, Exception e) {
-        log.warn("Circuit abierto para Users Service, usando fallback", e);
-        return UserDTO.builder()
-            .id(userId)
-            .name("Usuario Temporal")
-            .build();
+    private List<AuditEvent> getAuditFallback(Long ticketId, Exception e) {
+        log.warn("Circuit abierto para AuditService, retornando lista vacía para ticket {}", ticketId);
+        return List.of();
     }
 }
 ```
@@ -149,7 +154,7 @@ resilience4j:
         wait-duration-in-open-state: 10s   # Esperar 10s antes de reintentar
         permitted-number-of-calls-in-half-open-state: 3
     instances:
-      users-service:
+      audit-service:
         base-config: default
 ```
 
@@ -221,4 +226,4 @@ public class RestClientInterceptor {
 
 ---
 
-*[← Volver a Lección 13](01_objetivo_y_alcance.md)*
+*[← Volver a Lección 14](01_objetivo_y_alcance.md)*

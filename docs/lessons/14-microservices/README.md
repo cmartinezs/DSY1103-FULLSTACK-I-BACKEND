@@ -1,4 +1,4 @@
-# Lección 13 — Comunicación entre Microservicios
+# Lección 14 — Comunicación entre Microservicios
 
 **Aprende a comunicar dos microservicios independientes usando RestClient, FeignClient o RestTemplate. Implementa resilencia, timeouts y fallbacks.**
 
@@ -21,31 +21,31 @@
 
 ## 🎯 Quick Start (10 min)
 
-### Con RestClient (Recomendado - Spring 6.1+)
+### Con RestClient (Recomendado — NotificationService)
 
 ```java
-// 1. Inyectar builder
+// NotificationClient.java
 @Service
-public class TicketService {
+public class NotificationClient {
     private final RestClient restClient;
     
-    public TicketService(RestClient.Builder builder) {
+    public NotificationClient(RestClient.Builder builder) {
         this.restClient = builder
             .baseUrl("http://localhost:8081")
             .build();
     }
     
-    // 2. Usar
-    public UserDTO getUser(Long id) {
-        return restClient.get()
-            .uri("/users/{id}", id)
+    public void send(String title, String message, String type, String recipient) {
+        restClient.post()
+            .uri("/api/notifications")
+            .body(new NotificationRequest(title, message, type, recipient))
             .retrieve()
-            .body(UserDTO.class);
+            .toBodilessEntity();
     }
 }
 ```
 
-### Con FeignClient (Alternativa)
+### Con FeignClient (Alternativa — AuditService)
 
 ```java
 // 1. Habilitar
@@ -54,44 +54,56 @@ public class TicketService {
 public class TicketsApplication {}
 
 // 2. Crear cliente
-@FeignClient(name = "users", url = "http://localhost:8081")
-public interface UsersClient {
-    @GetMapping("/users/{id}")
-    UserDTO getUser(@PathVariable Long id);
+@FeignClient(name = "audit-service", url = "http://localhost:8082",
+             fallback = AuditServiceClientFallback.class)
+public interface AuditServiceClient {
+    @PostMapping("/api/audit")
+    AuditEvent logEvent(@RequestBody AuditRequest request);
+    
+    @GetMapping("/api/audit/ticket/{ticketId}")
+    List<AuditEvent> getAuditByTicket(@PathVariable Long ticketId);
 }
 
 // 3. Inyectar y usar
 @Service
 @RequiredArgsConstructor
 public class TicketService {
-    private final UsersClient usersClient;
+    private final AuditServiceClient auditClient;
     
-    public TicketDetail getTicket(Long id) {
-        UserDTO user = usersClient.getUser(1L);
-        return new TicketDetail(ticket, user);
+    public void afterCreate(Ticket saved) {
+        auditClient.logEvent(new AuditRequest(
+            "TICKET_CREATED", "Ticket", saved.getId(), null, "system", null
+        ));
     }
 }
 ```
 
-### Con RestTemplate (Legacy - No recomendado)
+### Con RestTemplate (Legacy — ReportsService, no recomendado)
+
+> ⚠️ ReportsService aún no está implementado; se desarrollará en una lección posterior. Este ejemplo muestra el patrón legacy de RestTemplate.
 
 ```java
-// 1. Registrar
+// 1. Registrar bean
 @Bean
+@Deprecated(since = "6.0", forRemoval = true)
 public RestTemplate restTemplate() {
     return new RestTemplate();
 }
 
-// 2. Usar
+// 2. ReportsClient.java
 @Service
-public class TicketService {
-    private final RestTemplate rest;
+public class ReportsClient {
+    private final RestTemplate restTemplate;
     
-    public void getTicket(Long id) {
-        UserDTO user = rest.getForObject(
-            "http://localhost:8081/users/{id}",
-            UserDTO.class,
-            1L
+    public ReportsClient(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+    
+    public void generateReport(Long ticketId, String type) {
+        restTemplate.postForObject(
+            "http://localhost:8083/api/reports",
+            new ReportRequest(ticketId, type),
+            Void.class
         );
     }
 }
@@ -109,14 +121,15 @@ Arquitectura donde una aplicación se divide en múltiples servicios independien
 flowchart TB
     subgraph Antes[Monolito]
         direction TB
-        A[Users code]
-        B[Tickets code]
-        C[Notifications]
+        A[Tickets code]
+        B[Notifications code]
+        C[Audit code]
     end
 
     subgraph Después[Microservicios]
         direction LR
-        D[Tickets 8080] --> E[Users 8081] --> F[Notifications 8082]
+        D[Tickets :8080] -->|RestClient| E[NotificationService :8081]
+        D -->|FeignClient| F[AuditService :8082]
     end
 ```
 
@@ -137,11 +150,13 @@ flowchart TB
 ```
 src/main/java/
 ├── clients/
-│   ├── NotificationClient.java          (RestClient o Feign)
-│   └── NotificationClientFallback.java  (optional)
+│   ├── NotificationClient.java             (RestClient → NotificationService :8081)
+│   ├── AuditServiceClient.java             (FeignClient → AuditService :8082)
+│   ├── AuditServiceClientFallback.java     (Fallback para FeignClient)
+│   └── ReportsClient.java                  (RestTemplate legacy → ReportsService :8083)
 ├── services/
-│   └── TicketService.java               (usa client)
-└── TicketsApplication.java              (@EnableFeignClients si aplica)
+│   └── TicketService.java                  (usa clientes)
+└── TicketsApplication.java                 (@EnableFeignClients)
 ```
 
 ---
@@ -164,4 +179,4 @@ Comienza con **[02. Guión Paso a Paso](02_guion_paso_a_paso.md)** para instrucc
 
 ---
 
-*Lección 13 de 13 - [← Volver a Lecciones](../)*
+*Lección 14 de 18 - [← Volver a Lecciones](../)*

@@ -1,4 +1,4 @@
-# Lección 13 — Checklist y Rúbrica Mínima
+# Lección 14 — Checklist y Rúbrica Mínima
 
 ## ✅ Checklist de Completitud
 
@@ -77,4 +77,4 @@
 
 ---
 
-*[← Volver a Lección 13](01_objetivo_y_alcance.md)*
+*[← Volver a Lección 14](01_objetivo_y_alcance.md)*

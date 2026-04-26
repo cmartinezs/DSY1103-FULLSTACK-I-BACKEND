@@ -1,15 +1,15 @@
-# Lección 13 — Comunicación entre Microservicios
+# Lección 14 — Comunicación entre Microservicios
 
 ## ¿De dónde venimos?
 
-En la lección 12 aprendiste a versionear cambios de BD con Flyway. Tu aplicación Tickets funciona perfectamente como **monolito**: todo el código está en un proyecto.
+En la lección 13 implementaste un historial persistente de cambios en el ticket. Tu aplicación Tickets funciona perfectamente como **monolito**: un único proyecto que gestiona tickets, usuarios e historial de cambios.
 
-Pero en equipos grandes, surge una necesidad: **dividir la aplicación en microservicios independientes**. Por ejemplo:
+Pero en equipos grandes, surge una necesidad: **dividir la aplicación en microservicios independientes**. En esta lección usaremos dos servicios reales: **NotificationService** (envío de notificaciones, puerto 8081) y **AuditService** (registro de auditoría, puerto 8082). Por ejemplo:
 
 ```mermaid
 flowchart LR
-    tickets[Tickets Service<br/>puerto 8080] -- HTTP --> users[Users Service<br/>puerto 8081]
-    users -- HTTP --> notif[Notifications<br/>puerto 8082]
+    tickets[Tickets Service 8080] -- RestClient --> notif[NotificationService 8081]
+    tickets -- FeignClient --> audit[AuditService 8082]
 ```
 
 Cada microservicio es una **aplicación independiente** en un puerto diferente. Se comunican vía HTTP/REST.
@@ -65,8 +65,8 @@ Al terminar esta lección podrás:
 
 ## Requisitos Previos
 
-- ✅ Lecciones 11-12 completadas
+- ✅ Lecciones 11-13 completadas
 - ✅ Entiendes Spring Boot básico
 - ✅ Conoces HTTP/REST
-- ✅ Tienes 2 aplicaciones Spring Boot (o emularás con clases mock)
+- ✅ Tienes **NotificationService** (puerto 8081) y **AuditService** (puerto 8082) corriendo
 - ✅ Spring Boot 6.1+ (para RestClient)

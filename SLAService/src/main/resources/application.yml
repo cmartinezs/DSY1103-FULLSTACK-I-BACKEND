@@ -1,0 +1,10 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: sla-service
+
+logging:
+  level:
+    cl.duoc.fullstack.sla: INFO
