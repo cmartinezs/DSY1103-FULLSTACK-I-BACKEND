@@ -68,8 +68,8 @@ Al terminar esta lección podrás:
 
 ## Requisitos Previos
 
-- ✅ Lecciones 11-13 completadas
+- ✅ Lecciones 10-13 completadas
 - ✅ Entiendes Spring Boot básico
 - ✅ Conoces HTTP/REST
 - ✅ Tienes **NotificationService** (puerto 8081) y **AuditService** (puerto 8082) corriendo
-- ✅ Spring Boot 6.1+ (para RestClient)
+- ✅ Spring framework 6.1+ / Springboot 3.2+ (para RestClient)
