@@ -1,9 +1,10 @@
 package cl.duoc.fullstack.tickets.service;
 
+import cl.duoc.fullstack.tickets.dto.TicketCommand;
 import cl.duoc.fullstack.tickets.dto.TicketHistoryResult;
-import cl.duoc.fullstack.tickets.dto.TicketRequest;
 import cl.duoc.fullstack.tickets.dto.TicketResult;
 import cl.duoc.fullstack.tickets.dto.UserResult;
+import cl.duoc.fullstack.tickets.exception.BadRequestException;
 import cl.duoc.fullstack.tickets.model.Ticket;
 import cl.duoc.fullstack.tickets.model.TicketHistory;
 import cl.duoc.fullstack.tickets.model.User;
@@ -13,6 +14,8 @@ import cl.duoc.fullstack.tickets.respository.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +36,7 @@ public class TicketService {
   }
 
   public List<TicketResult> getTickets() {
-    return this.repository.findAllOrderByCreatedAt().stream()
+    return this.repository.findAllByOrderByCreatedAtAsc().stream()
         .map(this::toResult)
         .toList();
   }
@@ -42,52 +45,39 @@ public class TicketService {
     if (statusFilter == null || statusFilter.isBlank()) {
       return getTickets();
     }
-    return this.repository.findAllByStatusIgnoreCase(statusFilter).stream()
+    return this.repository.findByStatusIgnoreCase(statusFilter).stream()
         .map(this::toResult)
         .toList();
   }
 
-  public TicketResult create(TicketRequest request) {
-    boolean exists = this.repository.existsByTitleIgnoreCase(request.title());
+  public TicketResult create(TicketCommand command) {
+    boolean exists = this.repository.existsByTitleIgnoreCase(command.title());
     if (exists) {
       throw new IllegalArgumentException(
-          "Ya existe un ticket con el título: \"" + request.title() + "\"");
+          "Ya existe un ticket con el título: \"" + command.title() + "\"");
     }
 
-    User creator = userRepository.findByEmail(request.createdByName()).orElse(null);
-    if (creator == null) {
-      throw new IllegalArgumentException("Usuario creador no encontrado: " + request.createdByName());
-    }
-
-    User assignedTo = null;
-    if (request.assignedToId() != null) {
-      assignedTo = userRepository.findById(request.assignedToId()).orElse(null);
-      if (assignedTo != null && assignedTo.getId().equals(creator.getId())) {
-        throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
-      }
-    }
+    User creator = userRepository.findByEmail(command.createdByEmail())
+        .orElseThrow(() -> new BadRequestException(
+            "El email '" + command.createdByEmail() + "' no existe en el sistema"));
 
     Ticket ticket = new Ticket();
-    ticket.setTitle(request.title());
-    ticket.setDescription(request.description());
-    ticket.setCreatedBy(creator);
-    ticket.setAssignedTo(assignedTo);
+    ticket.setTitle(command.title());
+    ticket.setDescription(command.description());
     ticket.setStatus("NEW");
     ticket.setCreatedAt(LocalDateTime.now());
     ticket.setEstimatedResolutionDate(LocalDate.now().plusDays(5));
+    ticket.setCreatedBy(creator);
+
     Ticket saved = this.repository.save(ticket);
 
-    registrarHistorial(saved, null, "NEW", "Ticket creado");
+    recordChange(saved, null, "NEW", null, null, "Ticket creado");
 
     return toResult(saved);
   }
 
   public Optional<TicketResult> getById(Long id) {
     return this.repository.findById(id).map(this::toResult);
-  }
-
-  public boolean existsById(Long id) {
-    return this.repository.existsById(id);
   }
 
   public boolean deleteById(Long id) {
@@ -98,84 +88,121 @@ public class TicketService {
     return false;
   }
 
-  public Optional<TicketResult> updateById(Long id, TicketRequest request) {
-    Optional<Ticket> found = this.repository.findById(id);
-    if (found.isEmpty()) {
+  public TicketResult updateById(Long id, TicketCommand command) {
+    Ticket ticket = repository.findById(id)
+        .orElseThrow(() -> new NoSuchElementException("Ticket con id " + id + " no existe"));
+
+    String previousStatus = ticket.getStatus();
+    String previousAssignedEmail = ticket.getAssignedTo() != null
+        ? ticket.getAssignedTo().getEmail()
+        : null;
+
+    ticket.setTitle(command.title());
+    ticket.setDescription(command.description());
+    if (command.status() != null && !command.status().isBlank()) {
+      ticket.setStatus(command.status());
+    }
+    ticket.setEffectiveResolutionDate(command.effectiveResolutionDate());
+
+    Ticket saved = repository.save(ticket);
+
+    recordChange(saved, previousStatus, saved.getStatus(), previousAssignedEmail, previousAssignedEmail, null);
+
+    return toResult(saved);
+  }
+
+  public Optional<TicketResult> assignTicket(Long ticketId, String assignedToEmail) {
+    Optional<Ticket> ticketOpt = repository.findById(ticketId);
+    if (ticketOpt.isEmpty()) {
       return Optional.empty();
     }
 
-    Ticket toUpdate = found.get();
-    String previousStatus = toUpdate.getStatus();
+    Ticket ticket = ticketOpt.get();
+    String previousAssignedEmail = ticket.getAssignedTo() != null
+        ? ticket.getAssignedTo().getEmail()
+        : null;
+    String newAssignedEmail;
 
-    if (request.assignedToId() != null) {
-      User assignedTo = userRepository.findById(request.assignedToId()).orElse(null);
-      if (assignedTo != null && toUpdate.getCreatedBy() != null
-          && assignedTo.getId().equals(toUpdate.getCreatedBy().getId())) {
-        throw new IllegalArgumentException("El creador y el asignado no pueden ser el mismo usuario");
-      }
-      toUpdate.setAssignedTo(assignedTo);
+    if (assignedToEmail == null || assignedToEmail.isBlank()) {
+      ticket.setAssignedTo(null);
+      newAssignedEmail = null;
+    } else {
+      User assignee = userRepository.findByEmail(assignedToEmail)
+          .orElseThrow(() -> new BadRequestException(
+              "El email '" + assignedToEmail + "' no existe en el sistema"));
+      ticket.setAssignedTo(assignee);
+      newAssignedEmail = assignee.getEmail();
     }
 
-    toUpdate.setTitle(request.title());
-    toUpdate.setDescription(request.description());
-    if (request.status() != null && !request.status().isBlank()) {
-      toUpdate.setStatus(request.status());
-    }
-    toUpdate.setEffectiveResolutionDate(request.effectiveResolutionDate());
-    Ticket saved = this.repository.save(toUpdate);
+    Ticket saved = repository.save(ticket);
 
-    if (!previousStatus.equals(saved.getStatus())) {
-      registrarHistorial(saved, previousStatus, saved.getStatus(), "Estado cambiado");
-    }
+    recordChange(saved, null, null, previousAssignedEmail, newAssignedEmail, null);
 
     return Optional.of(toResult(saved));
   }
 
-  public List<TicketHistoryResult> getTicketHistory(Long ticketId) {
-    return this.historyRepository.findByTicketIdOrderByChangedAtDesc(ticketId).stream()
+  public Optional<List<TicketHistoryResult>> getHistory(Long ticketId) {
+    if (!repository.existsById(ticketId)) {
+      return Optional.empty();
+    }
+    List<TicketHistoryResult> history = historyRepository
+        .findByTicketIdOrderByChangedAtDesc(ticketId)
+        .stream()
         .map(this::toHistoryResult)
         .toList();
+    return Optional.of(history);
   }
 
-  private void registrarHistorial(Ticket ticket, String estadoAnterior, String estadoNuevo, String comentario) {
-    TicketHistory entrada = new TicketHistory();
-    entrada.setTicket(ticket);
-    entrada.setPreviousStatus(estadoAnterior);
-    entrada.setNewStatus(estadoNuevo);
-    entrada.setChangedAt(LocalDateTime.now());
-    entrada.setComment(comentario);
-    this.historyRepository.save(entrada);
+  private void recordChange(
+      Ticket ticket,
+      String previousStatus,
+      String newStatus,
+      String previousAssignedEmail,
+      String newAssignedEmail,
+      String comment) {
+
+    boolean statusChanged = newStatus != null
+        && !newStatus.equalsIgnoreCase(previousStatus == null ? "" : previousStatus);
+    boolean assigneeChanged = !Objects.equals(previousAssignedEmail, newAssignedEmail);
+
+    if (!statusChanged && !assigneeChanged) {
+      return;
+    }
+
+    TicketHistory entry = new TicketHistory();
+    entry.setTicket(ticket);
+    entry.setPreviousStatus(statusChanged ? previousStatus : null);
+    entry.setNewStatus(statusChanged ? newStatus : null);
+    entry.setPreviousAssignedEmail(assigneeChanged ? previousAssignedEmail : null);
+    entry.setNewAssignedEmail(assigneeChanged ? newAssignedEmail : null);
+    entry.setChangedAt(LocalDateTime.now());
+    entry.setComment(comment);
+    historyRepository.save(entry);
   }
 
-  private TicketHistoryResult toHistoryResult(TicketHistory history) {
+  private TicketHistoryResult toHistoryResult(TicketHistory h) {
     return new TicketHistoryResult(
-        history.getId(),
-        history.getPreviousStatus(),
-        history.getNewStatus(),
-        history.getChangedAt(),
-        history.getComment()
+        h.getId(),
+        h.getPreviousStatus(),
+        h.getNewStatus(),
+        h.getPreviousAssignedEmail(),
+        h.getNewAssignedEmail(),
+        h.getChangedAt(),
+        h.getComment()
     );
   }
 
   private TicketResult toResult(Ticket ticket) {
-    UserResult createdByResult = null;
-    if (ticket.getCreatedBy() != null) {
-      createdByResult = new UserResult(
-          ticket.getCreatedBy().getId(),
-          ticket.getCreatedBy().getName(),
-          ticket.getCreatedBy().getEmail()
-      );
-    }
-
-    UserResult assignedToResult = null;
-    if (ticket.getAssignedTo() != null) {
-      assignedToResult = new UserResult(
-          ticket.getAssignedTo().getId(),
-          ticket.getAssignedTo().getName(),
-          ticket.getAssignedTo().getEmail()
-      );
-    }
-
+    UserResult createdBy = ticket.getCreatedBy() != null
+        ? new UserResult(ticket.getCreatedBy().getId(),
+                         ticket.getCreatedBy().getName(),
+                         ticket.getCreatedBy().getEmail())
+        : null;
+    UserResult assignedTo = ticket.getAssignedTo() != null
+        ? new UserResult(ticket.getAssignedTo().getId(),
+                         ticket.getAssignedTo().getName(),
+                         ticket.getAssignedTo().getEmail())
+        : null;
     return new TicketResult(
         ticket.getId(),
         ticket.getTitle(),
@@ -184,8 +211,9 @@ public class TicketService {
         ticket.getCreatedAt(),
         ticket.getEstimatedResolutionDate(),
         ticket.getEffectiveResolutionDate(),
-        createdByResult,
-        assignedToResult
+        createdBy,
+        assignedTo
     );
   }
 }
+

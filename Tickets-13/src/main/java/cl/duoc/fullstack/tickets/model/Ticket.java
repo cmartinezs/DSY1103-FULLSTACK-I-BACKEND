@@ -1,7 +1,5 @@
 package cl.duoc.fullstack.tickets.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -40,15 +38,12 @@ public class Ticket {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "created_by_id")
-  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
   private User createdBy;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "assigned_to_id")
-  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
   private User assignedTo;
 
   @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = false)
-  @JsonIgnore
   private List<TicketHistory> history = new ArrayList<>();
 }

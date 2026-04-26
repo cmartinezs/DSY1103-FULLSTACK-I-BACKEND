@@ -18,10 +18,11 @@ En soporte técnico, esa trazabilidad es fundamental: permite auditar tiempos de
 
 Al terminar esta lección tendrás:
 
-1. Una nueva entidad `TicketHistory` que registra cada cambio de estado de un ticket
+1. Una nueva entidad `TicketHistory` que registra cada cambio de estado Y de asignado de un ticket
 2. La relación `@OneToMany` en `Ticket` → `TicketHistory`
-3. El `TicketService` actualizado para crear un registro de historial automáticamente cuando el estado cambia
-4. Un nuevo endpoint `GET /tickets/{id}/history` que devuelve el historial de cambios de un ticket
+3. Un DTO de respuesta `TicketHistoryResult` para exponer el historial sin exponer la entidad directamente
+4. El `TicketService` actualizado para registrar historial automáticamente en `updateById()` y `assignTicket()`
+5. Un endpoint `GET /tickets/by-id/{id}/history` en `TicketController` (no hay `TicketHistoryController`)
 
 ### Lo que vas a poder explicar
 
@@ -30,6 +31,9 @@ Al terminar esta lección tendrás:
 - ¿Qué significa `CascadeType.ALL` y cuándo usarlo?
 - ¿Por qué el historial nunca se debe borrar?
 - ¿Cómo registra el Service el historial sin que el Controller lo sepa?
+- ¿Por qué `TicketHistory` no tiene un controller propio? ¿Qué es una entidad débil?
+- ¿Por qué el historial de asignado guarda el email como String y no como FK a User?
+- ¿Por qué no se necesita `@JsonIgnore` en las entities de historial?
 
 ---
 
@@ -37,7 +41,7 @@ Al terminar esta lección tendrás:
 
 | Requerimiento | Descripción |
 |---|---|
-| **REQ-18** | El sistema debe registrar automáticamente un historial de cambios de estado de cada ticket, con el estado anterior, el nuevo estado y la fecha y hora del cambio |
+| **REQ-18** | El sistema debe registrar automáticamente un historial de cambios de cada ticket: cambios de estado (con el estado anterior y el nuevo) y cambios de asignado (con el email del asignado anterior y el nuevo), incluyendo la fecha y hora de cada cambio |
 
 ---
 
@@ -67,15 +71,24 @@ src/main/java/cl/duoc/fullstack/tickets/
 │   ├── Ticket.java              ← con @OneToMany a TicketHistory
 │   ├── User.java
 │   └── TicketHistory.java       ← nueva entidad
+├── dto/
+│   ├── TicketRequest.java
+│   ├── TicketCommand.java
+│   ├── TicketResult.java
+│   ├── TicketResponse.java
+│   ├── UserRequest.java
+│   ├── UserResult.java
+│   ├── AssignTicketRequest.java
+│   └── TicketHistoryResult.java  ← nuevo DTO de respuesta
 ├── respository/
 │   ├── TicketRepository.java
 │   ├── UserRepository.java
 │   └── TicketHistoryRepository.java   ← nuevo
 ├── service/
-│   ├── TicketService.java       ← registra historial en updateById()
+│   ├── TicketService.java       ← registra historial en updateById() y assignTicket()
 │   └── UserService.java
 └── controller/
-    ├── TicketController.java    ← nuevo endpoint GET /{id}/history
+    ├── TicketController.java    ← nuevo endpoint GET /by-id/{id}/history
     └── UserController.java
 ```
 
@@ -86,6 +99,6 @@ src/main/java/cl/duoc/fullstack/tickets/
 | Tema | ¿Por qué queda afuera? |
 |---|---|
 | `@CreatedDate`, `@LastModifiedDate` (Spring Data Auditing) | Configuración adicional; el patrón manual es más claro para aprender |
-| Quién realizó el cambio de estado | Requiere autenticación (Spring Security), fuera del alcance del curso |
+| Quién realizó el cambio (`changedByEmail`) | Lo verás en la actividad individual |
 | Notificaciones al cambiar estado | Fuera del alcance del curso |
 | Paginación del historial | Requiere `Pageable`; el historial por ticket es pequeño en este contexto |

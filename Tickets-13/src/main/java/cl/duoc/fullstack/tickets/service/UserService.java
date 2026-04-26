@@ -11,32 +11,31 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
 
-  private final UserRepository userRepository;
+  private UserRepository repository;
 
-  public UserService(UserRepository userRepository) {
-    this.userRepository = userRepository;
+  public UserService(UserRepository repository) {
+    this.repository = repository;
   }
 
   public List<UserResult> getAll() {
-    return userRepository.findAll().stream()
+    return repository.findAll().stream()
         .map(this::toResult)
         .toList();
   }
 
   public UserResult create(UserRequest request) {
-    if (userRepository.existsByEmail(request.email())) {
+    if (repository.existsByEmail(request.getEmail())) {
       throw new IllegalArgumentException(
-          "Ya existe un usuario con el email '" + request.email() + "'");
+          "Ya existe un usuario con el email '" + request.getEmail() + "'");
     }
     User user = new User();
-    user.setName(request.name());
-    user.setEmail(request.email());
-    User saved = userRepository.save(user);
-    return toResult(saved);
+    user.setName(request.getName());
+    user.setEmail(request.getEmail());
+    return toResult(repository.save(user));
   }
 
   public Optional<UserResult> getById(Long id) {
-    return userRepository.findById(id).map(this::toResult);
+    return repository.findById(id).map(this::toResult);
   }
 
   private UserResult toResult(User user) {

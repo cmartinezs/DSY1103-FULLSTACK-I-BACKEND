@@ -9,7 +9,6 @@ Crea `src/main/java/cl/duoc/fullstack/tickets/model/TicketHistory.java`:
 ```java
 package cl.duoc.fullstack.tickets.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -39,14 +38,19 @@ public class TicketHistory {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "ticket_id", nullable = false)
-  @JsonIgnore
   private Ticket ticket;
 
   @Column(name = "previous_status", length = 20)
   private String previousStatus;
 
-  @Column(name = "new_status", nullable = false, length = 20)
+  @Column(name = "new_status", length = 20)
   private String newStatus;
+
+  @Column(name = "previous_assigned_email", length = 150)
+  private String previousAssignedEmail;
+
+  @Column(name = "new_assigned_email", length = 150)
+  private String newAssignedEmail;
 
   @Column(name = "changed_at", nullable = false)
   private LocalDateTime changedAt;
@@ -58,9 +62,13 @@ public class TicketHistory {
 
 **Notas importantes:**
 
-- `@JsonIgnore` en el campo `ticket` es **obligatorio**: cuando se serializa un `TicketHistory`, Jackson no debe intentar serializar el `Ticket` padre (que contiene la lista de historiales), lo que causaría un bucle infinito.
-- `previousStatus` puede ser `null` — el primer registro de historial (cuando se crea el ticket con estado `NEW`) no tiene estado anterior.
-- `comment` es opcional — permite agregar una nota al cambio de estado.
+- `previousStatus` y `newStatus` registran el cambio de estado. Ambos pueden ser `null` si el registro es solo de cambio de asignado.
+- `previousAssignedEmail` y `newAssignedEmail` registran el email del asignado antes y después del cambio. Son `String`, no FK a `User`.
+- `comment` es opcional — permite agregar una nota al cambio.
+- **No hay `@JsonIgnore`**: esta entity nunca se expone directamente al cliente. El Service la convierte a `TicketHistoryResult` antes de retornar, por lo que Jackson no la serializa y no hay riesgo de bucle circular.
+
+> **¿Por qué el asignado se guarda como email y no como FK a User?**
+> El historial es un **log inmutable** que registra un snapshot del estado en el momento del cambio. Si usáramos FK a User y ese usuario fuera eliminado o modificado en el futuro, el historial quedaría inconsistente. El email es el dato identitario que existía en ese momento — autosuficiente y no referencial.
 
 ---
 
@@ -69,7 +77,6 @@ public class TicketHistory {
 Abre `Ticket.java` y agrega al final del cuerpo de la clase:
 
 ```java
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
@@ -78,7 +85,6 @@ import java.util.List;
 // ... dentro de la clase Ticket:
 
   @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = false)
-  @JsonIgnore
   private List<TicketHistory> history = new ArrayList<>();
 ```
 
@@ -88,8 +94,8 @@ import java.util.List;
 > **¿Qué hace `cascade = CascadeType.ALL`?**
 > Propaga las operaciones de persistencia desde `Ticket` hacia sus `TicketHistory`. Si guardas un `Ticket` que tiene entradas en `history`, JPA también guarda los `TicketHistory` automáticamente.
 
-> **¿Por qué `@JsonIgnore` en la lista?**
-> Mismo motivo que en `@ManyToOne`: evitar serialización circular. El historial se expone a través del endpoint dedicado `GET /tickets/{id}/history`, no dentro del ticket.
+> **¿Por qué no hay `@JsonIgnore` en la lista `history`?**
+> El historial se expone a través del endpoint `GET /tickets/by-id/{id}/history`, que retorna `List<TicketHistoryResult>` (un DTO record). Jackson nunca serializa el `Ticket` ni sus colecciones directamente — el Service convierte todo a DTOs antes de retornar al controller.
 
 > **¿Por qué `orphanRemoval = false`?**
 > El historial nunca debe borrarse, aunque se borre el ticket. Lo dejamos en `false` para que los registros históricos persistan incluso si el ticket es eliminado. (En producción se usaría borrado lógico, pero eso está fuera del alcance del curso.)
@@ -118,9 +124,33 @@ public interface TicketHistoryRepository extends JpaRepository<TicketHistory, Lo
 
 ---
 
-## Paso 4: actualizar `TicketService` para registrar el historial
+## Paso 4: crear el DTO `TicketHistoryResult`
 
-El historial debe registrarse automáticamente cuando el estado de un ticket cambia. El Controller no se entera — es responsabilidad del Service.
+Crea `src/main/java/cl/duoc/fullstack/tickets/dto/TicketHistoryResult.java`:
+
+```java
+package cl.duoc.fullstack.tickets.dto;
+
+import java.time.LocalDateTime;
+
+public record TicketHistoryResult(
+    Long id,
+    String previousStatus,
+    String newStatus,
+    String previousAssignedEmail,
+    String newAssignedEmail,
+    LocalDateTime changedAt,
+    String comment
+) {}
+```
+
+Este record es el contrato de respuesta del historial. El Service construye instancias de este record a partir de la entity `TicketHistory`, asegurando que Jackson solo serialice el DTO — nunca la entity.
+
+---
+
+## Paso 5: actualizar `TicketService` para registrar el historial
+
+El historial debe registrarse automáticamente cuando el estado o el asignado cambian. El Controller no se entera — es responsabilidad del Service.
 
 Inyecta `TicketHistoryRepository` en `TicketService`:
 
@@ -142,125 +172,196 @@ public class TicketService {
   }
 ```
 
-Agrega un método privado de ayuda para crear un registro de historial:
+Agrega un método privado `recordChange` y otro de conversión a DTO:
 
 ```java
-  private void registrarCambioDeEstado(Ticket ticket, String estadoAnterior, String estadoNuevo, String comentario) {
-    TicketHistory entrada = new TicketHistory();
-    entrada.setTicket(ticket);
-    entrada.setPreviousStatus(estadoAnterior);
-    entrada.setNewStatus(estadoNuevo);
-    entrada.setChangedAt(LocalDateTime.now());
-    entrada.setComment(comentario);
-    historyRepository.save(entrada);
+  private void recordChange(
+      Ticket ticket,
+      String previousStatus,
+      String newStatus,
+      String previousAssignedEmail,
+      String newAssignedEmail,
+      String comment) {
+
+    boolean statusChanged = newStatus != null
+        && !newStatus.equalsIgnoreCase(previousStatus == null ? "" : previousStatus);
+    boolean assigneeChanged = !java.util.Objects.equals(previousAssignedEmail, newAssignedEmail);
+
+    if (!statusChanged && !assigneeChanged) {
+      return; // no hay cambio real → no registrar
+    }
+
+    TicketHistory entry = new TicketHistory();
+    entry.setTicket(ticket);
+    entry.setPreviousStatus(statusChanged ? previousStatus : null);
+    entry.setNewStatus(statusChanged ? newStatus : null);
+    entry.setPreviousAssignedEmail(assigneeChanged ? previousAssignedEmail : null);
+    entry.setNewAssignedEmail(assigneeChanged ? newAssignedEmail : null);
+    entry.setChangedAt(LocalDateTime.now());
+    entry.setComment(comment);
+    historyRepository.save(entry);
+  }
+
+  private TicketHistoryResult toHistoryResult(TicketHistory h) {
+    return new TicketHistoryResult(
+        h.getId(),
+        h.getPreviousStatus(),
+        h.getNewStatus(),
+        h.getPreviousAssignedEmail(),
+        h.getNewAssignedEmail(),
+        h.getChangedAt(),
+        h.getComment()
+    );
   }
 ```
 
 Actualiza `create()` para registrar el historial de creación:
 
 ```java
-  public Ticket create(TicketRequest request) {
-    if (repository.existsByTitle(request.getTitle())) {
+  public TicketResult create(TicketCommand command) {
+    if (repository.existsByTitle(command.title())) {
       throw new IllegalArgumentException(
-          "Ya existe un ticket con el título '" + request.getTitle() + "'");
+          "Ya existe un ticket con el título '" + command.title() + "'");
     }
 
+    User createdBy = userRepository.findByEmail(command.createdByEmail())
+        .orElseThrow(() -> new BadRequestException(
+            "No existe un usuario con el email '" + command.createdByEmail() + "'"));
+
     Ticket ticket = new Ticket();
-    ticket.setTitle(request.getTitle());
-    ticket.setDescription(request.getDescription());
+    ticket.setTitle(command.title());
+    ticket.setDescription(command.description());
     ticket.setStatus("NEW");
     ticket.setCreatedAt(LocalDateTime.now());
     ticket.setEstimatedResolutionDate(LocalDate.now().plusDays(5));
+    ticket.setCreatedBy(createdBy);
 
-    // Resolver usuarios (igual que en L12)
-    if (request.getCreatedById() != null) {
-      userRepository.findById(request.getCreatedById()).ifPresent(ticket::setCreatedBy);
-    }
-    if (request.getAssignedToId() != null) {
-      userRepository.findById(request.getAssignedToId()).ifPresent(ticket::setAssignedTo);
-    }
-
-    Ticket guardado = repository.save(ticket);
+    Ticket saved = repository.save(ticket);
 
     // Registrar historial: el ticket nació en estado NEW (sin estado anterior)
-    registrarCambioDeEstado(guardado, null, "NEW", "Ticket creado");
+    recordChange(saved, null, "NEW", null, null, "Ticket creado");
 
-    return guardado;
+    return toResult(saved);
   }
 ```
 
-Actualiza `updateById()` para registrar el historial cuando el estado cambia:
+Actualiza `updateById()` para registrar el historial cuando cambia el estado:
 
 ```java
-  public Optional<Ticket> updateById(Long id, TicketRequest request) {
-    return repository.findById(id).map(ticket -> {
-      ticket.setTitle(request.getTitle());
-      ticket.setDescription(request.getDescription());
+  public TicketResult updateById(Long id, TicketCommand command) {
+    Ticket ticket = repository.findById(id)
+        .orElseThrow(() -> new NoSuchElementException("Ticket con id " + id + " no existe"));
 
-      // Registrar historial solo si el estado realmente cambió
-      if (request.getStatus() != null
-          && !request.getStatus().isBlank()
-          && !request.getStatus().equalsIgnoreCase(ticket.getStatus())) {
+    // Capturar valores anteriores para el historial
+    String previousStatus = ticket.getStatus();
+    String previousAssignedEmail = ticket.getAssignedTo() != null
+        ? ticket.getAssignedTo().getEmail()
+        : null;
 
-        String estadoAnterior = ticket.getStatus();
-        ticket.setStatus(request.getStatus());
-        registrarCambioDeEstado(ticket, estadoAnterior, request.getStatus(), null);
-      }
+    ticket.setTitle(command.title());
+    ticket.setDescription(command.description());
 
-      // Actualizar usuario asignado si se proporcionó
-      if (request.getAssignedToId() != null) {
-        userRepository.findById(request.getAssignedToId())
-            .ifPresent(ticket::setAssignedTo);
-      }
+    if (command.status() != null && !command.status().isBlank()) {
+      ticket.setStatus(command.status());
+    }
 
-      return repository.save(ticket);
-    });
+    Ticket saved = repository.save(ticket);
+
+    recordChange(saved, previousStatus, saved.getStatus(), previousAssignedEmail, previousAssignedEmail, null);
+
+    return toResult(saved);
   }
 ```
 
-> **¿Por qué comparamos `!request.getStatus().equalsIgnoreCase(ticket.getStatus())`?**
-> Si el cliente envía el mismo estado que ya tiene el ticket, no hay cambio real y no debe crearse un registro de historial. El historial debe reflejar cambios reales, no actualizaciones sin efecto.
+Actualiza `assignTicket()` para registrar el cambio de asignado:
+
+```java
+  public Optional<TicketResult> assignTicket(Long id, AssignTicketRequest request) {
+    if (!repository.existsById(id)) {
+      return Optional.empty();
+    }
+
+    Ticket ticket = repository.findById(id).orElseThrow();
+
+    String previousAssignedEmail = ticket.getAssignedTo() != null
+        ? ticket.getAssignedTo().getEmail()
+        : null;
+    String newAssignedEmail;
+
+    if (request.getAssignedToEmail() == null || request.getAssignedToEmail().isBlank()) {
+      ticket.setAssignedTo(null);
+      newAssignedEmail = null;
+    } else {
+      User assignee = userRepository.findByEmail(request.getAssignedToEmail())
+          .orElseThrow(() -> new BadRequestException(
+              "No existe un usuario con el email '" + request.getAssignedToEmail() + "'"));
+      ticket.setAssignedTo(assignee);
+      newAssignedEmail = assignee.getEmail();
+    }
+
+    Ticket saved = repository.save(ticket);
+
+    recordChange(saved, null, null, previousAssignedEmail, newAssignedEmail, null);
+
+    return Optional.of(toResult(saved));
+  }
+```
+
+Agrega el método `getHistory()` que el Controller usará:
+
+```java
+  public Optional<List<TicketHistoryResult>> getHistory(Long ticketId) {
+    if (!repository.existsById(ticketId)) {
+      return Optional.empty();
+    }
+    List<TicketHistoryResult> historial = historyRepository
+        .findByTicketIdOrderByChangedAtDesc(ticketId)
+        .stream()
+        .map(this::toHistoryResult)
+        .toList();
+    return Optional.of(historial);
+  }
+```
+
+> **¿Por qué el Controller no sabe que se está registrando historial?**
+> `updateById()` y `assignTicket()` registran el historial internamente. Esto aplica el principio de **responsabilidad única**: el Service es dueño de la lógica de negocio, incluida la auditoría. El Controller solo orquesta la petición HTTP.
 
 ---
 
-## Paso 5: agregar el endpoint de historial en `TicketController`
+## Paso 6: agregar el endpoint de historial en `TicketController`
 
 Agrega en `TicketController`:
 
 ```java
-import cl.duoc.fullstack.tickets.model.TicketHistory;
-import cl.duoc.fullstack.tickets.respository.TicketHistoryRepository;
+import cl.duoc.fullstack.tickets.dto.TicketHistoryResult;
+import java.util.List;
 
-// Inyectar en el constructor:
-private TicketHistoryRepository historyRepository;
-
-public TicketController(TicketService service, TicketHistoryRepository historyRepository) {
+// El constructor NO cambia — TicketController solo inyecta TicketService:
+public TicketController(TicketService service) {
   this.service = service;
-  this.historyRepository = historyRepository;
 }
 
 // Nuevo endpoint:
-@GetMapping("/{id}/history")
-public ResponseEntity<List<TicketHistory>> getHistory(@PathVariable Long id) {
-  if (!service.existsById(id)) {
-    return ResponseEntity.notFound().build();
-  }
-  List<TicketHistory> history = historyRepository.findByTicketIdOrderByChangedAtDesc(id);
-  return ResponseEntity.ok(history);
+@GetMapping("/by-id/{id}/history")
+public ResponseEntity<List<TicketHistoryResult>> getHistory(@PathVariable Long id) {
+  return service.getHistory(id)
+      .map(ResponseEntity::ok)
+      .orElse(ResponseEntity.notFound().build());
 }
 ```
 
-Agrega también `existsById` al `TicketService`:
+> **¿Por qué el Controller no inyecta `TicketHistoryRepository`?**
+> La arquitectura de 5 capas establece que el Controller nunca habla directamente con el Repository. La consulta del historial es responsabilidad del Service, que también se encarga de convertir las entities a DTOs.
 
-```java
-public boolean existsById(Long id) {
-  return repository.existsById(id);
-}
-```
+> **¿Por qué la URL es `/by-id/{id}/history` y no `/{id}/history`?**
+> Para ser coherente con el patrón existente en el mismo Controller: `GET /tickets/by-id/{id}`, `PUT /tickets/by-id/{id}`, etc. El historial es un subrecurso del ticket, representado como `/by-id/{id}/history`.
+
+> **¿Por qué no hay `TicketHistoryController`?**
+> `TicketHistory` es una **entidad débil** (weak entity): no puede existir ni tiene sentido sin su Ticket padre. Acceder al historial siempre requiere el ID del ticket. No hay caso de uso donde se consulte el historial sin saber a qué ticket pertenece, por lo que un controller dedicado añadiría complejidad sin valor.
 
 ---
 
-## Paso 6: probar el flujo completo
+## Paso 7: probar el flujo completo
 
 ### Crear un ticket
 
@@ -268,7 +369,7 @@ public boolean existsById(Long id) {
 POST http://localhost:8080/ticket-app/tickets
 Content-Type: application/json
 
-{ "title": "Red caída en piso 3", "description": "Sin internet desde las 9am" }
+{ "title": "Red caída en piso 3", "description": "Sin internet desde las 9am", "createdByEmail": "admin@empresa.cl" }
 ```
 
 Respuesta: `201 Created`, ticket con `id: 1` en estado `NEW`.
@@ -276,7 +377,7 @@ Respuesta: `201 Created`, ticket con `id: 1` en estado `NEW`.
 ### Consultar historial inicial
 
 ```
-GET http://localhost:8080/ticket-app/tickets/1/history
+GET http://localhost:8080/ticket-app/tickets/by-id/1/history
 ```
 
 Respuesta esperada:
@@ -286,6 +387,8 @@ Respuesta esperada:
     "id": 1,
     "previousStatus": null,
     "newStatus": "NEW",
+    "previousAssignedEmail": null,
+    "newAssignedEmail": null,
     "changedAt": "2026-04-15T10:30:00",
     "comment": "Ticket creado"
   }
@@ -295,29 +398,50 @@ Respuesta esperada:
 ### Cambiar el estado del ticket
 
 ```
-PUT http://localhost:8080/ticket-app/tickets/1
+PUT http://localhost:8080/ticket-app/tickets/by-id/1
 Content-Type: application/json
 
 {
   "title": "Red caída en piso 3",
   "description": "Sin internet desde las 9am",
-  "status": "IN_PROGRESS"
+  "status": "IN_PROGRESS",
+  "createdByEmail": "admin@empresa.cl"
 }
+```
+
+### Asignar el ticket a un usuario
+
+```
+PATCH http://localhost:8080/ticket-app/tickets/by-id/1/assign
+Content-Type: application/json
+
+{ "assignedToEmail": "soporte@empresa.cl" }
 ```
 
 ### Consultar historial actualizado
 
 ```
-GET http://localhost:8080/ticket-app/tickets/1/history
+GET http://localhost:8080/ticket-app/tickets/by-id/1/history
 ```
 
 Respuesta esperada:
 ```json
 [
   {
+    "id": 3,
+    "previousStatus": null,
+    "newStatus": null,
+    "previousAssignedEmail": null,
+    "newAssignedEmail": "soporte@empresa.cl",
+    "changedAt": "2026-04-15T10:40:00",
+    "comment": null
+  },
+  {
     "id": 2,
     "previousStatus": "NEW",
     "newStatus": "IN_PROGRESS",
+    "previousAssignedEmail": null,
+    "newAssignedEmail": null,
     "changedAt": "2026-04-15T10:35:00",
     "comment": null
   },
@@ -325,36 +449,24 @@ Respuesta esperada:
     "id": 1,
     "previousStatus": null,
     "newStatus": "NEW",
+    "previousAssignedEmail": null,
+    "newAssignedEmail": null,
     "changedAt": "2026-04-15T10:30:00",
     "comment": "Ticket creado"
   }
 ]
 ```
 
-### Cerrar el ticket
-
-```
-PUT http://localhost:8080/ticket-app/tickets/1
-Content-Type: application/json
-
-{
-  "title": "Red caída en piso 3",
-  "description": "Sin internet desde las 9am",
-  "status": "RESOLVED"
-}
-```
-
-El historial tendrá ahora 3 entradas ordenadas del más reciente al más antiguo.
-
 ### Verificar en la base de datos
 
-En phpMyAdmin o Supabase, la tabla `ticket_history` debe mostrar todos los registros con los estados y fechas correctos.
+En phpMyAdmin o Supabase, la tabla `ticket_history` debe mostrar todos los registros con los estados, emails y fechas correctos.
 
 ---
 
-## Paso 7: reflexiona antes de cerrar
+## Paso 8: reflexiona antes de cerrar
 
 1. ¿Qué pasaría si `orphanRemoval = true`? ¿El historial se borraría si se borra el ticket?
 2. ¿Por qué el `Controller` no sabe que se está registrando historial cuando llama a `updateById()`?
-3. Si el mismo estado se envía dos veces (`NEW` → `NEW`), ¿se crea un registro de historial? ¿Por qué?
-4. El historial se guarda en una tabla separada. ¿Qué ventaja tiene esto frente a guardar el historial como texto en el mismo ticket?
+3. Si el mismo estado se envía dos veces (`NEW` → `NEW`) y el asignado no cambia, ¿se crea un registro de historial? ¿Por qué?
+4. ¿Por qué el email del asignado es más adecuado que el ID de usuario para un log de auditoría?
+5. Si `TicketHistory` tuviera su propio Controller, ¿qué problemas aparecerían? ¿Podría alguien crear un historial falso via POST?

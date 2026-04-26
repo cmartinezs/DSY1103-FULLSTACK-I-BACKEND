@@ -8,5 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TicketHistoryRepository extends JpaRepository<TicketHistory, Long> {
 
+  // Devuelve el historial de un ticket ordenado del más reciente al más antiguo
   List<TicketHistory> findByTicketIdOrderByChangedAtDesc(Long ticketId);
 }

@@ -6,6 +6,8 @@ public record TicketHistoryResult(
     Long id,
     String previousStatus,
     String newStatus,
+    String previousAssignedEmail,
+    String newAssignedEmail,
     LocalDateTime changedAt,
     String comment
 ) {}

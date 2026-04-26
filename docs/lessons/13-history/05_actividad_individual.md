@@ -1,98 +1,132 @@
-# Lección 13 — Actividad individual: historial de asignaciones
+# Lección 13 — Actividad individual: registrar quién hizo el cambio
 
 ## Contexto
 
-Tu sistema registra el historial de cambios de estado. Esta actividad extiende esa funcionalidad para registrar también los cambios de usuario asignado: cada vez que un ticket es asignado o reasignado, queda un registro del usuario anterior y el nuevo.
+Tu sistema ya registra qué cambió (estado y asignado) y cuándo. Esta actividad extiende el historial para registrar también **quién** realizó el cambio: el email del usuario que ejecutó la operación.
+
+En sistemas con autenticación (Spring Security), este dato vendría automáticamente del usuario autenticado en el contexto de la petición. Por ahora, lo recibiremos explícitamente en el cuerpo de la petición.
 
 ---
 
-## Parte 1: extender `TicketHistory` con el campo de asignación
+## Parte 1: agregar `changedByEmail` a `TicketHistory`
 
-Agrega dos campos a `TicketHistory.java`:
+Agrega este campo a `TicketHistory.java`:
 
 ```java
-@ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name = "previous_assigned_to_id")
-@JsonIgnore
-private User previousAssignedTo;
-
-@ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name = "new_assigned_to_id")
-@JsonIgnore
-private User newAssignedTo;
+@Column(name = "changed_by_email", length = 150)
+private String changedByEmail;
 ```
 
-Ambos campos son opcionales (pueden ser null): un registro de historial puede ser de cambio de estado, de cambio de asignado, o de ambas cosas a la vez.
+- Es `String`, no FK a `User` — mismo razonamiento que `previousAssignedEmail` y `newAssignedEmail`: el historial es inmutable, debe guardar snapshots, no referencias.
+- Puede ser `null` si no se proporciona (por compatibilidad retroactiva).
 
 ---
 
-## Parte 2: actualizar `registrarCambioDeEstado` en `TicketService`
+## Parte 2: actualizar `TicketHistoryResult`
 
-Modifica el método privado para que también acepte información de asignación:
+Agrega el campo al record:
 
 ```java
-private void registrarCambio(
+public record TicketHistoryResult(
+    Long id,
+    String previousStatus,
+    String newStatus,
+    String previousAssignedEmail,
+    String newAssignedEmail,
+    String changedByEmail,       // ← nuevo
+    LocalDateTime changedAt,
+    String comment
+) {}
+```
+
+---
+
+## Parte 3: actualizar `recordChange` en `TicketService`
+
+Agrega el parámetro `changedByEmail` al método privado:
+
+```java
+private void recordChange(
     Ticket ticket,
-    String estadoAnterior,
-    String estadoNuevo,
-    User asignadoAnterior,
-    User asignadoNuevo,
-    String comentario) {
+    String previousStatus,
+    String newStatus,
+    String previousAssignedEmail,
+    String newAssignedEmail,
+    String changedByEmail,       // ← nuevo parámetro
+    String comment) {
 
-  // Solo registrar si hay algún cambio real
-  boolean cambioEstado = estadoNuevo != null && !estadoNuevo.equalsIgnoreCase(estadoAnterior);
-  boolean cambioAsignado = !java.util.Objects.equals(
-      asignadoAnterior == null ? null : asignadoAnterior.getId(),
-      asignadoNuevo == null ? null : asignadoNuevo.getId());
+  boolean statusChanged = newStatus != null
+      && !newStatus.equalsIgnoreCase(previousStatus == null ? "" : previousStatus);
+  boolean assigneeChanged = !java.util.Objects.equals(previousAssignedEmail, newAssignedEmail);
 
-  if (!cambioEstado && !cambioAsignado) {
-    return;   // No hay nada que registrar
+  if (!statusChanged && !assigneeChanged) {
+    return;
   }
 
-  TicketHistory entrada = new TicketHistory();
-  entrada.setTicket(ticket);
-  entrada.setPreviousStatus(estadoAnterior);
-  entrada.setNewStatus(estadoNuevo != null ? estadoNuevo : ticket.getStatus());
-  entrada.setPreviousAssignedTo(asignadoAnterior);
-  entrada.setNewAssignedTo(asignadoNuevo);
-  entrada.setChangedAt(LocalDateTime.now());
-  entrada.setComment(comentario);
-  historyRepository.save(entrada);
+  TicketHistory entry = new TicketHistory();
+  entry.setTicket(ticket);
+  entry.setPreviousStatus(statusChanged ? previousStatus : null);
+  entry.setNewStatus(statusChanged ? newStatus : null);
+  entry.setPreviousAssignedEmail(assigneeChanged ? previousAssignedEmail : null);
+  entry.setNewAssignedEmail(assigneeChanged ? newAssignedEmail : null);
+  entry.setChangedByEmail(changedByEmail);  // ← nuevo
+  entry.setChangedAt(LocalDateTime.now());
+  entry.setComment(comment);
+  historyRepository.save(entry);
+}
+```
+
+Actualiza también `toHistoryResult()`:
+
+```java
+private TicketHistoryResult toHistoryResult(TicketHistory h) {
+  return new TicketHistoryResult(
+      h.getId(),
+      h.getPreviousStatus(),
+      h.getNewStatus(),
+      h.getPreviousAssignedEmail(),
+      h.getNewAssignedEmail(),
+      h.getChangedByEmail(),     // ← nuevo
+      h.getChangedAt(),
+      h.getComment()
+  );
 }
 ```
 
 ---
 
-## Parte 3: actualizar `updateById` para registrar el cambio de asignado
+## Parte 4: recibir `changedByEmail` desde el cliente
+
+Para que el cliente pueda informar quién realiza el cambio, agrega el campo a los DTOs de comando:
+
+**`TicketCommand.java`** — agrega el campo:
+```java
+public record TicketCommand(
+    String title,
+    String description,
+    String status,
+    String createdByEmail,
+    String changedByEmail       // ← nuevo (puede ser null)
+) {}
+```
+
+**`AssignTicketRequest.java`** — agrega el campo:
+```java
+private String changedByEmail;   // ← nuevo (puede ser null)
+```
+
+Actualiza `updateById()` y `assignTicket()` en `TicketService` para pasar `changedByEmail` a `recordChange`:
 
 ```java
-public Optional<Ticket> updateById(Long id, TicketRequest request) {
-  return repository.findById(id).map(ticket -> {
-    ticket.setTitle(request.getTitle());
-    ticket.setDescription(request.getDescription());
+// En updateById():
+recordChange(saved, previousStatus, saved.getStatus(),
+    previousAssignedEmail, previousAssignedEmail,
+    command.changedByEmail(), null);    // ← pasar changedByEmail
 
-    String estadoAnterior = ticket.getStatus();
-    String estadoNuevo = request.getStatus();
-    User asignadoAnterior = ticket.getAssignedTo();
-    User asignadoNuevo = ticket.getAssignedTo();   // por defecto, no cambia
-
-    if (estadoNuevo != null && !estadoNuevo.isBlank()) {
-      ticket.setStatus(estadoNuevo);
-    }
-
-    if (request.getAssignedToId() != null) {
-      User nuevoAsignado = userRepository.findById(request.getAssignedToId())
-          .orElseThrow(() -> new IllegalArgumentException(
-              "No existe un usuario con ID " + request.getAssignedToId()));
-      ticket.setAssignedTo(nuevoAsignado);
-      asignadoNuevo = nuevoAsignado;
-    }
-
-    registrarCambio(ticket, estadoAnterior, estadoNuevo, asignadoAnterior, asignadoNuevo, null);
-
-    return repository.save(ticket);
-  });
-}
+// En assignTicket():
+recordChange(saved, null, null,
+    previousAssignedEmail, newAssignedEmail,
+    request.getChangedByEmail(), null); // ← pasar changedByEmail
 ```
 
 ---
@@ -101,11 +135,10 @@ public Optional<Ticket> updateById(Long id, TicketRequest request) {
 
 | Prueba | Resultado esperado |
 |---|---|
-| Crear ticket y ver historial | 1 entrada: `previousAssignedTo: null`, `newAssignedTo: null` |
-| Asignar ticket a usuario 1 | 1 nueva entrada con `newAssignedTo.id = 1` |
-| Reasignar ticket a usuario 2 | 1 nueva entrada con `previousAssignedTo.id = 1`, `newAssignedTo.id = 2` |
-| Cambiar estado sin cambiar asignado | 1 nueva entrada con el cambio de estado, `previousAssignedTo == newAssignedTo` |
-| Enviar mismos datos (sin cambio real) | **No** se crea nueva entrada |
+| Actualizar estado enviando `changedByEmail` | La entrada de historial muestra el email en `changedByEmail` |
+| Asignar ticket enviando `changedByEmail` | La entrada de historial muestra el email en `changedByEmail` |
+| Actualizar sin enviar `changedByEmail` | La entrada de historial tiene `changedByEmail: null` (no falla) |
+| `GET /tickets/by-id/{id}/history` | El campo `changedByEmail` aparece en todas las entradas (puede ser null en las anteriores) |
 
 ---
 
@@ -113,23 +146,21 @@ public Optional<Ticket> updateById(Long id, TicketRequest request) {
 
 | Criterio | Puntaje |
 |---|---|
-| `TicketHistory` tiene los campos `previousAssignedTo` y `newAssignedTo` con las anotaciones correctas | 25% |
-| `registrarCambio` detecta correctamente si hay cambio en asignado y/o estado | 30% |
-| No se registra historial cuando no hay cambio real | 20% |
-| El endpoint `GET /tickets/{id}/history` devuelve los nuevos campos | 15% |
-| No hay errores de serialización (`@JsonIgnore` en los campos `User` del historial) | 10% |
+| `TicketHistory` tiene el campo `changedByEmail` como `String` (no FK a User) | 20% |
+| `TicketHistoryResult` incluye `changedByEmail` | 15% |
+| `recordChange` acepta y registra `changedByEmail` | 25% |
+| `updateById()` y `assignTicket()` pasan `changedByEmail` al método de registro | 25% |
+| El campo es opcional (`null` cuando no se proporciona) y no provoca errores | 15% |
 
 ---
 
-## Desafío opcional
+## Reflexión final
 
-Agrega el campo `changedBy` a `TicketHistory`: el usuario que realizó el cambio (quién llamó al endpoint de actualización).
+Cuando implementes Spring Security en un proyecto real, el `changedByEmail` no vendrá del cuerpo de la petición — vendrá del `SecurityContext`:
 
 ```java
-@ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name = "changed_by_id")
-@JsonIgnore
-private User changedBy;
+String changedByEmail = SecurityContextHolder.getContext()
+    .getAuthentication().getName();
 ```
 
-Actualiza `TicketRequest` con un campo `changedById` y pásalo al servicio para registrarlo en el historial. Cuando el sistema tenga autenticación (Spring Security), este campo se obtendrá automáticamente del usuario autenticado — por ahora lo recibimos explícitamente del cliente.
+El cliente ya no necesita enviarlo porque el servidor sabe quién es el usuario autenticado. El diseño con email como parámetro explícito que usaste aquí es la misma arquitectura — solo cambia de dónde viene el dato.
