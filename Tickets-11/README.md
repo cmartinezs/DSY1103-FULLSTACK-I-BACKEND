@@ -1,123 +1,188 @@
-# Tickets-11: Lección 11 - Configuración de Bases de Datos
+# Tickets-11 — Lección 11: Configuración Multi-Base de Datos
 
-## 📋 Descripción
+Subproyecto del curso **DSY1103 - Fullstack I**.
 
-Este proyecto implementa la **Lección 11: Configuración de Bases de Datos** del curso DSY1103 Fullstack I.
-
-Perfiles de Spring Boot para múltiples bases de datos (H2, MySQL, PostgreSQL/Supabase).
+Extiende Lección 10 incorporando **perfiles de Spring Boot** para conectar a H2, MySQL o PostgreSQL/Supabase sin cambiar código Java.
 
 ---
 
 ## 🔄 Cambios desde Lección 10
 
-### 1. Dependencias (pom.xml)
-- ✅ `mysql-connector-j`
-- ✅ `postgresql`
-- ✅ `spring-dotenv` para cargar .env
-- ✅ `spring-boot-h2console`
+### Dependencias nuevas
+| Dependencia | Para qué sirve |
+|---|---|
+| `mysql-connector-j` | Driver JDBC para MySQL (XAMPP) |
+| `postgresql` | Driver JDBC para PostgreSQL (Supabase) |
+| `spring-dotenv` | Carga automática de archivos `.env` |
 
-### 2. Perfiles vs Entornos
+> `spring-boot-h2console` ya estaba en L10.
 
-| Concepto | Descripción |
-|----------|-------------|
-| **Perfil** | Archivo de configuración (`application-{profile}.yml`) |
-| **Entorno** | Valores de las variables para ese perfil |
+### Perfiles de Spring Boot
 
-| Perfil | Archivo | Entornos que lo usan |
-|--------|---------|---------------------|
-| `h2` | `application-h2.yml` | local |
-| `mysql` | `application-mysql.yml` | dev |
-| `supabase` | `application-supabase.yml` | test, prod |
+Un perfil = un archivo `application-{perfil}.yml` con la configuración de esa base de datos.
 
-### 3. Archivos de Perfil
+| Perfil | Archivo | Base de datos |
+|---|---|---|
+| `h2` | `application-h2.yml` | H2 en memoria (desarrollo rápido) |
+| `mysql` | `application-mysql.yml` | MySQL local (XAMPP) |
+| `supabase` | `application-supabase.yml` | PostgreSQL en la nube |
 
-| Archivo | Perfil | Base de Datos |
-|---------|-------|--------------|
-| `application-h2.yml` | `h2` | H2 (memoria) |
-| `application-mysql.yml` | `mysql` | MySQL (XAMPP) |
-| `application-supabase.yml` | `supabase` | Supabase (PostgreSQL) |
+### Archivos `.env` por entorno
 
-### 4. Archivos de Entorno
+| Archivo | Perfil activo | Descripción |
+|---|---|---|
+| `.env.local` | `h2` | Desarrollo local sin BD externa |
+| `.env.dev` | `mysql` | Desarrollo con MySQL/XAMPP |
+| `.env.test` | `supabase` | Pruebas contra Supabase |
+| `.env.prod` | `supabase` | Producción (mismas variables, distintos valores) |
+| `.env.example` | — | Plantilla — copiar y rellenar |
 
-| Archivo | Perfil | Entorno | Descripción |
-|---------|-------|---------|-------------|
-| `.env.local` | `h2` | local | Desarrollo rápido |
-| `.env.dev` | `mysql` | dev | Desarrollo con MySQL |
-| `.env.test` | `supabase` | test | Pruebas en Supabase |
-| `.env.prod` | `supabase` | prod | Producción (mismo perfil, diferentes valores) |
+> ⚠️ **Nunca** hacer commit de un `.env` con credenciales reales. Solo `.env.example` va al repositorio.
 
-### 5. application.yml (Base)
-- ✅ Configuración base sin credenciales
-- ✅ Niveles de logging por perfil
-
-### 6. Carga de Variables de Entorno (.env)
-- ✅ Dependencia `spring-dotenv` para cargar `.env` automáticamente
-- ✅ Archivo `.env.example` con plantilla
-- ⚠️ **Variables sensibles**: NUNCA hacer commit de `.env` con credenciales reales
+### Sin cambios de código Java
+El modelo, repositorio, servicio, controlador y DTOs son idénticos a Lección 10. Solo cambia la configuración.
 
 ---
 
-## 🌍 Cómo Usar Perfiles y Entornos
+## 🌍 Cómo activar un perfil
 
-### Opción 1: Copiar archivo .env
+### Opción 1 — Archivo `.env` (recomendada)
 
 ```bash
-# Elegir el entorno que necesitas
-copy .env.local .env    # Perfil: h2
-copy .env.dev .env      # Perfil: mysql
-copy .env.test .env     # Perfil: supabase
-copy .env.prod .env     # Perfil: supabase (valores diferentes)
+# Copiar el entorno que necesitas
+copy .env.local .env      # → perfil h2
+copy .env.dev .env        # → perfil mysql
+copy .env.test .env       # → perfil supabase
 
-# Ejecutar la aplicación
-./mvnw spring-boot:run
+# Ejecutar
+.\mvnw.cmd spring-boot:run
 ```
 
-### Opción 2: Con variable de entorno
+### Opción 2 — Variable de entorno
 
-```bash
-# PowerShell (Windows)
+```powershell
+# PowerShell
 $env:SPRING_PROFILES_ACTIVE="mysql"
-./mvnw.cmd spring-boot:run
-
-# bash/Linux/macOS
-SPRING_PROFILES_ACTIVE=mysql ./mvnw spring-boot:run
+.\mvnw.cmd spring-boot:run
 ```
 
-### Opción 3: Por línea de comandos
+### Opción 3 — Argumento de Maven
 
 ```bash
-./mvnw spring-boot:run -Dspring.profiles.active=h2
-./mvnw spring-boot:run -Dspring.profiles.active=mysql
-./mvnw spring-boot:run -Dspring.profiles.active=supabase
+.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=supabase
 ```
 
 ---
 
-## 📝 Archivos de Configuración
+## 🛠️ Tecnologías
 
-| Archivo | Descripción |
-|---------|-------------|
-| `application.yml` | Configuración base |
-| `application-h2.yml` | Perfil H2 |
-| `application-mysql.yml` | Perfil MySQL |
-| `application-supabase.yml` | Perfil Supabase |
-| `.env.local` | Entorno local (perfil h2) |
-| `.env.dev` | Entorno dev (perfil mysql) |
-| `.env.test` | Entorno test (perfil supabase) |
-| `.env.prod` | Entorno prod (perfil supabase) |
-| `.env.example` | Plantilla de variables |
-
----
-
-## 🧪 Validación
-
-- [x] Perfil h2 funciona con entorno local
-- [x] Perfil mysql funciona con entorno dev
-- [x] Perfil supabase funciona con entorno test
-- [x] Perfil supabase funciona con entorno prod (mismos valores de perfil, diferentes variables)
+| Herramienta | Versión |
+|---|---|
+| Java | 21 |
+| Spring Boot | 4.0.5 |
+| Spring Web MVC | (incluido) |
+| Spring Data JPA / Hibernate | (incluido) |
+| H2 Database | (incluido) |
+| MySQL Connector/J | (incluido) |
+| PostgreSQL JDBC | (incluido) |
+| spring-dotenv | 4.0.0 |
+| Lombok | (incluido) |
+| Jakarta Validation | (incluido) |
+| Maven Wrapper | (incluido) |
 
 ---
 
-**Base**: Lección 10 (JPA Intro)  
-**Stack**: Spring Boot 4.0.5, Java 21, JPA/Hibernate, H2, MySQL, PostgreSQL  
+## 📁 Estructura del proyecto
+
+```
+src/main/java/cl/duoc/fullstack/tickets/
+├── TicketsApplication.java
+├── config/
+│   └── DataInitializer.java        # Datos iniciales de ejemplo
+├── controller/
+│   └── TicketController.java       # Endpoints REST
+├── dto/
+│   ├── TicketRequest.java          # Entrada HTTP (con validaciones)
+│   ├── TicketCommand.java          # Objeto interno Controller → Service
+│   ├── TicketResult.java           # Objeto interno Service → Controller
+│   └── TicketResponse.java         # Salida HTTP
+├── model/
+│   ├── Ticket.java                 # Entidad JPA
+│   └── ErrorResponse.java          # Record para respuestas de error
+├── respository/
+│   └── TicketRepository.java       # JpaRepository<Ticket, Long>
+└── service/
+    └── TicketService.java          # Lógica de negocio
+
+src/main/resources/
+├── application.yml                 # Config base (sin credenciales)
+├── application-h2.yml              # Perfil H2
+├── application-mysql.yml           # Perfil MySQL
+└── application-supabase.yml        # Perfil Supabase/PostgreSQL
+```
+
+---
+
+## 📦 Modelo de datos
+
+### `Ticket`
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `id` | `Long` | PK auto-incremental |
+| `title` | `String` | Título (único, requerido) |
+| `description` | `String` | Descripción (requerida) |
+| `status` | `String` | `NEW`, `IN_PROGRESS`, `RESOLVED`, `CLOSED` |
+| `createdAt` | `LocalDateTime` | Fecha/hora de creación (auto) |
+| `estimatedResolutionDate` | `LocalDate` | Fecha estimada (createdAt + 5 días) |
+| `effectiveResolutionDate` | `LocalDateTime` | Fecha real de resolución |
+
+---
+
+## 🔌 Endpoints
+
+Base URL: `http://localhost:8080/ticket-app`
+
+| Método | Ruta | Body | Descripción | Respuesta OK |
+|---|---|---|---|---|
+| `GET` | `/tickets` | — | Listar todos (opcional `?status=`) | `200` lista |
+| `POST` | `/tickets` | `TicketRequest` | Crear ticket | `201` ticket creado |
+| `GET` | `/tickets/by-id/{id}` | — | Obtener por ID | `200` / `404` |
+| `PUT` | `/tickets/by-id/{id}` | `TicketRequest` | Actualizar ticket | `200` / `404` |
+| `DELETE` | `/tickets/by-id/{id}` | — | Eliminar ticket | `204` / `404` |
+
+### Errores posibles
+
+| Código | Causa |
+|---|---|
+| `400 Bad Request` | Validación fallida (`@NotBlank`, `@Size`) |
+| `404 Not Found` | ID no existe |
+| `409 Conflict` | Título duplicado |
+
+---
+
+## 🚀 Ejecutar
+
+```bash
+cd Tickets-11
+
+# 1. Seleccionar entorno
+copy .env.local .env    # H2 — sin configuración adicional
+
+# 2. Iniciar
+.\mvnw.cmd spring-boot:run
+```
+
+---
+
+## 🧪 Tests
+
+```bash
+.\mvnw.cmd test
+```
+
+---
+
+**Base**: Lección 10 — JPA + H2  
+**Stack**: Spring Boot 4.0.5 · Java 21 · JPA/Hibernate · H2 · MySQL · PostgreSQL  
 **Estado**: ✅ Completada
