@@ -1,6 +1,6 @@
 package cl.duoc.fullstack.tickets.service;
 
-import cl.duoc.fullstack.tickets.dto.TicketRequest;
+import cl.duoc.fullstack.tickets.dto.TicketCommand;
 import cl.duoc.fullstack.tickets.dto.TicketResult;
 import cl.duoc.fullstack.tickets.model.Ticket;
 import cl.duoc.fullstack.tickets.respository.TicketRepository;
@@ -20,7 +20,7 @@ public class TicketService {
   }
 
   public List<TicketResult> getTickets() {
-    return this.repository.findAllOrderByCreatedAt().stream()
+    return this.repository.findAllByOrderByCreatedAtAsc().stream()
         .map(this::toResult)
         .toList();
   }
@@ -29,21 +29,21 @@ public class TicketService {
     if (statusFilter == null || statusFilter.isBlank()) {
       return getTickets();
     }
-    return this.repository.findAllByStatusIgnoreCase(statusFilter).stream()
+    return this.repository.findByStatusIgnoreCase(statusFilter).stream()
         .map(this::toResult)
         .toList();
   }
 
-  public TicketResult create(TicketRequest request) {
-    boolean exists = this.repository.existsByTitleIgnoreCase(request.title());
+  public TicketResult create(TicketCommand command) {
+    boolean exists = this.repository.existsByTitleIgnoreCase(command.title());
     if (exists) {
       throw new IllegalArgumentException(
-          "Ya existe un ticket con el título: \"" + request.title() + "\"");
+          "Ya existe un ticket con el título: \"" + command.title() + "\"");
     }
 
     Ticket ticket = new Ticket();
-    ticket.setTitle(request.title());
-    ticket.setDescription(request.description());
+    ticket.setTitle(command.title());
+    ticket.setDescription(command.description());
     ticket.setStatus("NEW");
     ticket.setCreatedAt(LocalDateTime.now());
     ticket.setEstimatedResolutionDate(LocalDate.now().plusDays(5));
@@ -63,7 +63,7 @@ public class TicketService {
     return false;
   }
 
-  public Optional<TicketResult> updateById(Long id, TicketRequest request) {
+  public Optional<TicketResult> updateById(Long id, TicketCommand command) {
     Optional<Ticket> found = this.repository.findById(id);
     if (found.isEmpty()) {
       return Optional.empty();
@@ -71,12 +71,12 @@ public class TicketService {
 
     Ticket toUpdate = found.get();
 
-    toUpdate.setTitle(request.title());
-    toUpdate.setDescription(request.description());
-    if (request.status() != null && !request.status().isBlank()) {
-      toUpdate.setStatus(request.status());
+    toUpdate.setTitle(command.title());
+    toUpdate.setDescription(command.description());
+    if (command.status() != null && !command.status().isBlank()) {
+      toUpdate.setStatus(command.status());
     }
-    toUpdate.setEffectiveResolutionDate(request.effectiveResolutionDate());
+    toUpdate.setEffectiveResolutionDate(command.effectiveResolutionDate());
     Ticket saved = this.repository.save(toUpdate);
     return Optional.of(toResult(saved));
   }

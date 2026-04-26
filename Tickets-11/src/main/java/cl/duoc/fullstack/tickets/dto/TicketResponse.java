@@ -3,7 +3,7 @@ package cl.duoc.fullstack.tickets.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public record TicketResult(
+public record TicketResponse(
     Long id,
     String title,
     String description,

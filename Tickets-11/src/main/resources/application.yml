@@ -1,6 +1,8 @@
 spring:
   application:
     name: Tickets
+  profiles:
+    active: h2
   jpa:
     show-sql: false
     properties:
