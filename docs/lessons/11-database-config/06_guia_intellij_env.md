@@ -50,8 +50,8 @@ Usa el botón ▶ o Shift+F10
 
 Verifica en los logs:
 ```
-The following profile is active: "mysql"
-HikariPool-1 - Connection is working...
+The following profiles are active: mysql
+HikariPool-1 - Start completed.
 ```
 
 ---

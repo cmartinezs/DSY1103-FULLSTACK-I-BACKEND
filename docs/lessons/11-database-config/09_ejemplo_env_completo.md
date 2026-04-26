@@ -44,9 +44,9 @@ $env:SPRING_PROFILES_ACTIVE="h2"
 
 ### Resultado esperado en logs
 ```
-The following profile is active: "h2"
+The following profiles are active: h2
 HikariPool-1 - Starting...
-HikariPool-1 - Connection is working...
+HikariPool-1 - Start completed.
 ```
 
 ---
@@ -86,9 +86,9 @@ $env:SPRING_PROFILES_ACTIVE="mysql"
 
 ### Resultado esperado en logs
 ```
-The following profile is active: "mysql"
+The following profiles are active: mysql
 HikariPool-1 - Starting...
-HikariPool-1 - Connection is working...
+HikariPool-1 - Start completed.
 ```
 
 ---
@@ -132,9 +132,9 @@ $env:SPRING_PROFILES_ACTIVE="supabase"
 
 ### Resultado esperado en logs
 ```
-The following profile is active: "supabase"
+The following profiles are active: supabase
 HikariPool-1 - Starting...
-HikariPool-1 - Connection is working...
+HikariPool-1 - Start completed.
 ```
 
 ---
@@ -172,7 +172,7 @@ $env:SPRING_PROFILES_ACTIVE="supabase"
 
 ---
 
-## 🎯 Cómo Cambiar de Entilibrio
+## 🎯 Cómo Cambiar de Entorno
 
 ### Cambiar solo el archivo .env
 ```bash

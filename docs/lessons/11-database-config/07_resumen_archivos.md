@@ -96,14 +96,17 @@ spring:
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost:3306}/${DB_NAME:tickets_db}?${DB_CONN_PROPS:useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:tickets_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:}
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
 ```
 
 **Variables de entorno (para entorno dev):**
@@ -126,14 +129,14 @@ DB_PASSWORD=
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost:5432}/${DB_NAME:tickets_db}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME:postgres}
     driver-class-name: org.postgresql.Driver
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:}
+    password: ${DB_PASSWORD}
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
@@ -271,7 +274,7 @@ SPRING_PROFILES_ACTIVE=mysql ./mvnw spring-boot:run
 - ✅ Creaste `.env` copiando `.env.local`, `.env.dev`, `.env.test` o `.env.prod`
 - ✅ Llenaste las credenciales en `.env` (excepto en local)
 - ✅ `.env` está en `.gitignore`
-- ✅ Tienes la base de datos correindo (XAMPP o Supabase)
+- ✅ Tienes la base de datos corriendo (XAMPP o Supabase)
 - ✅ Ejecutaste la app y verificaste los logs
 
 ---

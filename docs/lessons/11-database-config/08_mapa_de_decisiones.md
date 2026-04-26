@@ -70,7 +70,7 @@ export SPRING_PROFILES_ACTIVE=mysql
 | Requiere software adicional | ❌ | XAMPP | Cuenta online |
 | Acceso desde otro PC | ❌ | ❌ | ✅ |
 | Gratis | ✅ | ✅ | ✅ (limits) |
-| Para producción | ❌ | ✅ | ✅ |
+| Para producción | ❌ | ❌ | ✅ |
 | Requiere variables de entorno | ❌ | ❌ | ✅ |
 
 ---

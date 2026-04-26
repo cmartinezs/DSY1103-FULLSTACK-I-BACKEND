@@ -109,8 +109,8 @@ DB_PASSWORD=tu-password
 
 Busca en los logs:
 ```
-The following profile is active: "[tu-perfil]"
-HikariPool-1 - Connection is working...
+The following profiles are active: [tu-perfil]
+HikariPool-1 - Start completed.
 ```
 
 Luego prueba: http://localhost:8080/ticket-app/tickets

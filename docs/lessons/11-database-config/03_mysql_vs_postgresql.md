@@ -114,4 +114,4 @@ datasource:
   password: ${DB_PASSWORD}
 ```
 
-Y defines las variables en tu entorno antes de arrancar la app. El extra de [Variables de Entorno](../../extras/env-variables/README.md) explica cómo hacerlo.
+Y defines las variables en tu entorno antes de arrancar la app. La [Guía IntelliJ](06_guia_intellij_env.md) explica cómo cargarlo desde el IDE, y el [Guión paso a paso](02_guion_paso_a_paso.md) cubre las opciones por terminal y sistema operativo.

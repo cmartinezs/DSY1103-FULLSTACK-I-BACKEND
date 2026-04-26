@@ -167,7 +167,7 @@ Después de arrancar, deberías ver en los logs:
 ```
 The following profiles are active: mysql
 HikariPool-1 - Starting...
-HikariPool-1 - Connection is working...
+HikariPool-1 - Start completed.
 ```
 
 Luego accede a: **http://localhost:8080/ticket-app/tickets**

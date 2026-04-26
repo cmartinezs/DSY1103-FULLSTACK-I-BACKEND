@@ -58,7 +58,7 @@ copy .env.prod .env
 ./mvnw.cmd spring-boot:run -Dspring.profiles.active=supabase
 ```
 
-**Opción 2: Variable de entorno**
+**Opción 3: Variable de entorno**
 ```bash
 # Windows (PowerShell)
 $env:SPRING_PROFILES_ACTIVE="mysql"
@@ -69,7 +69,7 @@ export SPRING_PROFILES_ACTIVE=mysql
 ./mvnw spring-boot:run
 ```
 
-**Opción 3: Desde IntelliJ IDEA**
+**Opción 4: Desde IntelliJ IDEA**
 1. Abre **Run** → **Edit Configurations**
 2. Busca la configuración de Maven (Spring Boot)
 3. En el campo **Program arguments**, agrega: `spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=mysql"`
@@ -96,20 +96,22 @@ cp .env.example .env
 
 **Contenido de `.env`:**
 ```env
-# MySQL Configuration
-MYSQL_URL=jdbc:mysql://localhost:3306/tickets_db?useSSL=false&serverTimezone=America/Santiago
-MYSQL_USERNAME=root
-MYSQL_PASSWORD=
-
-# Supabase Configuration
-DB_HOST=db.xxxxxxxxxxxx.supabase.co
-DB_PORT=5432
-DB_NAME=postgres
-DB_USER=postgres
-DB_PASSWORD=your-supabase-password
-
-# Active Profile
+# Perfil activo (h2, mysql, supabase)
 SPRING_PROFILES_ACTIVE=mysql
+
+# MySQL Configuration (usado por el perfil mysql)
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=tickets_db
+DB_USER=root
+DB_PASSWORD=
+
+# Supabase Configuration (usado por el perfil supabase)
+# DB_HOST=db.xxxxxxxxxxxx.supabase.co
+# DB_PORT=5432
+# DB_NAME=postgres
+# DB_USER=postgres
+# DB_PASSWORD=your-supabase-password
 ```
 
 ### Paso 2: Cargar `.env` en los archivos YAML
@@ -136,12 +138,14 @@ server:
 ```yaml
 spring:
   datasource:
-    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/tickets_db?useSSL=false&serverTimezone=America/Santiago}
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:tickets_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:}
   jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
@@ -202,7 +206,7 @@ source ~/.bashrc
 2. Selecciona la configuración de Spring Boot
 3. En **Environment variables**, agrega las variables:
    ```
-   SPRING_PROFILES_ACTIVE=mysql;MYSQL_USERNAME=root;MYSQL_PASSWORD=;DB_HOST=db.xxxx.supabase.co;DB_PORT=5432
+   SPRING_PROFILES_ACTIVE=mysql;DB_HOST=localhost;DB_PORT=3306;DB_NAME=tickets_db;DB_USER=root;DB_PASSWORD=
    ```
    (usa `;` para separar en Windows, `:` en Linux/macOS)
 4. Guarda y ejecuta
@@ -219,7 +223,7 @@ Agrega la dependencia en `pom.xml`:
 <dependency>
     <groupId>me.paulschwarz</groupId>
     <artifactId>spring-dotenv</artifactId>
-    <version>3.0.0</version>
+    <version>4.0.0</version>
 </dependency>
 ```
 
@@ -239,7 +243,7 @@ The following profiles are active: mysql
 Y luego:
 ```
 HikariPool-1 - Starting...
-HikariPool-1 - Connection is working...
+HikariPool-1 - Start completed.
 ```
 
 ---
@@ -276,37 +280,37 @@ HikariPool-1 - Connection is working...
 > **¿Qué es el cotejamiento?**
 > Define cómo se comparan y ordenan los textos. `utf8mb4_unicode_ci` soporta todos los caracteres del español (tildes, ñ) y es insensible a mayúsculas en las comparaciones (`ci` = case-insensitive). Es el estándar para aplicaciones en español.
 
-### Paso A3: configurar `application.yml` para MySQL
+### Paso A3: verificar `application-mysql.yml`
+
+Este archivo ya existe en `src/main/resources/`. Confírmalo:
 
 ```yaml
 spring:
-  application:
-    name: Tickets
-
   datasource:
-    url: jdbc:mysql://localhost:3306/tickets_db?useSSL=false&serverTimezone=America/Santiago
-    username: root
-    password:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:tickets_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
-
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:}
   jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: update
-    show-sql: true
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
-
-server:
-  port: 8080
-  servlet:
-    context-path: "/ticket-app"
 ```
 
-> **¿Qué hace `?useSSL=false&serverTimezone=America/Santiago` en la URL?**
+> **¿Qué hace `?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC` en la URL?**
 > - `useSSL=false`: desactiva SSL para conexiones locales (XAMPP no tiene certificado)
-> - `serverTimezone=America/Santiago`: sincroniza la zona horaria entre Java y MySQL para que los `LocalDateTime` se guarden y lean correctamente
+> - `allowPublicKeyRetrieval=true`: necesario con versiones recientes de MySQL para autenticación sin SSL
+> - `serverTimezone=UTC`: sincroniza la zona horaria entre Java y MySQL para que los `LocalDateTime` se guarden y lean correctamente
+
+Luego copia el archivo de entorno y arranca con el perfil mysql:
+
+```bash
+copy .env.dev .env
+./mvnw.cmd spring-boot:run
+```
 
 ### Paso A4: arrancar y verificar
 
@@ -359,37 +363,43 @@ jdbc:postgresql://db.xxxxxxxxxxxx.supabase.co:5432/postgres
 </dependency>
 ```
 
-### Paso B5: configurar `application.yml` para Supabase
+### Paso B5: configurar `.env` con tus credenciales de Supabase
+
+Edita tu `.env` (o `.env.test`) con los valores obtenidos en el paso anterior:
+
+```env
+SPRING_PROFILES_ACTIVE=supabase
+DB_HOST=db.xxxxxxxxxxxx.supabase.co
+DB_PORT=5432
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=tu-contraseña-de-supabase
+```
+
+El archivo `application-supabase.yml` ya existe en `src/main/resources/` y leerá estas variables automáticamente:
 
 ```yaml
 spring:
-  application:
-    name: Tickets
-
   datasource:
-    url: jdbc:postgresql://db.xxxxxxxxxxxx.supabase.co:5432/postgres
-    username: postgres
-    password: tu-contraseña-de-supabase
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     driver-class-name: org.postgresql.Driver
-
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
-    show-sql: true
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-
-server:
-  port: 8080
-  servlet:
-    context-path: "/ticket-app"
 ```
 
-> **Reemplaza:**
-> - `db.xxxxxxxxxxxx.supabase.co` con tu host real de Supabase
-> - `tu-contraseña-de-supabase` con la contraseña que creaste en el Paso B2
+Luego arranca con el perfil supabase:
+
+```bash
+copy .env.test .env
+./mvnw.cmd spring-boot:run
+```
 
 ### Paso B6: arrancar y verificar
 
@@ -403,25 +413,23 @@ En el dashboard de Supabase, ve a **Table Editor** — deberías ver la tabla `t
 
 ## Cómo cambiar entre MySQL y Supabase
 
-El código Java no cambia. Solo modificas el `application.yml`:
+El código Java no cambia. Solo cambias el archivo `.env` activo:
 
-```yaml
+```bash
 # Para usar MySQL local (XAMPP):
-datasource:
-  url: jdbc:mysql://localhost:3306/tickets_db?useSSL=false&serverTimezone=America/Santiago
-  username: root
-  password:
-  driver-class-name: com.mysql.cj.jdbc.Driver
+copy .env.dev .env
+./mvnw.cmd spring-boot:run
 
-# Para usar Supabase (comentar el bloque anterior y descomentar este):
-# datasource:
-#   url: jdbc:postgresql://db.xxxx.supabase.co:5432/postgres
-#   username: postgres
-#   password: tu-contraseña
-#   driver-class-name: org.postgresql.Driver
+# Para usar Supabase:
+copy .env.test .env
+./mvnw.cmd spring-boot:run
 ```
 
-Y cambiar el driver correspondiente en `pom.xml`.
+O bien pasa el perfil directamente por línea de comandos:
+```bash
+./mvnw.cmd spring-boot:run -Dspring.profiles.active=mysql
+./mvnw.cmd spring-boot:run -Dspring.profiles.active=supabase
+```
 
 > **¿Por qué funciona esto?**
 > JPA es una **especificación** (un contrato). Hibernate la implementa para cualquier base de datos que tenga un driver JDBC. El código Java no sabe si está hablando con MySQL o PostgreSQL — eso es responsabilidad de Hibernate y el driver. Cambias la configuración, no el código.
@@ -451,13 +459,13 @@ Si quieres comprobar que las credenciales son correctas antes de arrancar Spring
 
 ---
 
-## El patrón `*Result` — Referencia
+## El patrón `*Command` / `*Response` — Referencia
 
-A partir de esta lección, el código usa el patrón `*Result` para retornar datos. El motivo y la implementación estándocumentados en **Lección 10 — JPA y ORM, sección "El patrón `*Result` — por qué no retornamos entidades JPA"**.
+A partir de esta lección, el código usa el patrón de DTOs de entrada y salida. El motivo está documentado en **Lección 10 — JPA y ORM, sección "Por qué no retornamos entidades directamente"**.
 
 | DTO | Uso |
 |---|---|
-| `*Request` | Input: el Controller lo recibe y el Service lo procesa |
-| `*Result` | Output: el Service transforma la entidad y el Controller la retorna |
+| `*Command` | Input: el Controller lo recibe y el Service lo procesa |
+| `*Response` | Output: el Service transforma la entidad y el Controller la retorna |
 
-**Regla de oro:** Una entidad JPA (`@Entity`) nunca sale del Service. Siempre se convierte a `*Result` primero.
+**Regla de oro:** Una entidad JPA (`@Entity`) nunca sale del Service. Siempre se convierte a `*Response` primero.
