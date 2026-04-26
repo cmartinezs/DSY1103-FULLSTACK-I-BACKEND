@@ -1,12 +1,18 @@
 package cl.duoc.fullstack.tickets.controller;
 
+import cl.duoc.fullstack.tickets.dto.AssignTicketRequest;
+import cl.duoc.fullstack.tickets.dto.AuditEvent;
+import cl.duoc.fullstack.tickets.dto.TicketCommand;
 import cl.duoc.fullstack.tickets.dto.TicketHistoryResult;
 import cl.duoc.fullstack.tickets.dto.TicketRequest;
+import cl.duoc.fullstack.tickets.dto.TicketResponse;
 import cl.duoc.fullstack.tickets.dto.TicketResult;
+import cl.duoc.fullstack.tickets.exception.BadRequestException;
 import cl.duoc.fullstack.tickets.model.ErrorResponse;
 import cl.duoc.fullstack.tickets.service.TicketService;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
@@ -15,6 +21,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -34,27 +41,35 @@ public class TicketController {
   }
 
   @GetMapping
-  public ResponseEntity<List<TicketResult>> getAllTickets(
+  public ResponseEntity<List<TicketResponse>> getAllTickets(
       @RequestParam(required = false) String status) {
-    List<TicketResult> tickets = status != null
+    List<TicketResult> results = status != null
         ? this.service.getTickets(status)
         : this.service.getTickets();
-    return ResponseEntity.ok(tickets);
+    List<TicketResponse> responses = results.stream()
+        .map(this::toResponse)
+        .toList();
+    return ResponseEntity.ok(responses);
   }
 
   @PostMapping
-  public ResponseEntity<Object> create(@Valid @RequestBody TicketRequest request) {
+  public ResponseEntity<?> create(@Valid @RequestBody TicketRequest request) {
     try {
-      TicketResult result = this.service.create(request);
-      return ResponseEntity.status(HttpStatus.CREATED).body(result);
+      TicketCommand command = toCommand(request);
+      TicketResult result = this.service.create(command);
+      TicketResponse response = toResponse(result);
+      return ResponseEntity.status(HttpStatus.CREATED).body(response);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(e.getMessage()));
+    } catch (BadRequestException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getMessage()));
     }
   }
 
   @GetMapping("/by-id/{id}")
-  public ResponseEntity<TicketResult> getTicketById(@PathVariable Long id) {
+  public ResponseEntity<TicketResponse> getTicketById(@PathVariable Long id) {
     return this.service.getById(id)
+        .map(result -> toResponse(result))
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }
@@ -64,10 +79,10 @@ public class TicketController {
       @PathVariable Long id,
       @Valid @RequestBody TicketRequest request) {
     try {
-      Optional<TicketResult> updated = this.service.updateById(id, request);
-      if (updated.isPresent()) {
-        return ResponseEntity.ok(updated.get());
-      }
+      TicketCommand command = toCommand(request);
+      TicketResult result = this.service.updateById(id, command);
+      return ResponseEntity.ok(toResponse(result));
+    } catch (NoSuchElementException e) {
       return ResponseEntity.notFound().build();
     } catch (IllegalArgumentException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(e.getMessage()));
@@ -82,10 +97,35 @@ public class TicketController {
     return ResponseEntity.noContent().build();
   }
 
-  @GetMapping("/{id}/history")
-  public ResponseEntity<List<TicketHistoryResult>> getTicketHistory(@PathVariable Long id) {
-    List<TicketHistoryResult> history = this.service.getTicketHistory(id);
-    return ResponseEntity.ok(history);
+  @PatchMapping("/by-id/{id}")
+  public ResponseEntity<?> assignTicket(
+      @PathVariable Long id,
+      @Valid @RequestBody AssignTicketRequest request) {
+    try {
+      Optional<TicketResult> result = this.service.assignTicket(id, request.getAssignedToEmail());
+      if (result.isEmpty()) {
+        return ResponseEntity.notFound().build();
+      }
+      return ResponseEntity.ok(toResponse(result.get()));
+    } catch (BadRequestException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(new ErrorResponse(e.getMessage()));
+    }
+  }
+
+  @GetMapping("/by-id/{id}/history")
+  public ResponseEntity<List<TicketHistoryResult>> getHistory(@PathVariable Long id) {
+    return service.getHistory(id)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
+  }
+
+  @GetMapping("/by-id/{id}/audit")
+  public ResponseEntity<List<AuditEvent>> getAuditTrail(@PathVariable Long id) {
+    if (this.service.getById(id).isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.ok(this.service.getAuditTrail(id));
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -94,5 +134,29 @@ public class TicketController {
         .map(err -> err.getField() + ": " + err.getDefaultMessage())
         .collect(Collectors.joining(", "));
     return ResponseEntity.badRequest().body(new ErrorResponse(message));
+  }
+
+  private TicketCommand toCommand(TicketRequest request) {
+    return new TicketCommand(
+        request.title(),
+        request.description(),
+        request.status(),
+        request.effectiveResolutionDate(),
+        request.createdByEmail()
+    );
+  }
+
+  private TicketResponse toResponse(TicketResult result) {
+    return new TicketResponse(
+        result.id(),
+        result.title(),
+        result.description(),
+        result.status(),
+        result.createdAt(),
+        result.estimatedResolutionDate(),
+        result.effectiveResolutionDate(),
+        result.createdBy(),
+        result.assignedTo()
+    );
   }
 }

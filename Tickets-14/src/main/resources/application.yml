@@ -6,6 +6,17 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  cloud:
+    openfeign:
+      client:
+        config:
+          audit-service:
+            connect-timeout: 5000
+            read-timeout: 10000
+            logger-level: BASIC
+          default:
+            connect-timeout: 5000
+            read-timeout: 10000
 
 server:
   port: 8080
