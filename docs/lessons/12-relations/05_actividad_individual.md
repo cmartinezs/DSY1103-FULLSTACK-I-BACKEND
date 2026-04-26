@@ -1,104 +1,118 @@
-# Lección 12 — Actividad individual: relacionar Category con Ticket
+# Lección 12 — Actividad Personal: Extender con Category
 
-## Contexto
+## ¿Qué es esta actividad?
 
-Actualmente los tickets no tienen categoría. En un sistema de soporte real, cada ticket pertenece a una categoría (Hardware, Software, Red, etc.) para poder filtrar y reportar por tipo de problema.
+Esta es una **ACTIVIDAD PERSONAL** que complementa el tutorial base.
 
-Esta actividad agrega la relación `Ticket` → `Category`.
+En `02_guion_paso_a_paso.md` cubrimos:
+- ✓ User (Entity, DTO, Repository, Service, Controller)
+- ✓ Ticket (relaciones @ManyToOne a User, búsqueda por email)
+- ✓ User con @OneToMany (Paso 9)
+- ✓ DTOs de respuesta TicketResult / UserResult (Paso 8.7)
+- ✓ Asignación con PATCH /tickets/{id} (Paso 8.8)
+
+**Category** no tiene guion paso-a-paso. En su lugar, tienes directrices para diseñarla e implementarla autónomamente.
+
+Esto es tu oportunidad de practicar el patrón completo:
+Entity → DTO → Repository → Service → Controller
 
 ---
 
-## Parte 1: agregar la relación en `Ticket`
+## Directrices: Implementa Category Autónomamente
 
-Agrega el campo `category` a `Ticket.java`:
+Sigue el mismo patrón que `User` del tutorial:
+
+### 1. Crear la entidad `Category`
+
+En `src/main/java/cl/duoc/fullstack/tickets/model/Category.java`:
+
+- `@Entity` y `@Table(name = "categories")`
+- Campo `id` con `@Id` y `@GeneratedValue`
+- Campo `name` con `@Column(nullable = false, unique = true, length = 100)` y `@NotBlank`
+- Campo `description` con `@Column(columnDefinition = "TEXT")` y `@NotBlank`
+- Anotaciones Lombok: `@Getter`, `@Setter`, `@NoArgsConstructor`, `@AllArgsConstructor`
+
+### 2. Crear `CategoryRequest` DTO
+
+En `src/main/java/cl/duoc/fullstack/tickets/dto/CategoryRequest.java`:
+
+- Campos: `name`, `description`
+- Validaciones: `@NotBlank` en ambos
+- Lombok: `@Getter`, `@Setter`
+
+### 3. Crear `CategoryRepository`
+
+En `src/main/java/cl/duoc/fullstack/tickets/respository/CategoryRepository.java`:
+
+- Extiende `JpaRepository<Category, Long>`
+- Métodos útiles: `existsByName()`, `findByName()`
+
+### 4. Crear `CategoryService`
+
+En `src/main/java/cl/duoc/fullstack/tickets/service/CategoryService.java`:
+
+- `getAll()` lista todas
+- `create(CategoryRequest)` valida duplicado por name
+- `getById(Long id)` retorna Optional
+- Excepciones: `IllegalArgumentException` si name duplicado
+
+### 5. Crear `CategoryController`
+
+En `src/main/java/cl/duoc/fullstack/tickets/controller/CategoryController.java`:
+
+- `@RestController` en `/categories`
+- `GET /categories` lista
+- `POST /categories` crea con `@Valid`, `201 Created` o `409 Conflict`
+- `GET /categories/{id}` por id
+
+### 6. Agregar @ManyToOne a Ticket
+
+En `Ticket.java`:
 
 ```java
 @ManyToOne(fetch = FetchType.LAZY)
 @JoinColumn(name = "category_id")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 private Category category;
 ```
 
-La columna `category_id` se creará automáticamente en la tabla `tickets`.
-
----
-
-## Parte 2: actualizar `TicketRequest`
-
-Agrega el campo opcional `categoryId` al DTO:
+### 7. Agregar `categoryId` a `TicketRequest`
 
 ```java
-private Long categoryId;   // opcional — un ticket puede no tener categoría aún
+private Long categoryId;  // opcional
 ```
 
----
+### 8. Actualizar `TicketService`
 
-## Parte 3: actualizar `TicketService`
+En el método `create()`, resuelve la categoría si se proporciona `categoryId`
+(análogo a `createdByEmail` — busca en repositorio y lanza excepción si no existe).
 
-En el método `create()`, agrega la resolución de la categoría junto con los usuarios:
+### 9. Pruebas
 
-```java
-if (request.getCategoryId() != null) {
-    Category category = categoryRepository.findById(request.getCategoryId())
-        .orElseThrow(() -> new IllegalArgumentException(
-            "No existe una categoría con ID " + request.getCategoryId()));
-    ticket.setCategory(category);
-}
+- POST /categories (crear categorías)
+- GET /categories (listar)
+- POST /tickets con categoryId válido
+- GET /tickets (verificar vinculación)
+
+### 10. Desafío Opcional
+
+Implementa filtro por categoría:
+
+```
+GET /tickets?categoryId=1
 ```
 
-Recuerda inyectar `CategoryRepository` en el constructor de `TicketService`.
-
----
-
-## Parte 4: agregar filtro por categoría
-
-Agrega al `TicketRepository`:
-
+Agrega a `TicketRepository`:
 ```java
 List<Ticket> findByCategoryId(Long categoryId);
-List<Ticket> findByCategoryIdAndStatusIgnoreCase(Long categoryId, String status);
 ```
 
-Y agrega el endpoint en `TicketController`:
-
+Agrega a `TicketController`:
+```java
+@GetMapping
+public List<Ticket> list(@RequestParam(required = false) Long categoryId) {
+  if (categoryId != null) {
+    return ticketService.findByCategory(categoryId);
+  }
+  return ticketService.getAll();
+}
 ```
-GET /tickets?categoryId=1          → tickets de la categoría con id=1
-GET /tickets?categoryId=1&status=NEW → tickets de la categoría 1 en estado NEW
-```
-
----
-
-## Pruebas requeridas
-
-| Prueba | Resultado esperado |
-|---|---|
-| `POST /tickets` con `categoryId` válido | Ticket creado con la categoría vinculada |
-| `POST /tickets` sin `categoryId` | Ticket creado con `category: null` |
-| `POST /tickets` con `categoryId` inexistente | Error descriptivo |
-| `GET /tickets?categoryId=1` | Solo tickets de esa categoría |
-| `GET /tickets?categoryId=1&status=NEW` | Tickets de esa categoría en estado NEW |
-| Base de datos | Columna `category_id` en tabla `tickets` con valores correctos |
-
----
-
-## Criterios de evaluación
-
-| Criterio | Puntaje |
-|---|---|
-| Campo `category` en `Ticket` con `@ManyToOne`, `@JoinColumn` y `@JsonIgnoreProperties` | 30% |
-| `categoryId` en `TicketRequest` (opcional) | 15% |
-| `TicketService.create()` resuelve la categoría correctamente | 25% |
-| Filtro `GET /tickets?categoryId=` funciona | 20% |
-| No hay `StackOverflowError` al serializar | 10% |
-
----
-
-## Desafío opcional
-
-Agrega el endpoint inverso: dado el id de una categoría, lista los tickets asociados a ella.
-
-```
-GET /categories/{id}/tickets
-```
-
-Para implementarlo, agrega el método al `CategoryService` (que delega al `TicketRepository.findByCategoryId(id)`) y el endpoint al `CategoryController`.

@@ -1,6 +1,5 @@
 package cl.duoc.fullstack.tickets.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -35,11 +34,9 @@ public class Ticket {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "created_by_id")
-  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
   private User createdBy;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "assigned_to_id")
-  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
   private User assignedTo;
 }

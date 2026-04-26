@@ -38,17 +38,27 @@ Al terminar esta lección tendrás:
 
 1. Una nueva entidad `User` con su repositorio, servicio y controlador
 2. La entidad `Ticket` con dos relaciones `@ManyToOne` a `User`
-3. `@Column` con personalización de nombres y restricciones
-4. `@JoinColumn` para nombrar explícitamente las claves foráneas
-5. Endpoints para crear usuarios y para crear tickets asociados a usuarios
+   - `createdBy`: el usuario que creó el ticket (requerido, se vincula por email)
+   - `assignedTo`: el usuario asignado al ticket (opcional, se asigna con PATCH)
+3. La entidad `User` con dos relaciones `@OneToMany` (el lado inverso de `@ManyToOne`):
+   - `createdTickets`: tickets que el usuario ha creado
+   - `assignedTickets`: tickets asignados al usuario
+4. `@Column` con personalización de nombres y restricciones
+5. `@JoinColumn` para nombrar explícitamente las claves foráneas
+6. Endpoints para crear usuarios (`POST /users`) y crear/asignar tickets (`POST /tickets`, `PATCH /tickets/{id}`)
+7. DTOs de respuesta (`TicketResult`, `UserResult`) para exponer datos anidados sin serialización circular
+8. Excepción personalizada `BadRequestException` para distinguir errores de negocio (409) de errores de cliente (400)
 
 ### Lo que vas a poder explicar
 
-- ¿Qué significa `@ManyToOne` y en qué lado de la relación va?
-- ¿Qué hace `@JoinColumn` y por qué se necesita?
 - ¿Qué es el "lado dueño" de una relación JPA?
-- ¿Qué hace `@OneToMany(mappedBy = "...")` y por qué no tiene clave foránea?
+- ¿Qué significa `@ManyToOne` y en qué lado de la relación va?
+- ¿Qué significa `@OneToMany` y por qué usa `mappedBy`?
+- ¿Qué hace `@JoinColumn` y por qué se necesita?
 - ¿Por qué `@Table(name = "users")` y no `@Table(name = "user")`?
+- ¿Cuál es la diferencia entre el lado "uno" y el lado "muchos" de una relación?
+- ¿Cuándo usar `@OneToOne` en lugar de `@ManyToOne`?
+- ¿Por qué `@ManyToMany` casi nunca se usa si la base de datos está normalizada (3FN)?
 
 ---
 
@@ -79,21 +89,26 @@ La estructura al terminar:
 
 ```
 src/main/java/cl/duoc/fullstack/tickets/
+├── exception/
+│   └── BadRequestException.java     ← nueva excepción personalizada
 ├── model/
 │   ├── Ticket.java              ← con @ManyToOne a User (createdBy, assignedTo)
-│   └── User.java                ← nueva entidad JPA
+│   └── User.java                ← nueva entidad con @OneToMany (createdTickets, assignedTickets)
 ├── respository/
 │   ├── TicketRepository.java
-│   └── UserRepository.java      ← nuevo
+│   └── UserRepository.java      ← nuevo, incluye findByEmail()
 ├── service/
-│   ├── TicketService.java       ← actualizado para resolver usuarios
+│   ├── TicketService.java       ← actualizado: busca usuario por email, nuevo assignTicket()
 │   └── UserService.java         ← nuevo
 ├── controller/
-│   ├── TicketController.java    ← actualizado
+│   ├── TicketController.java    ← actualizado: POST acepta email, nuevo PATCH /tickets/{id}
 │   └── UserController.java      ← nuevo
 └── dto/
-    ├── TicketRequest.java       ← actualizado con createdById y assignedToId
-    └── UserRequest.java         ← nuevo
+    ├── TicketRequest.java       ← actualizado con createdByEmail
+    ├── TicketResult.java        ← nuevo DTO de respuesta con UserResult anidado
+    ├── AssignTicketRequest.java ← nuevo DTO para PATCH
+    ├── UserRequest.java         ← nuevo
+    └── UserResult.java          ← nuevo DTO de respuesta de usuario
 ```
 
 ---
@@ -103,6 +118,6 @@ src/main/java/cl/duoc/fullstack/tickets/
 | Tema | ¿Cuándo se ve? |
 |---|---|
 | Tabla de historial de cambios | Lección 13 |
-| `@ManyToMany` (relación muchos a muchos) | Fuera del alcance del curso |
-| `fetch = LAZY` vs `EAGER` y el problema N+1 | Mención breve en el archivo conceptual |
-| DTOs de respuesta con datos anidados | Se usa `@JsonIgnore` para evitar serialización circular en esta etapa |
+| `@ManyToMany` en profundidad | Se menciona en esta lección junto a la razón por la que no la usamos (3FN) |
+| `fetch = LAZY` vs `EAGER` y el problema N+1 | Se explica en el archivo conceptual de esta lección |
+| DTOs de respuesta con datos anidados | Cubierto en esta lección con `TicketResult` y `UserResult` |
