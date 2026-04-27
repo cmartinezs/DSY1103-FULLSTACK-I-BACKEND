@@ -34,6 +34,7 @@ Esta sección reúne material complementario sobre temas que **no son parte dire
 | 20 | [🕰️ Historia de la Computación e Informática](#20-️-historia-de-la-computación-e-informática) | [`historia-de-la-computacion/`](./historia-de-la-computacion/README.md) |
 | 21 | [Próximos temas](#21-próximos-temas) | — |
 | 22 | [🎯 Homologación — Diagnóstico Java](#22-homologación--diagnóstico-java) | [`homologacion/`](./homologacion/README.md) |
+| 23 | [🏗️ De Monolito a Microservicios](#23-️-de-monolito-a-microservicios) | [`monolito-a-microservicios/`](./monolito-a-microservicios/README.md) |
 
 ---
 
@@ -360,6 +361,25 @@ Evaluación diagnóstica de 10 ejercicios progresivos para desarrollar en **80 m
 **Package:** `cl.duoc.diagnostico.minombredeusuario`
 
 → [Ver todos los ejercicios de homologación](./homologacion/README.md)
+
+---
+
+## 23. 🏗️ De Monolito a Microservicios
+
+Guía completa de buenas prácticas para dividir un sistema monolítico en microservicios, con un **caso de estudio real** de una empresa manufacturera con múltiples sucursales, bodega central, fabricación propia, proveedores, clientes, fidelización y logística propia + terceros.
+
+**Temas cubiertos:** cuándo y por qué migrar · identificación de Bounded Contexts (DDD + Event Storming) · mapa completo de 15 microservicios (10 de dominio + 5 auxiliares) · comunicación síncrona (REST + Circuit Breaker) vs. asíncrona (eventos + Saga) · estrategia de migración gradual (Strangler Fig) · buenas prácticas (BD por servicio, API versioning, observabilidad, contratos OpenAPI) · anti-patrones a evitar (monolito distribuido, chatty services, big bang) · checklist de migración.
+
+**Servicios del caso FabriTech S.A.:**
+
+| Tipo | Servicios |
+|------|-----------|
+| Dominio | `catalog` · `manufacturing` · `procurement` · `inventory` · `branch` · `customer` · `order` · `loyalty` · `shipping` · `payment` |
+| Auxiliares | `auth` · `notification` · `email` · `pdf` · `report` |
+
+**¿Por qué importa?** La mayoría de los sistemas empresariales modernos son microservicios que empezaron como monolitos. Saber cuándo y cómo hacer esa transición —y qué errores evitar— es una de las habilidades más valoradas en un desarrollador backend senior.
+
+→ [Ver guía completa: De Monolito a Microservicios](./monolito-a-microservicios/README.md)
 
 ---
 
