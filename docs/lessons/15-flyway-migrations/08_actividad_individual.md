@@ -1,142 +1,130 @@
-# Lección 15 — Actividad Individual
+# Lección 15 — Actividad Individual: Migración Flyway de `Category`
 
-## 🎯 Objetivo
+## Contexto
 
-Implementar **Flyway** para tu aplicación Tickets y crear al menos 2 migraciones SQL versionadas.
+En la lección 05 creaste el recurso `Category` con persistencia en memoria. En la lección 10 lo migraste a JPA con `@Entity` y `JpaRepository`. Ahora que el proyecto usa Flyway para controlar el esquema, **JPA ya no puede crear ni modificar tablas automáticamente** en MySQL y Supabase (`ddl-auto: validate`).
 
----
-
-## 📋 Requisitos
-
-### 1. Configuración Base
-
-- [ ] Agrega Flyway al `pom.xml`
-- [ ] Configura Flyway en `application-mysql.yml` y `application-supabase.yml`
-- [ ] Deshabilita Flyway en `application-h2.yml`
-- [ ] Cambia `ddl-auto` a `validate` en MySQL y Supabase
-
-### 2. Primera Migración (Tabla Tickets)
-
-Crea `V1__create_tickets_table.sql` en ambas carpetas (mysql/ y supabase/):
-
-```
-✅ Debe crear tabla tickets con columnas:
-  - id (auto-increment/serial)
-  - title (VARCHAR, NOT NULL, UNIQUE)
-  - description (TEXT)
-  - status (VARCHAR, DEFAULT 'NEW')
-  - priority (VARCHAR, DEFAULT 'MEDIUM')
-  - created_at (TIMESTAMP)
-  - estimated_resolution_date (DATE)
-  - updated_at (TIMESTAMP)
-  
-✅ Debe incluir índices:
-  - idx_status
-  - idx_created_at
-```
-
-### 3. Segunda Migración (Tabla Usuarios)
-
-Crea `V2__create_users_table.sql`:
-
-```
-✅ Debe crear tabla users con columnas:
-  - id (auto-increment/serial)
-  - email (VARCHAR, UNIQUE)
-  - name (VARCHAR)
-  - password_hash (VARCHAR)
-  - created_at (TIMESTAMP)
-  
-✅ Debe incluir índice:
-  - idx_email
-```
-
-### 4. Tercera Migración (Relación)
-
-Crea `V3__add_tickets_users_relation.sql`:
-
-```
-✅ Debe agregar foreign key de tickets a usuarios:
-  - created_by_id INT/INTEGER
-  - Constrains: FK tickets.created_by_id → users.id
-  
-✅ Debe incluir índice:
-  - idx_created_by_id
-```
+Tu tarea es escribir las migraciones Flyway que crean la tabla `categories` y la vinculan con `tickets`, continuando la secuencia de versiones del proyecto.
 
 ---
 
-## 🚀 Pasos a Seguir
+## Lo que debes entregar
 
-1. **Agrega dependencia Flyway a `pom.xml`**
-   ```bash
-   ./mvnw clean install
-   ```
+Las migraciones van dentro de `src/main/resources/db/migration/` y siguen la convención establecida en clase:
 
-2. **Crea carpeta de migraciones**
-   ```
-   src/main/resources/db/migration/mysql/
-   src/main/resources/db/migration/supabase/
-   ```
+```
+V{versión}__lesson_15_{verbo}_{sujeto}.sql
+```
 
-3. **Configura YAML** (cambios en application-mysql.yml y application-supabase.yml)
-
-4. **Escribe migraciones SQL** (V1, V2, V3)
-
-5. **Prueba con MySQL:**
-   ```bash
-   export SPRING_PROFILES_ACTIVE=mysql
-   ./mvnw spring-boot:run
-   ```
-
-6. **Prueba con Supabase:**
-   ```bash
-   export SPRING_PROFILES_ACTIVE=supabase
-   ./mvnw spring-boot:run
-   ```
-
-7. **Verifica tablas en BD:**
-   - phpMyAdmin (MySQL)
-   - Supabase console (PostgreSQL)
-   - Verifica que `flyway_schema_history` tiene 3 filas
-
-8. **Commit a Git**
-   ```bash
-   git add src/main/resources/db/migration/
-   git add docs/lessons/15-flyway-migrations/
-   git commit -m "feat: agregar Flyway migrations v1-v3"
-   ```
+Las versiones deben continuar la secuencia existente (V7 es la última del guión), así que tu actividad parte desde **V8**.
 
 ---
 
-## ✅ Validación
+## Parte 1: Crear la tabla `categories`
 
-Debes poder responder:
+Crea los archivos para ambos motores:
 
-- [ ] "¿Por qué Flyway es mejor que `ddl-auto` en producción?"
-- [ ] "¿Qué hace la tabla `flyway_schema_history`?"
-- [ ] "¿Puedo editar V1 después de ejecutarla?"
-- [ ] "¿Por qué H2 no usa Flyway?"
-- [ ] "¿Cuál es la diferencia de sintaxis SQL entre MySQL y PostgreSQL en mis migraciones?"
+- `db/migration/mysql/V8__lesson_15_create_categories_table.sql`
+- `db/migration/supabase/V8__lesson_15_create_categories_table.sql`
 
----
+La tabla debe reflejar exactamente la entidad `Category` que definiste en la lección 10:
 
-## 📦 Entrega
+| Campo | Tipo Java | Columna MySQL | Columna PostgreSQL |
+|-------|-----------|---------------|--------------------|
+| `id` | `Long` | `BIGINT AUTO_INCREMENT` | `BIGSERIAL` |
+| `name` | `String` | `VARCHAR(100) NOT NULL UNIQUE` | `VARCHAR(100) NOT NULL UNIQUE` |
+| `description` | `String` | `TEXT` | `TEXT` |
 
-Sube tu código con:
-- ✅ Migraciones V1, V2, V3 en ambas carpetas (mysql y supabase)
-- ✅ Configuración YAML actualizada
-- ✅ `pom.xml` con Flyway
-- ✅ Tests pasando (API responde correctamente)
+Incluye al menos un índice sobre `name`.
 
 ---
 
-## 🔥 Desafío Extra (Opcional)
+## Parte 2: Seed de categorías iniciales
 
-- Crea `V4__create_comments_table.sql` (tabla relacionada)
-- Crea `V5__add_resolved_by_column.sql` (agregar FK a usuario que resuelve)
-- Documenta por qué el orden de migraciones importa
+Cada bloque de lección debe terminar con un seed. Crea:
+
+- `db/migration/mysql/V9__lesson_15_insert_initial_categories.sql`
+- `db/migration/supabase/V9__lesson_15_insert_initial_categories.sql`
+
+Inserta las mismas categorías que usabas como datos de prueba en memoria desde la lección 05:
+
+| name | description |
+|------|-------------|
+| `Bug` | `Problema o error que afecta el funcionamiento esperado` |
+| `Feature` | `Nueva funcionalidad solicitada por el usuario` |
+| `Mejora` | `Cambio menor que optimiza una funcionalidad existente` |
+
+---
+
+## Parte 3 (opcional): Vincular `Category` con `Ticket`
+
+Si en la lección 12 ya agregaste `category_id` a `Ticket`, crea la migración que lo formaliza en la BD:
+
+- `db/migration/mysql/V10__lesson_15_add_category_to_tickets.sql`
+- `db/migration/supabase/V10__lesson_15_add_category_to_tickets.sql`
+
+```sql
+-- MySQL
+ALTER TABLE tickets
+    ADD COLUMN category_id BIGINT,
+    ADD CONSTRAINT fk_tickets_category
+        FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL;
+```
+
+```sql
+-- PostgreSQL
+ALTER TABLE tickets
+    ADD COLUMN category_id BIGINT,
+    ADD CONSTRAINT fk_tickets_category
+        FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL;
+```
+
+---
+
+## Verificación
+
+Arranca la app con MySQL o Supabase y comprueba los logs:
+
+```
+Successfully applied 2 migrations to schema ... (V8, V9)
+```
+
+Luego verifica en tu cliente de BD:
+
+| Verificación | Resultado esperado |
+|---|---|
+| `SELECT * FROM flyway_schema_history` | 9 filas (V1-V9) |
+| `SELECT * FROM categories` | 3 filas (Bug, Feature, Mejora) |
+| `DESCRIBE categories` / `\d categories` | columnas `id`, `name`, `description` |
+| App arranca sin errores con `ddl-auto: validate` | Hibernate valida sin crear nada |
+
+---
+
+## Criterios de evaluación
+
+| Criterio | Puntaje |
+|---|---|
+| V8 crea la tabla con columnas y tipos correctos (MySQL y Supabase) | 35% |
+| V9 inserta las 3 categorías iniciales | 25% |
+| Los nombres de archivo siguen el patrón `V{n}__lesson_15_{verbo}_{sujeto}.sql` | 20% |
+| La app arranca sin errores en el perfil mysql o supabase | 20% |
+
+---
+
+## Desafío opcional
+
+Si V10 (relación `category_id` en `tickets`) ya funciona, agrega el seed que vincula los tickets existentes a una categoría:
+
+```sql
+-- V11__lesson_15_update_ticket_categories.sql
+UPDATE tickets SET category_id = 1 WHERE title = 'Error en login';
+UPDATE tickets SET category_id = 3 WHERE title = 'Mejora en dashboard';
+UPDATE tickets SET category_id = 2 WHERE title = 'Documentacion API';
+```
+
+> **¿Por qué UPDATE y no INSERT?** Los tickets ya existen (fueron insertados en V2 y vinculados a usuarios en V5). Aquí solo les asignamos su categoría, no los recreamos.
 
 ---
 
 *[← Volver a Lección 15](01_objetivo_y_alcance.md)*
+

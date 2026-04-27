@@ -3,29 +3,48 @@
 ## Patrón de Nombres
 
 ```
-V{versión}__{verbo}_{sujeto}.sql
+V{versión}__lesson_{lección}_{verbo}_{sujeto}.sql
 ```
 
 | Parte | Regla | Ejemplo |
 |-------|-------|---------|
 | `V` | Mayúscula obligatoria | `V1`, `V2`, `V10` |
-| `{versión}` | Número entero, sin ceros a la izquierda | `1` ✅ — `01` ❌ |
+| `{versión}` | Número secuencial global, sin ceros a la izquierda | `1` ✅ — `01` ❌ |
 | `__` | Dos guiones bajos (separador obligatorio) | `V1__` ✅ — `V1_` ❌ |
-| `{verbo}` | Acción en inglés, snake_case | `create_`, `add_`, `drop_` |
-| `{sujeto}` | Tabla o columna afectada, en inglés | `tickets_table`, `priority_column` |
+| `lesson_` | Prefijo fijo que identifica el bloque de lección | `lesson_` ✅ |
+| `{lección}` | Número de lección donde se introdujo el cambio | `10`, `12`, `13` |
+| `{verbo}` | Acción en inglés, snake_case | `create_`, `add_`, `insert_` |
+| `{sujeto}` | Tabla o columna afectada, en inglés | `tickets_table`, `initial_tickets` |
 | `.sql` | Extensión en minúsculas | `.sql` ✅ — `.SQL` ❌ |
 
 > **Siempre en inglés.** Es el estándar de la industria. Los nombres en español generan problemas en entornos donde el equipo o las herramientas CI/CD son multilenguaje.
 
+### Progresión por lección
+
+Cada lección agrupa una o más migraciones DDL seguidas obligatoriamente de un **seed** (INSERT y/o UPDATE) antes de continuar con la siguiente lección:
+
+```
+V1__lesson_10_create_tickets_table.sql      ← DDL
+V2__lesson_10_insert_initial_tickets.sql    ← seed ✅ cierra lección 10
+
+V3__lesson_12_create_users_table.sql        ← DDL
+V4__lesson_12_add_user_relations_to_tickets.sql  ← DDL
+V5__lesson_12_insert_users_and_link_tickets.sql  ← seed ✅ cierra lección 12
+
+V6__lesson_13_create_ticket_history_table.sql    ← DDL
+V7__lesson_13_insert_initial_history.sql    ← seed ✅ cierra lección 13
+```
+
 ### Verbos más usados
 
 ```
-create_   →  V1__create_tickets_table.sql
-add_      →  V2__add_priority_column.sql
-alter_    →  V3__alter_status_column_type.sql
-insert_   →  V4__insert_initial_data.sql
-drop_     →  V5__drop_legacy_column.sql
-rename_   →  V6__rename_users_table.sql
+create_   →  V1__lesson_10_create_tickets_table.sql
+add_      →  V4__lesson_12_add_user_relations_to_tickets.sql
+alter_    →  V{n}__lesson_{x}_alter_status_column_type.sql
+insert_   →  V2__lesson_10_insert_initial_tickets.sql
+update_   →  V{n}__lesson_{x}_update_ticket_priority.sql
+drop_     →  V{n}__lesson_{x}_drop_legacy_column.sql
+rename_   →  V{n}__lesson_{x}_rename_users_table.sql
 ```
 
 ---
