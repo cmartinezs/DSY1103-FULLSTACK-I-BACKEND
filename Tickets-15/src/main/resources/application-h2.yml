@@ -1,19 +1,12 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:tickets_db
-    driverClassName: org.h2.Driver
+    url: jdbc:h2:mem:tickets_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
     username: sa
     password: ''
+  flyway:
+    enabled: false
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
-  flyway:
-    enabled: false
-
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 5000
-        readTimeout: 5000

@@ -1,6 +1,5 @@
 package cl.duoc.fullstack.tickets.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -30,14 +29,19 @@ public class TicketHistory {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "ticket_id", nullable = false)
-  @JsonIgnore
   private Ticket ticket;
 
   @Column(name = "previous_status", length = 20)
   private String previousStatus;
 
-  @Column(name = "new_status", nullable = false, length = 20)
+  @Column(name = "new_status", length = 20)
   private String newStatus;
+
+  @Column(name = "previous_assigned_email", length = 150)
+  private String previousAssignedEmail;
+
+  @Column(name = "new_assigned_email", length = 150)
+  private String newAssignedEmail;
 
   @Column(name = "changed_at", nullable = false)
   private LocalDateTime changedAt;

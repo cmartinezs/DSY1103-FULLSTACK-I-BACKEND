@@ -6,28 +6,22 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  cloud:
+    openfeign:
+      client:
+        config:
+          audit-service:
+            connect-timeout: 5000
+            read-timeout: 10000
+            logger-level: BASIC
+          default:
+            connect-timeout: 5000
+            read-timeout: 10000
 
 server:
   port: 8080
   servlet:
     context-path: "/ticket-app"
-
-notification:
-  feign:
-    url: http://localhost:8081
-  rest:
-    url: http://localhost:8081
-
-audit:
-  service:
-    url: http://localhost:8082
-
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 5000
-        readTimeout: 5000
 
 logging:
   level:
