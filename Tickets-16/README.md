@@ -1,44 +1,281 @@
 # Tickets-16: Lección 16 - Spring Security
 
-## Descripción
+## 📋 Descripción
 
 Este proyecto implementa la **Lección 16: Spring Security** del curso DSY1103 Fullstack I.
 
-Agrega autenticación y autorización con roles (USER, AGENT, ADMIN).
+Parte desde la base funcional de `Tickets-15`, conserva la comunicación HTTP con microservicios externos usando OpenFeign y RestClient, y agrega autenticación/autorización con Spring Security.
 
-## Cambios desde Lección 15
+## 🎯 Caso de Uso Extendido (Sistema de Tickets con Gestión de Usuarios)
 
-### Dependencia agregada
+### Roles definidos
+| Rol     | Descripción              |
+|---------|--------------------------|
+| USER    | Crea tickets, ve estado  |
+| AGENT   | Recibe tickets asignados |
+| ADMIN   | Supervisa y gestiona     |
+
+### Modelo de datos
+- **User**: id, name, email, role (USER/AGENT/ADMIN), active
+- **Ticket**: relaciones con User, Category, Tags
+- **Category**: One-to-Many con Ticket
+- **Tag**: Many-to-Many con Ticket
+- **TicketHistory**: historial de cambios de estado
+
+---
+
+## 🔄 Historial heredado: Cambios desde Lección 14 a Lección 15
+
+### 1. Dependencia Agregada
 ```xml
 <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-security</artifactId>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+    <version>5.0.1</version>
 </dependency>
 ```
 
-### Archivos nuevos
-- `config/SecurityConfig.java` - Configuración de seguridad
-- `config/CustomUserDetailsService.java` - Carga usuarios desde BD
-
-## Roles y permisos
-
-| Rol | Permisos |
-|-----|---------|
-| USER | GET /tickets, POST /tickets |
-| AGENT | + PUT /tickets/{id} |
-| ADMIN | + /users, /categories, /tags |
-
-## Testing
-
-```bash
-# Users con roles (del DataInitializer):
-# admin / admin123 (ADMIN)
-# agent1 / agent123 (AGENT)
-# user1 / user123 (USER)
-
-curl -u admin:admin123 http://localhost:8080/ticket-app/tickets
+### 2. Notificación Cliente (FeignClient)
+```java
+@FeignClient(
+    name = "notificationService",
+    url = "${notification.service.url:http://localhost:8081}",
+    fallback = NotificationClientFallback.class
+)
+public interface NotificationClient {
+    @PostMapping("/api/notifications/send")
+    Map<String, Object> sendNotification(@RequestBody Map<String, String> notification);
+}
 ```
 
-## Estado
+### 3. Fallback para Fallos
+```java
+@Component
+public class NotificationClientFallback implements NotificationClient {
+    private static final Logger logger = LoggerFactory.getLogger(NotificationClientFallback.class);
 
-✅ Completado
+    @Override
+    public Map<String, Object> sendNotification(Map<String, String> notification) {
+        logger.warn("Notification service unavailable. Notification not sent: {}", notification.get("title"));
+        return Collections.singletonMap("status", "fallback");
+    }
+}
+```
+
+### 4. Configuración de Timeouts
+```yaml
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+```
+
+### 5. Integración en TicketService
+- Notificaciones al crear ticket
+- Notificaciones al actualizar ticket
+
+### 6. Habilitar Feign
+```java
+@SpringBootApplication
+@EnableFeignClients
+public class TicketsApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(TicketsApplication.class, args);
+    }
+}
+```
+
+---
+
+## 📊 Requisitos del Caso Extendido por Lección
+
+| Lección | Requisitos del Caso Extendido |
+|---------|------------------------------|
+| 10 | ✅ User entity con roles, Ticket con User relaciones, seed de datos |
+| 11 | ✅ Perfiles con diferentes configs de BD para usuarios (H2, MySQL, Supabase) |
+| 12 | ✅ Category (One-to-Many), Tag (Many-to-Many), CRUD completo |
+| 13 | ✅ TicketHistory, registro automático, endpoint de historial |
+| 14 | ✅ Flyway migrations con Foreign Keys a users |
+| 15 | ✅ FeignClient + RestClient, notificaciones en crear/actualizar |
+| 16 | Security con 3 roles (USER/AGENT/ADMIN) |
+| 17 | Logging de operaciones de usuarios |
+| 18 | Excepciones para casos de usuarios |
+
+---
+
+## 🧪 Uso
+
+```bash
+# Desarrollo (H2)
+./mvnw spring-boot:run
+
+# MySQL
+./mvnw spring-boot:run -Dspring.profiles.active=mysql
+
+# Supabase
+./mvnw spring-boot:run -Dspring.profiles.active=supabase
+```
+
+### Probar notificaciones
+
+El **NotificationService** debe estar corriendo en `http://localhost:8081`:
+
+```bash
+cd NotificationService
+./mvnw spring-boot:run
+```
+
+Desde otra terminal, ejecutar Tickets:
+
+```bash
+cd Tickets-16
+./mvnw spring-boot:run
+```
+
+Las notificaciones se envían automáticamente al crear o actualizar tickets.
+
+---
+
+## 📦 NotificationService (Microservicio Externo)
+
+El proyecto `NotificationService/` es un microservicio independiente que recibe notificaciones del cliente.
+
+**Puerto**: 8081
+**Endpoint**: `POST /api/notifications/send`
+
+## ✅ Validación
+
+- [x] Proyecto compila sin errores
+- [x] FeignClient configurado con fallback
+- [x] Timeouts configurados (5 segundos)
+- [x] Integración en TicketService funciona
+
+## 📝 Archivos
+
+| Archivo | Descripción |
+|---------|-------------|
+| `pom.xml` | Dependencia OpenFeign |
+| `client/NotificationClient.java` | FeignClient para notificaciones |
+| `client/NotificationClientFallback.java` | Fallback cuando servicio no está disponible |
+| `client/NotificationRestClient.java` | RestClient alternativo |
+| `TicketsApplication.java` | @EnableFeignClients |
+| `service/TicketService.java` | Notificaciones al crear/actualizar |
+| `application.yml` | Configuración de Feign/RestClient |
+
+**NotificationService/** (microservicio externo):
+| Archivo | Descripción |
+|---------|-------------|
+| `pom.xml` | Dependencias Spring Boot |
+| `NotificationsApplication.java` | Aplicación principal |
+| `controller/NotificationController.java` | Endpoint de notificaciones |
+
+---
+
+**Base heredada**: Lección 15 (Comunicación entre Microservicios)
+**Stack**: Spring Boot 4.0.5, Java 21, JPA/Hibernate, OpenFeign, Spring Security, H2, MySQL, PostgreSQL
+
+---
+
+## Cambios desde Lección 15: Spring Security
+
+Este snapshot parte desde `Tickets-15` y agrega seguridad con Spring Security para proteger la API REST de tickets.
+
+### 1. Dependencia de Spring Security
+
+Se agregó `spring-boot-starter-security` al `pom.xml`.
+
+### 2. Modelo `User` preparado para autenticación
+
+La entidad `User` ahora incluye:
+
+- `password`: hash BCrypt de la contraseña.
+- `role`: enum `USER`, `AGENT`, `ADMIN`.
+- `active`: permite deshabilitar usuarios sin eliminarlos.
+
+### 3. Usuarios desde base de datos
+
+Se implementó `CustomUserDetailsService`, que carga usuarios desde `UserRepository.findByEmail(email)`.
+
+Spring Security usa el email como username para HTTP Basic Auth.
+
+### 4. Contraseñas BCrypt
+
+Se agregó un bean `PasswordEncoder` con `BCryptPasswordEncoder`.
+
+Las credenciales de prueba son:
+
+| Email | Contraseña | Rol |
+|-------|------------|-----|
+| `admin@empresa.com` | `pass123` | ADMIN |
+| `ana.garcia@empresa.com` | `user123` | USER |
+| `carlos.lopez@empresa.com` | `user123` | AGENT |
+
+### 5. Migraciones Flyway
+
+Se agregaron migraciones por perfil:
+
+- `src/main/resources/db/migration/mysql/V8__lesson_16_add_security_to_users.sql`
+- `src/main/resources/db/migration/supabase/V8__lesson_16_add_security_to_users.sql`
+
+Estas migraciones agregan `password`, `role` y `active` a `users`, actualizan usuarios existentes y crean el usuario administrador.
+
+### 6. Seguridad HTTP Basic y API stateless
+
+Se agregó `SecurityConfig` con:
+
+- `SecurityFilterChain`.
+- `csrf.disable()`.
+- `SessionCreationPolicy.STATELESS`.
+- `httpBasic(Customizer.withDefaults())`.
+- Reglas de autorización por endpoint.
+- `@EnableMethodSecurity` para habilitar `@PreAuthorize`.
+
+### 7. Reglas de autorización
+
+| Endpoint | Regla |
+|----------|-------|
+| `GET /tickets` y `GET /tickets/by-id/**` | Público |
+| `POST /tickets` | USER, AGENT o ADMIN |
+| `PUT /tickets/by-id/{id}` | USER, AGENT o ADMIN + regla por ticket específico |
+| `PATCH /tickets/by-id/{id}` | ADMIN |
+| `DELETE /tickets/by-id/{id}` | ADMIN |
+| `GET /tickets/by-id/{id}/history` | ADMIN |
+| `GET /tickets/by-id/{id}/audit` | ADMIN |
+| `GET /users` y `GET /users/by-id/**` | Público |
+| Mutaciones de `/users/**` | ADMIN |
+
+### 8. Restricción de edición de tickets
+
+Se agregó `TicketSecurity` y se anotó `PUT /tickets/by-id/{id}` con:
+
+```java
+@PreAuthorize("@ticketSecurity.canEdit(#id, authentication)")
+```
+
+La regla es:
+
+- USER solo puede editar tickets creados por él.
+- AGENT solo puede editar tickets asignados a él.
+- ADMIN puede editar cualquier ticket.
+
+### 9. Datos H2
+
+`DataInitializer` ahora corre solo con perfil `h2`, crea usuarios con BCrypt y deja tickets de prueba para validar edición por creador/asignado.
+
+### 10. Validación esperada
+
+| Caso | Resultado esperado |
+|------|--------------------|
+| GET `/ticket-app/tickets` sin auth | `200 OK` |
+| POST `/ticket-app/tickets` sin auth | `401 Unauthorized` |
+| POST con USER válido | `201 Created` |
+| DELETE con USER válido | `403 Forbidden` |
+| DELETE con ADMIN válido | `204 No Content` si existe |
+| PUT con USER creador | `200 OK` si payload válido |
+| PUT con USER no creador | `403 Forbidden` |
+| PUT con AGENT asignado | `200 OK` si payload válido |
+| PUT con AGENT no asignado | `403 Forbidden` |
+
+**Estado Lección 16**: Implementada

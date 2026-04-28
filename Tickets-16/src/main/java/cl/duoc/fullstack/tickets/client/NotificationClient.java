@@ -1,26 +1,38 @@
 package cl.duoc.fullstack.tickets.client;
 
-import java.util.List;
-import java.util.Map;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import cl.duoc.fullstack.tickets.dto.NotificationRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
-@FeignClient(
-    name = "notificationService",
-    url = "${notification.service.url:http://localhost:8081}",
-    fallback = NotificationClientFallback.class
-)
-public interface NotificationClient {
+@Service
+@Slf4j
+public class NotificationClient {
 
-    @PostMapping("/api/notifications")
-    Map<String, Object> createNotification(@RequestBody Map<String, String> notification);
+  private final RestClient restClient;
 
-    @GetMapping("/api/notifications")
-    List<Map<String, Object>> listNotifications();
+  // Spring inyecta el RestClient.Builder preconfigurado (no lo instanciamos nosotros)
+  public NotificationClient(RestClient.Builder builder) {
+    this.restClient = builder
+        .baseUrl("http://localhost:8081")  // URL base de NotificationService
+        .build();                           // materializa el cliente inmutable para esta clase
+  }
 
-    @GetMapping("/api/notifications/{id}")
-    Map<String, Object> getNotification(@PathVariable("id") Long id);
+  // Patron fire-and-forget: si falla, la operacion principal ya se completo
+  public void send(String title, String message, String type, String recipient) {
+    try {
+      NotificationRequest request = new NotificationRequest(title, message, type, recipient);
+
+      restClient.post()
+          .uri("/api/notifications")
+          .body(request)
+          .retrieve()
+          .toBodilessEntity();
+
+      log.info("Notificacion enviada a '{}': {}", recipient, title);
+    } catch (Exception e) {
+      // Si la notificacion falla, el ticket ya fue guardado: no revertimos nada.
+      log.error("Error enviando notificacion a '{}': {}", recipient, e.getMessage());
+    }
+  }
 }
