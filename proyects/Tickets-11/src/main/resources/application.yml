@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: Tickets
+  profiles:
+    active: h2
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: "/ticket-app"
+
+logging:
+  level:
+    root: INFO
+    cl.duoc.fullstack: DEBUG
