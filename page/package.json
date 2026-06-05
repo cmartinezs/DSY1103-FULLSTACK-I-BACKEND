@@ -1,0 +1,36 @@
+{
+  "name": "dsy1103-course-page",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/generate-content.mjs",
+    "dev": "vite --host 0.0.0.0",
+    "prebuild": "node scripts/generate-content.mjs",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "lucide-react": "latest",
+    "mermaid": "^11.15.0",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-markdown": "latest",
+    "react-syntax-highlighter": "^16.1.1",
+    "remark-gfm": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  },
+  "devDependencies": {
+    "@eslint/js": "latest",
+    "autoprefixer": "latest",
+    "eslint": "latest",
+    "eslint-plugin-react-hooks": "latest",
+    "eslint-plugin-react-refresh": "latest",
+    "globals": "latest",
+    "postcss": "latest",
+    "tailwindcss": "3.4.17"
+  }
+}

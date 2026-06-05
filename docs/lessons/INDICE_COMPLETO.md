@@ -1,4 +1,4 @@
-# 📚 Índice Completo del Curso — 19 Lecciones
+# 📚 Índice Completo del Curso — 22 Lecciones
 
 ## 🎓 Estructura del Curso
 
@@ -69,6 +69,17 @@ Seguridad, auditoría y manejo de errores
 
 ---
 
+### 🟤 Producción III (Lecciones 19-21)
+Documentación, navegabilidad y testing
+
+| # | Título | Status | Destacado |
+|---|--------|--------|-----------|
+| 19 | OpenAPI Specification (OAS) | ✅ Completada | **Swagger UI, Contratos de API, Ejemplos** |
+| 20 | HATEOAS en APIs | ✅ Completada | **Links, _links, Respuestas Navegables** |
+| 21 | Pruebas Unitarias en Microservicios | ✅ Completada | **JUnit 5, Mockito, Given When Then** |
+
+---
+
 ## 📖 Navegación Recomendada
 
 ```
@@ -90,7 +101,10 @@ Avanzado
 ├─ Lección 15     (Microservicios)
 ├─ Lección 16     (Seguridad)
 ├─ Lección 17     (Logging)
-└─ Lección 18     (Manejo global de errores)
+├─ Lección 18     (Manejo global de errores)
+├─ Lección 19     (Documentación OpenAPI)
+├─ Lección 20     (HATEOAS)
+└─ Lección 21     (Pruebas unitarias)
 ```
 
 ---
@@ -176,10 +190,71 @@ Avanzado
 
 ---
 
+## 🎯 Lección 19 — Microservicios con OpenAPI Specification (OAS)
+
+**Tema:** Documentación estándar de APIs REST
+
+- ✅ OpenAPI Specification como contrato
+- ✅ Swagger UI para leer y probar endpoints
+- ✅ Documentación de DTOs, errores y códigos HTTP
+- ✅ Aplicación a Tickets y microservicios de apoyo
+
+**Documentos:** 6 archivos (objetivo, conceptos, guión, ejemplos, checklist, actividad)
+
+**Habilidades:**
+- [ ] Explicar qué es OAS
+- [ ] Diferenciar OpenAPI y Swagger
+- [ ] Publicar Swagger UI
+- [ ] Documentar endpoints y DTOs
+- [ ] Usar documentación como contrato entre microservicios
+
+---
+
+## 🎯 Lección 20 — Implementación de HATEOAS en la Documentación de APIs
+
+**Tema:** Respuestas REST con enlaces navegables
+
+- ✅ Spring HATEOAS
+- ✅ `EntityModel` y `CollectionModel`
+- ✅ Links `self`, `all`, `update`, `audit-history`
+- ✅ Documentación del formato `_links`
+
+**Documentos:** 6 archivos (objetivo, conceptos, guión, ejemplos, checklist, actividad)
+
+**Habilidades:**
+- [ ] Explicar qué es HATEOAS
+- [ ] Agregar enlaces a respuestas REST
+- [ ] Crear assemblers de links
+- [ ] Documentar respuestas enriquecidas
+- [ ] Evaluar cuándo HATEOAS aporta valor
+
+---
+
+## 🎯 Lección 21 — Pruebas Unitarias en Proyectos de Microservicios
+
+**Tema:** Testing unitario con JUnit 5 y Mockito
+
+- ✅ JUnit 5
+- ✅ Mockito
+- ✅ Modelo Given When Then
+- ✅ Plan breve de pruebas unitarias
+- ✅ Pruebas de servicios y fallbacks sin levantar microservicios reales
+
+**Documentos:** 7 archivos (objetivo, conceptos, guión, plan, ejemplos GWT, checklist, actividad)
+
+**Habilidades:**
+- [ ] Explicar qué es testing
+- [ ] Escribir pruebas unitarias de services
+- [ ] Mockear repositories y clientes HTTP
+- [ ] Probar errores y fallbacks
+- [ ] Crear un plan mínimo de pruebas unitarias
+
+---
+
 ## 🛠️ Stack Tecnológico (Completo)
 
 ```
-Spring Boot 4.0.3
+Spring Boot 4.0.5
 ├─ Spring Web MVC (HTTP, REST)
 ├─ Spring Data JPA (ORM)
 ├─ Hibernate (JPA implementation)
@@ -187,6 +262,10 @@ Spring Boot 4.0.3
 ├─ Lombok (Boilerplate reduction)
 ├─ Jakarta Validation (@Valid, @NotBlank)
 ├─ Spring Cloud OpenFeign (Microservicios)
+├─ Spring HATEOAS (_links)
+├─ springdoc-openapi (OpenAPI / Swagger UI)
+├─ JUnit 5 (Testing)
+├─ Mockito (Mocks)
 └─ Spring Boot DevTools (Hot reload)
 
 Databases
@@ -212,7 +291,9 @@ Lección 7-10:   Backend práctico    ░░░░░░░░░░░░░░
 Lección 11:     BD múltiples        ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (60%)
 Lección 12-13:  Relaciones/Auditría ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (73%)
 Lección 14:     Migraciones Flyway  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (87%)
-Lección 15:     Microservicios      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (100%)
+Lección 15:     Microservicios      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (71%)
+Lección 16-18:  Producción II       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (86%)
+Lección 19-21:  Docs y Testing      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (100%)
 ```
 
 ---
@@ -241,6 +322,24 @@ Lección 15:     Microservicios      ░░░░░░░░░░░░░░�
 - ✅ Timeouts configurados
 - ✅ Tests con mocks
 
+### Lección 19
+- ✅ Swagger UI disponible
+- ✅ OpenAPI JSON disponible
+- ✅ Endpoints principales documentados
+- ✅ DTOs y errores documentados
+
+### Lección 20
+- ✅ Respuestas con `_links`
+- ✅ `self` en recurso individual
+- ✅ Links útiles de negocio
+- ✅ OpenAPI actualizado con formato HATEOAS
+
+### Lección 21
+- ✅ Pruebas unitarias con JUnit 5
+- ✅ Mockito para repositories y clientes externos
+- ✅ Casos felices, errores y fallbacks
+- ✅ Plan breve de pruebas unitarias
+
 ---
 
 ## 🚀 Próximos Pasos (Opcional)
@@ -254,7 +353,7 @@ Después de las 13 lecciones, puedes explorar:
 - ☸️ **Orquestación:** Kubernetes
 - 📈 **CI/CD:** GitHub Actions, GitLab CI
 - 🔄 **Message Queues:** RabbitMQ, Kafka
-- 📚 **API Documentation:** Swagger/OpenAPI
+- 📄 **Contract Testing:** Pact, validación OpenAPI en pipeline
 
 ---
 
