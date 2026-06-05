@@ -102,7 +102,7 @@ Se estudian de forma **autónoma** en paralelo al curso.
 | Recurso | Enlace |
 |---------|--------|
 | README principal | [`../README.md`](../README.md) |
-| Proyecto Tickets (API) | [`../proyects/Tickets/README.md`](../proyects/Tickets/README.md) |
+| Proyecto Tickets (API) | [`../proyects/Tickets/README.md`](../projects/Tickets/README.md) |
 | 🗺️ Roadmap de estudio | [`roadmap.md`](./roadmap.md) |
 
 ---
