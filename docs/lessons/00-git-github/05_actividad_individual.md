@@ -35,7 +35,7 @@ Dominar Git y GitHub para trabajar en equipo profesionalmente.
 ### Paso 1: Setup local (10 min)
 
 ```bash
-cd Tickets
+cd proyects/Tickets
 git init
 git config user.name "Tu Nombre"
 git config user.email "tu@email.com"

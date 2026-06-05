@@ -84,7 +84,7 @@ Para **no hardcodear credenciales** en el código, usamos variables de entorno. 
 
 ### Paso 1: Crear el archivo `.env`
 
-En la raíz del proyecto `Tickets/`, copia `.env.example` a `.env`:
+En la raíz del proyecto `proyects/Tickets/`, copia `.env.example` a `.env`:
 
 ```bash
 # Windows
@@ -227,7 +227,7 @@ Agrega la dependencia en `pom.xml`:
 </dependency>
 ```
 
-Spring cargará automáticamente `Tickets/.env` al arrancar.
+Spring cargará automáticamente `proyects/Tickets/.env` al arrancar.
 
 ### Paso 4: Verificar que funcionó
 

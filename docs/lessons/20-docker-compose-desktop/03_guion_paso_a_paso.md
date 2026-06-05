@@ -96,7 +96,7 @@ DB_PASSWORD=tickets123
 
 ## Paso 5: Ejecutar proyecto local contra Docker
 
-Desde `Tickets-11`, `Tickets-12` o superior:
+Desde `proyects/Tickets-11`, `proyects/Tickets-12` o superior:
 
 ```bash
 mvnw.cmd spring-boot:run
@@ -175,4 +175,3 @@ docker compose down -v
 ```
 
 Usa `-v` solo si quieres reiniciar las bases de datos desde cero.
-

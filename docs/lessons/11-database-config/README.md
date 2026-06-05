@@ -33,21 +33,21 @@
 
 ### Opción 1: H2 (el más fácil, sin instalar nada)
 ```bash
-cd Tickets
+cd proyects/Tickets
 ./mvnw spring-boot:run
 ```
 ✅ Accede a http://localhost:8080/ticket-app/tickets
 
 ### Opción 2: MySQL Local
 ```bash
-cd Tickets
+cd proyects/Tickets
 ./mvnw spring-boot:run \
   -Dspring-boot.run.arguments="--spring.profiles.active=mysql"
 ```
 
 ### Opción 3: Supabase (en la nube)
 ```bash
-cd Tickets
+cd proyects/Tickets
 # 1. Copia .env.example a .env
 cp .env.example .env
 # 2. Edita .env con tus credenciales de Supabase

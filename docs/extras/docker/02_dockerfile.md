@@ -215,7 +215,7 @@ ENV SPRING_PROFILES_ACTIVE=production
 ```yaml
 services:
   tickets:
-    build: ./Tickets
+    build: ./proyects/Tickets
     environment:
       SERVER_PORT: "8080"
       SPRING_PROFILES_ACTIVE: docker

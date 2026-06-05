@@ -24,7 +24,7 @@ usuario@hostname:~/proyectos$
 
 Antes de ejecutar cualquier comando, necesitas saber **dónde estás** en el sistema de archivos. Cada vez que abres una terminal empiezas en tu carpeta home (`~`). Navegar con rutas **absolutas** (desde la raíz `/`) siempre funciona sin importar desde dónde estés; las rutas **relativas** dependen de tu posición actual y son más cortas de escribir.
 
-> 🎯 **Cuándo lo usarás:** entrar a la carpeta `Tickets/` para ejecutar `./mvnw`, moverse entre `src/main/java` y `src/test/java`, navegar a la carpeta de logs en un servidor.
+> 🎯 **Cuándo lo usarás:** entrar a la carpeta `proyects/Tickets/` para ejecutar `./mvnw`, moverse entre `src/main/java` y `src/test/java`, navegar a la carpeta de logs en un servidor.
 
 ### Conceptos clave
 
@@ -46,7 +46,7 @@ pwd
 cd /home/usuario/proyectos
 
 # Ir a una ruta relativa (desde donde estoy)
-cd Tickets
+cd proyects/Tickets
 cd ../docs
 
 # Ir a la carpeta home directamente

@@ -21,7 +21,7 @@ Construir APIs REST con buenas prácticas desde el inicio:
 
 ## Estructura del repositorio
 
-- [`Tickets/`](proyects/Tickets/README.md): proyecto Spring Boot principal del curso
+- [`proyects/Tickets/`](proyects/Tickets/README.md): proyecto Spring Boot principal del curso
 - [`docs/`](./docs/README.md): documentación del curso (lecciones y material de apoyo)
 
 ## Requisitos
@@ -31,19 +31,19 @@ Construir APIs REST con buenas prácticas desde el inicio:
 
 ## Ejecutar el proyecto
 
-Desde la carpeta `Tickets/`:
+Desde la carpeta `proyects/Tickets/`:
 
 ```bash
-cd Tickets
+cd proyects/Tickets
 ./mvnw spring-boot:run
 ```
 
 ## Ejecutar pruebas
 
-Desde la carpeta `Tickets/`:
+Desde la carpeta `proyects/Tickets/`:
 
 ```bash
-cd Tickets
+cd proyects/Tickets
 ./mvnw test
 ```
 
@@ -56,7 +56,6 @@ Toda la documentación del curso está centralizada en [`docs/`](./docs/README.m
 ## Estado del repositorio
 
 Este repositorio se usa con foco académico para practicar y evaluar avances por clase.
-
 
 
 

@@ -40,7 +40,7 @@ PS C:\Users\usuario\proyectos>
 
 Antes de ejecutar cualquier comando, necesitas saber **dónde estás** en el sistema de archivos. Cada vez que abres una terminal empiezas en la carpeta del usuario (`C:\Users\tu-usuario`). Navegar con rutas **absolutas** (`C:\ruta\completa`) siempre funciona sin importar desde dónde estés; las rutas **relativas** dependen de tu posición actual y son más cortas de escribir.
 
-> 🎯 **Cuándo lo usarás:** entrar a la carpeta `Tickets\` para ejecutar `.\mvnw`, moverse entre `src\main\java` y `src\test\java`, cambiar de unidad de disco cuando el proyecto está en `D:\`.
+> 🎯 **Cuándo lo usarás:** entrar a la carpeta `proyects\Tickets\` para ejecutar `.\mvnw`, moverse entre `src\main\java` y `src\test\java`, cambiar de unidad de disco cuando el proyecto está en `D:\`.
 
 ### Conceptos clave
 
@@ -63,7 +63,7 @@ cd
 cd C:\Users\usuario\proyectos
 
 :: Ir a una ruta relativa
-cd Tickets
+cd proyects/Tickets
 cd ..\docs
 
 :: Ir a la carpeta del usuario
@@ -84,7 +84,7 @@ Set-Location C:\Users\usuario\proyectos   # o su alias:
 cd C:\Users\usuario\proyectos
 
 # Ir a una ruta relativa
-cd Tickets
+cd proyects/Tickets
 cd ..\docs
 
 # Ir a la carpeta del usuario

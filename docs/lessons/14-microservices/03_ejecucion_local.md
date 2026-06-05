@@ -64,11 +64,12 @@ Estructura necesaria:
 ```
 monorepo/
 ├── compose.yaml              ← nombre moderno (V2)
-├── Tickets/
-│   └── Dockerfile            ← requerido por cada servicio
-├── NotificationService/
-│   └── Dockerfile            ← requerido
-└── ...
+├── proyects/
+│   ├── Tickets/
+│   │   └── Dockerfile        ← requerido por cada servicio
+│   ├── NotificationService/
+│   │   └── Dockerfile        ← requerido
+│   └── ...
 ```
 
 Ejemplo de `compose.yaml`:
@@ -77,19 +78,19 @@ Ejemplo de `compose.yaml`:
 # compose.yaml — Compose V2 (no necesita campo "version:")
 services:
   tickets:
-    build: ./Tickets          # ← usa el Dockerfile de ./Tickets/
+    build: ./proyects/Tickets          # ← usa el Dockerfile de ./proyects/Tickets/
     ports: ["8080:8080"]
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx128m"
 
   notification:
-    build: ./NotificationService
+    build: ./proyects/NotificationService
     ports: ["8081:8081"]
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx64m"
 
   audit:
-    build: ./AuditService
+    build: ./proyects/AuditService
     ports: ["8082:8082"]
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx64m"
@@ -144,11 +145,11 @@ Crea un script `start-all.cmd` (Windows) en la raíz:
 @echo off
 echo Iniciando todos los microservicios...
 
-start "NotificationService" cmd /k "cd NotificationService && mvnw.cmd spring-boot:run -Dspring-boot.run.jvmArguments=-Xmx64m"
-start "AuditService"        cmd /k "cd AuditService        && mvnw.cmd spring-boot:run -Dspring-boot.run.jvmArguments=-Xmx64m"
-start "SearchService"       cmd /k "cd SearchService       && mvnw.cmd spring-boot:run -Dspring-boot.run.jvmArguments=-Xmx64m"
-start "SLAService"          cmd /k "cd SLAService          && mvnw.cmd spring-boot:run -Dspring-boot.run.jvmArguments=-Xmx64m"
-start "Tickets"             cmd /k "cd Tickets             && mvnw.cmd spring-boot:run -Dspring-boot.run.jvmArguments=-Xmx128m"
+start "NotificationService" cmd /k "cd proyects/NotificationService && mvnw.cmd spring-boot:run -Dspring-boot.run.jvmArguments=-Xmx64m"
+start "AuditService"        cmd /k "cd proyects/AuditService        && mvnw.cmd spring-boot:run -Dspring-boot.run.jvmArguments=-Xmx64m"
+start "SearchService"       cmd /k "cd proyects/SearchService       && mvnw.cmd spring-boot:run -Dspring-boot.run.jvmArguments=-Xmx64m"
+start "SLAService"          cmd /k "cd proyects/SLAService          && mvnw.cmd spring-boot:run -Dspring-boot.run.jvmArguments=-Xmx64m"
+start "Tickets"             cmd /k "cd proyects/Tickets             && mvnw.cmd spring-boot:run -Dspring-boot.run.jvmArguments=-Xmx128m"
 
 echo Servicios iniciados. Revisa cada ventana.
 ```

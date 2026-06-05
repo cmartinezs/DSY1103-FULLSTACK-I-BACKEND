@@ -6,16 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository layout
 
-- `Tickets/` — Spring Boot 4 project (the active backend application)
+- `proyects/Tickets/` — Spring Boot 4 project (the active backend application)
 - `docs/` — Course documentation and supplementary study material (read-only reference)
 - `Homologacion/` — Separate workspace (independent, not part of the main app)
 
-All development work happens inside `Tickets/`. Run every command from that directory.
+All development work happens inside `proyects/Tickets/`. Run every command from that directory.
 
 ## Commands
 
 ```bash
-cd Tickets
+cd proyects/Tickets
 
 # Run the application
 ./mvnw spring-boot:run

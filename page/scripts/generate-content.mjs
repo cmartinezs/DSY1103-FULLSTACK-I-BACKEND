@@ -3,6 +3,7 @@ import path from 'node:path';
 
 const pageDir = process.cwd();
 const repoRoot = path.resolve(pageDir, '..');
+const projectsRoot = path.join(repoRoot, 'proyects');
 const outDir = path.join(pageDir, 'src', 'generated');
 const outFile = path.join(outDir, 'content.json');
 
@@ -212,7 +213,7 @@ async function buildProjects() {
   const projects = [];
 
   for (const name of projectNames) {
-    const absolute = path.join(repoRoot, name);
+    const absolute = path.join(projectsRoot, name);
     if (!(await pathExists(absolute))) continue;
 
     const files = await listFiles(absolute, {

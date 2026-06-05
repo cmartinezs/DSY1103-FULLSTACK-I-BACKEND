@@ -77,7 +77,7 @@ services:
 
   tickets-api:
     build:
-      context: ./Tickets-19
+      context: ./proyects/Tickets-19
     depends_on:
       - mysql
     environment:
@@ -104,25 +104,25 @@ Dentro de Docker, `DB_HOST` debe ser `mysql`, no `localhost`.
 services:
   notification-service:
     build:
-      context: ./NotificationService
+      context: ./proyects/NotificationService
     ports:
       - "8081:8081"
 
   audit-service:
     build:
-      context: ./AuditService
+      context: ./proyects/AuditService
     ports:
       - "8082:8082"
 
   search-service:
     build:
-      context: ./SearchService
+      context: ./proyects/SearchService
     ports:
       - "8084:8084"
 
   sla-service:
     build:
-      context: ./SLAService
+      context: ./proyects/SLAService
     ports:
       - "8085:8085"
 ```

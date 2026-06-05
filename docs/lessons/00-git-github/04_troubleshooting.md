@@ -6,7 +6,7 @@
 
 **Solución:**
 ```bash
-cd Tickets/
+cd proyects/Tickets/
 git init
 ```
 

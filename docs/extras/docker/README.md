@@ -105,7 +105,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 services:
   tickets:
-    build: ./Tickets          # ← busca Dockerfile en ./Tickets/
+    build: ./proyects/Tickets          # ← busca Dockerfile en ./Tickets/
     ports:
       - "8080:8080"           # "puerto_host:puerto_contenedor"
     environment:
@@ -115,28 +115,28 @@ services:
       JAVA_TOOL_OPTIONS: "-Xmx128m -Xms64m"
 
   notification:
-    build: ./NotificationService
+    build: ./proyects/NotificationService
     ports:
       - "8081:8081"
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx64m -Xms32m"
 
   audit:
-    build: ./AuditService
+    build: ./proyects/AuditService
     ports:
       - "8082:8082"
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx64m -Xms32m"
 
   search:
-    build: ./SearchService
+    build: ./proyects/SearchService
     ports:
       - "8084:8084"
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx64m -Xms32m"
 
   sla:
-    build: ./SLAService
+    build: ./proyects/SLAService
     ports:
       - "8085:8085"
     environment:

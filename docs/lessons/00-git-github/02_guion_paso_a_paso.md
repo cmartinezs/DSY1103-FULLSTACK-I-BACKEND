@@ -26,7 +26,7 @@ git config --global core.autocrlf true  # Windows
 En tu carpeta del proyecto:
 
 ```bash
-cd C:\Users\tu\IdeaProjects\DSY1103-FULLSTACK-I-BACKEND\Tickets
+cd C:\Users\tu\IdeaProjects\DSY1103-FULLSTACK-I-BACKEND\proyects\Tickets
 git init
 ```
 
@@ -34,7 +34,7 @@ Resultado: aparece carpeta `.git/` (oculta).
 
 ## Paso 4: Crear .gitignore
 
-Archivo `Tickets/.gitignore`:
+Archivo `proyects/Tickets/.gitignore`:
 
 ```
 target/

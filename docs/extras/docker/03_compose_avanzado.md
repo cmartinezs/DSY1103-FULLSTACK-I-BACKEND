@@ -47,7 +47,7 @@ No todos los campos son necesarios. El siguiente es el mínimo para los microser
 ```yaml
 services:
   tickets:
-    build: ./Tickets
+    build: ./proyects/Tickets
     ports: ["8080:8080"]
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx128m"
@@ -74,7 +74,7 @@ services:
       start_period: 20s
 
   tickets:
-    build: ./Tickets
+    build: ./proyects/Tickets
     ports: ["8080:8080"]
     depends_on:
       mysql:
@@ -211,27 +211,27 @@ Con muchos servicios, no siempre quieres levantar todo. Los profiles permiten ag
 ```yaml
 services:
   tickets:
-    build: ./Tickets
+    build: ./proyects/Tickets
     ports: ["8080:8080"]
     # sin profile → siempre se levanta
 
   notification:
-    build: ./NotificationService
+    build: ./proyects/NotificationService
     ports: ["8081:8081"]
     profiles: [notificaciones]     # solo si se activa el perfil
 
   audit:
-    build: ./AuditService
+    build: ./proyects/AuditService
     ports: ["8082:8082"]
     profiles: [auditoría]
 
   search:
-    build: ./SearchService
+    build: ./proyects/SearchService
     ports: ["8084:8084"]
     profiles: [búsqueda]
 
   sla:
-    build: ./SLAService
+    build: ./proyects/SLAService
     ports: ["8085:8085"]
     profiles: [sla]
 ```
@@ -255,7 +255,7 @@ Este archivo cubre los 5 servicios actuales del proyecto. Guárdalo en la raíz 
 
 services:
   tickets:
-    build: ./Tickets
+    build: ./proyects/Tickets
     ports: ["8080:8080"]
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx128m -Xms64m"
@@ -268,28 +268,28 @@ services:
     restart: on-failure
 
   notification:
-    build: ./NotificationService
+    build: ./proyects/NotificationService
     ports: ["8081:8081"]
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx64m -Xms32m"
     restart: on-failure
 
   audit:
-    build: ./AuditService
+    build: ./proyects/AuditService
     ports: ["8082:8082"]
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx64m -Xms32m"
     restart: on-failure
 
   search:
-    build: ./SearchService
+    build: ./proyects/SearchService
     ports: ["8084:8084"]
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx64m -Xms32m"
     restart: on-failure
 
   sla:
-    build: ./SLAService
+    build: ./proyects/SLAService
     ports: ["8085:8085"]
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx64m -Xms32m"
@@ -327,16 +327,16 @@ Compose V2 incluye un modo de desarrollo que observa cambios en el código fuent
 ```yaml
 services:
   tickets:
-    build: ./Tickets
+    build: ./proyects/Tickets
     develop:
       watch:
         - action: rebuild              # reconstruye imagen completa
-          path: ./Tickets/src
+          path: ./proyects/Tickets/src
         - action: sync                 # sincroniza archivos sin reconstruir
-          path: ./Tickets/src/main/resources
+          path: ./proyects/Tickets/src/main/resources
           target: /app/resources
         - action: rebuild
-          path: ./Tickets/pom.xml
+          path: ./proyects/Tickets/pom.xml
 ```
 
 ```bash

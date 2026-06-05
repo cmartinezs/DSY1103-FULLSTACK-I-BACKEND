@@ -205,7 +205,7 @@ notification:
 # compose.yaml
 services:
   tickets:
-    build: ./Tickets
+    build: ./proyects/Tickets
     environment:
       SPRING_PROFILES_ACTIVE: docker
 ```

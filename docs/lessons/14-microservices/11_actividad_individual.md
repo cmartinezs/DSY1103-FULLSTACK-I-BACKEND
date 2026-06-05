@@ -148,7 +148,7 @@ public Ticket create(TicketRequest request) {
 
 7. **Probar que compila**
    ```bash
-   cd Tickets-14
+   cd proyects/Tickets-14
    mvnw.cmd package -DskipTests
    ```
 

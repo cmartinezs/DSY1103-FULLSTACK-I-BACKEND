@@ -43,7 +43,7 @@ docker compose ps
 
 ### Parte 3: Conexión con Spring Boot
 
-Conecta un proyecto `Tickets-11` o superior a una base de datos Docker.
+Conecta un proyecto `proyects/Tickets-11` o superior a una base de datos Docker.
 
 Prueba:
 
@@ -96,4 +96,3 @@ docker compose down -v
 3. ¿Para qué sirve Docker Compose?
 4. ¿Por qué dentro de Docker no se usa `localhost` para llamar a otro contenedor?
 5. ¿Qué hace `docker compose down -v`?
-

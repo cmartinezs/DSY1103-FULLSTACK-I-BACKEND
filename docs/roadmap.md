@@ -361,7 +361,7 @@ Si debes elegir **un solo extra por semana**, este es el orden de mayor a menor 
 
 Este repositorio contiene el material de apoyo del curso, organizado en dos grandes áreas:
 
-1. **Proyectos progresivos** (`Tickets/`, `Tickets-10/`, ..., `Tickets-18/`) — cada carpeta es una lección独立性
+1. **Proyectos progresivos** (`proyects/Tickets/`, `proyects/Tickets-10/`, ..., `proyects/Tickets-18/`) — cada carpeta es una lección独立性
 2. **Extras** (`docs/extras/`) — material teóricos opcionales
 
 ### Según tu nivel
@@ -369,7 +369,7 @@ Este repositorio contiene el material de apoyo del curso, organizado en dos gran
 #### 🐣 Nuevo en programación
 > No has programado antes o llevas poco tiempo.
 
-Usa los proyectos en orden. Cada `Tickets-N/` incluye TODO lo necesario para esa lección:
+Usa los proyectos en orden. Cada `proyects/Tickets-N/` incluye TODO lo necesario para esa lección:
 - Clases completas con comentarios
 - Tests para verificar
 - Configuración lista para ejecutar
@@ -387,8 +387,8 @@ Usa los proyectos en orden. Cada `Tickets-N/` incluye TODO lo necesario para esa
 
 ```
 Secuencia sugerida:
-Tickets/   → Tickets-10/ → ... → Tickets-18/
-   (base)      (JPA)            (Exceptions)
+proyects/Tickets/   → proyects/Tickets-10/ → ... → proyects/Tickets-18/
+   (base)              (JPA)                     (Exceptions)
 ```
 
 ---
@@ -397,10 +397,10 @@ Tickets/   → Tickets-10/ → ... → Tickets-18/
 > Ya conoces lo básico de Java u otro lenguaje.
 
 Puedes saltar directamente a la lección que necesitas:
-- ¿Necesitas JPA? → `Tickets-10/`
-- ¿Necesitas Security? → `Tickets-16/`
-- ¿Necesitas Microservicios? → `Tickets-15/`
-- ¿Necesitas Exception Handling? → `Tickets-18/`
+- ¿Necesitas JPA? → `proyects/Tickets-10/`
+- ¿Necesitas Security? → `proyects/Tickets-16/`
+- ¿Necesitas Microservicios? → `proyects/Tickets-15/`
+- ¿Necesitas Exception Handling? → `proyects/Tickets-18/`
 
 **Extras requeridos:**
 - 📄 YAML
@@ -431,10 +431,10 @@ Usa este repo como referencia rápida:
 
 ### Estructura de cada proyecto
 
-Cada carpeta `Tickets-N/` sigue la misma estructura:
+Cada carpeta `proyects/Tickets-N/` sigue la misma estructura:
 
 ```
-Tickets-N/
+proyects/Tickets-N/
 ├── src/main/java/           # Código fuente
 │   └── cl/duoc/fullstack/
 │       ├── controller/      # Endpoints REST
@@ -456,7 +456,7 @@ Tickets-N/
 
 ```bash
 # Ejecutar proyecto (desde su directorio)
-cd Tickets-10
+cd proyects/Tickets-10
 mvnw.cmd spring-boot:run
 
 # Compilar

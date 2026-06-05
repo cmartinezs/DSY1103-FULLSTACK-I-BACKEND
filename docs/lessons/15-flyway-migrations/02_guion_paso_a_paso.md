@@ -223,7 +223,7 @@ CREATE INDEX idx_status ON tickets(status);
 ## Paso 7: Ejecutar la App (Flyway Aplica Automáticamente)
 
 ```bash
-cd Tickets
+cd proyects/Tickets
 
 # Con MySQL
 ./mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=mysql"
