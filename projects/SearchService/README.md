@@ -22,6 +22,26 @@ mvnw.cmd spring-boot:run        # Windows
 
 ---
 
+## Docker
+
+Este microservicio incluye `Dockerfile` y `.dockerignore` para la Leccion 20.
+
+Construir solo este servicio:
+
+```bash
+docker build -t dsy1103-search-service .
+docker run --rm -p 8084:8084 dsy1103-search-service
+```
+
+Ejecutarlo junto a Tickets y los demas servicios:
+
+```bash
+cd ../Tickets-20
+docker compose up --build search-service
+```
+
+---
+
 ## API
 
 ### `POST /api/search/index`

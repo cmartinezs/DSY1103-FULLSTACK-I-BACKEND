@@ -22,6 +22,26 @@ mvnw.cmd spring-boot:run        # Windows
 
 ---
 
+## Docker
+
+Este microservicio incluye `Dockerfile` y `.dockerignore` para la Leccion 20.
+
+Construir solo este servicio:
+
+```bash
+docker build -t dsy1103-notification-service .
+docker run --rm -p 8081:8081 dsy1103-notification-service
+```
+
+Ejecutarlo junto a Tickets y los demas servicios:
+
+```bash
+cd ../Tickets-20
+docker compose up --build notification-service
+```
+
+---
+
 ## API
 
 ### `POST /api/notifications`

@@ -22,6 +22,7 @@ const projectNames = [
   'Tickets-17',
   'Tickets-18',
   'Tickets-19',
+  'Tickets-20',
   'NotificationService',
   'AuditService',
   'SearchService',
@@ -265,6 +266,9 @@ function isRelevantProjectFile(relative) {
   if (normalized === 'pom.xml') return true;
   if (normalized === 'README.md') return true;
   if (normalized === '.env.example') return true;
+  if (normalized === '.dockerignore') return true;
+  if (normalized === 'Dockerfile') return true;
+  if (normalized === 'docker-compose.yml') return true;
   if (normalized.startsWith('src/main/')) return textExtensions.has(path.extname(normalized));
   if (normalized.startsWith('src/test/')) return textExtensions.has(path.extname(normalized));
   if (normalized.startsWith('src/main/resources/db/migration/')) return true;
@@ -288,7 +292,8 @@ async function buildProjects() {
       const stat = await fs.stat(file.absolute);
       if (stat.size > 120_000) continue;
       const ext = path.extname(file.relative);
-      if (!textExtensions.has(ext) && file.relative !== 'pom.xml' && file.relative !== '.env.example') {
+      const relevantExtensionless = ['Dockerfile', '.dockerignore'].includes(file.relative);
+      if (!textExtensions.has(ext) && file.relative !== 'pom.xml' && file.relative !== '.env.example' && !relevantExtensionless) {
         continue;
       }
       fileItems.push({
@@ -317,6 +322,7 @@ async function buildProjects() {
 }
 
 function languageFor(relative) {
+  if (relative === 'Dockerfile') return 'dockerfile';
   const ext = path.extname(relative);
   if (ext === '.java') return 'java';
   if (ext === '.xml') return 'xml';

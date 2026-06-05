@@ -1,0 +1,112 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: dsy1103-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-tickets_db}
+      MYSQL_USER: ${MYSQL_USER:-tickets}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-tickets123}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  postgres:
+    image: postgres:16
+    container_name: dsy1103-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tickets_db}
+      POSTGRES_USER: ${POSTGRES_USER:-tickets}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tickets123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  notification-service:
+    build:
+      context: ../NotificationService
+    container_name: dsy1103-notification-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SERVER_PORT: 8081
+
+  audit-service:
+    build:
+      context: ../AuditService
+    container_name: dsy1103-audit-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      SERVER_PORT: 8082
+
+  search-service:
+    build:
+      context: ../SearchService
+    container_name: dsy1103-search-service
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      SERVER_PORT: 8084
+
+  sla-service:
+    build:
+      context: ../SLAService
+    container_name: dsy1103-sla-service
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    environment:
+      SERVER_PORT: 8085
+
+  tickets-api:
+    build:
+      context: .
+    container_name: dsy1103-tickets-api
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      notification-service:
+        condition: service_started
+      audit-service:
+        condition: service_started
+      search-service:
+        condition: service_started
+      sla-service:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-mysql}
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-tickets_db}
+      DB_USER: ${DB_USER:-tickets}
+      DB_PASSWORD: ${DB_PASSWORD:-tickets123}
+      NOTIFICATION_SERVICE_URL: ${NOTIFICATION_SERVICE_URL:-http://notification-service:8081}
+      AUDIT_SERVICE_URL: ${AUDIT_SERVICE_URL:-http://audit-service:8082}
+      SEARCH_SERVICE_URL: ${SEARCH_SERVICE_URL:-http://search-service:8084}
+      SLA_SERVICE_URL: ${SLA_SERVICE_URL:-http://sla-service:8085}
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:
+  postgres_data:

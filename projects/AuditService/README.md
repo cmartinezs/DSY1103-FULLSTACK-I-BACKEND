@@ -22,6 +22,26 @@ mvnw.cmd spring-boot:run        # Windows
 
 ---
 
+## Docker
+
+Este microservicio incluye `Dockerfile` y `.dockerignore` para la Leccion 20.
+
+Construir solo este servicio:
+
+```bash
+docker build -t dsy1103-audit-service .
+docker run --rm -p 8082:8082 dsy1103-audit-service
+```
+
+Ejecutarlo junto a Tickets y los demas servicios:
+
+```bash
+cd ../Tickets-20
+docker compose up --build audit-service
+```
+
+---
+
 ## API
 
 ### `POST /api/audit`
