@@ -17,6 +17,7 @@ import {
   GraduationCap,
   Layers3,
   LocateFixed,
+  Package,
   PanelLeftClose,
   Search,
   Server,
@@ -216,7 +217,7 @@ function App() {
             {mode === 'lessons' ? (
               <DocsTree docs={filteredDocs} selectedDoc={selectedDoc} onSelect={navigateToDoc} />
             ) : (
-              <ProjectList
+              <ProjectTree
                 projects={filteredProjects}
                 selectedProject={selectedProject}
                 selectedFile={selectedFile}
@@ -429,53 +430,179 @@ function TreeNode({
   );
 }
 
-function ProjectList({ projects, selectedProject, selectedFile, onProjectSelect, onFileSelect }) {
+function ProjectTree({ projects, selectedProject, selectedFile, onProjectSelect, onFileSelect }) {
+  const projectPackages = useMemo(() => buildProjectPackages(content.projects), []);
+  const tree = useMemo(() => buildProjectTree(projects, projectPackages), [projects, projectPackages]);
+  const allFolderPaths = useMemo(() => collectFolderPaths(tree), [tree]);
+  const [expandedPaths, setExpandedPaths] = useState(new Set());
+  const fileRefs = useRef(new Map());
+  const searchIsActive = projects.length !== content.projects.length;
+
+  function toggleFolder(path) {
+    setExpandedPaths((current) => {
+      const next = new Set(current);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
+  }
+
+  function closeAll() {
+    setExpandedPaths(new Set());
+  }
+
+  function openAll() {
+    setExpandedPaths(new Set(allFolderPaths));
+  }
+
+  function locateSelected() {
+    if (!selectedProject || !selectedFile) return;
+    const ancestors = folderAncestorsForProjectFile(selectedProject, selectedFile, projectPackages);
+    setExpandedPaths((current) => new Set([...current, ...ancestors]));
+    window.setTimeout(() => {
+      fileRefs.current.get(selectedFile.id)?.scrollIntoView({
+        block: 'center',
+        behavior: 'smooth',
+      });
+    }, 0);
+  }
+
+  function registerFileRef(id, node) {
+    if (node) {
+      fileRefs.current.set(id, node);
+    } else {
+      fileRefs.current.delete(id);
+    }
+  }
+
   return (
     <div className="grid max-h-[calc(100vh-190px)] grid-rows-[auto_1fr] overflow-hidden">
       <div className="border-b border-zinc-200 p-3">
-        <div className="grid grid-cols-2 gap-2">
-          {projects.map((project) => (
-            <button
-              key={project.id}
-              type="button"
-              onClick={() => onProjectSelect(project)}
-              className={`rounded-md border px-3 py-2 text-left text-sm transition ${
-                selectedProject?.id === project.id
-                  ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
-                  : 'border-zinc-200 hover:bg-zinc-100'
-              }`}
-            >
-              <span className="block truncate font-semibold">{project.name}</span>
-              <span className="block truncate text-xs text-zinc-500">{project.kind}</span>
-            </button>
-          ))}
+        <div className="grid grid-cols-3 gap-2">
+          <TreeControlButton onClick={closeAll}>Cerrar</TreeControlButton>
+          <TreeControlButton onClick={openAll}>Abrir</TreeControlButton>
+          <TreeControlButton onClick={locateSelected} icon={LocateFixed}>
+            Ubicar
+          </TreeControlButton>
         </div>
+        <p className="mt-2 text-xs leading-5 text-zinc-500">
+          {searchIsActive
+            ? 'Busqueda activa: se muestran los proyectos con coincidencias.'
+            : 'Cada proyecto abre su arbol Maven con paquetes Java compactados.'}
+        </p>
       </div>
       <div className="overflow-y-auto p-3">
-        <div className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-950 ring-1 ring-amber-200">
-          <strong>{selectedProject?.name}</strong>
-          <span className="mt-1 block text-xs">{selectedProject?.fileCount ?? 0} archivos indexados</span>
-        </div>
-        <div className="space-y-1">
-          {selectedProject?.files.map((file) => (
+        <ProjectTreeNode
+          node={tree}
+          selectedProject={selectedProject}
+          selectedFile={selectedFile}
+          onProjectSelect={onProjectSelect}
+          onFileSelect={onFileSelect}
+          expandedPaths={expandedPaths}
+          onToggle={toggleFolder}
+          forceOpen={searchIsActive}
+          registerFileRef={registerFileRef}
+          root
+        />
+        {projects.length === 0 && <EmptyState text="No hay proyectos para la busqueda actual." />}
+      </div>
+    </div>
+  );
+}
+
+function ProjectTreeNode({
+  node,
+  selectedProject,
+  selectedFile,
+  onProjectSelect,
+  onFileSelect,
+  expandedPaths,
+  onToggle,
+  forceOpen = false,
+  registerFileRef,
+  root = false,
+  depth = 0,
+}) {
+  const folders = [...node.children.values()].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { numeric: true }),
+  );
+  const files = [...node.files].sort((a, b) =>
+    a.treePath.localeCompare(b.treePath, undefined, { numeric: true }),
+  );
+  const expanded = root || forceOpen || expandedPaths.has(node.path);
+  const isProject = node.type === 'project';
+  const selectedFolder = isProject && selectedProject?.id === node.project.id;
+
+  return (
+    <div className={root ? '' : 'ml-2 border-l border-zinc-200 pl-2'}>
+      {!root && (
+        <button
+          type="button"
+          onClick={() => {
+            onToggle(node.path);
+            if (isProject) onProjectSelect(node.project);
+          }}
+          className={`mb-1 mt-2 flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm font-semibold transition ${
+            selectedFolder ? 'bg-emerald-50 text-emerald-900 ring-1 ring-emerald-200' : 'text-zinc-700 hover:bg-zinc-100'
+          }`}
+        >
+          {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          {node.packageFolder ? (
+            <Package size={15} className="text-sky-700" />
+          ) : (
+            <Folder size={15} className={isProject ? 'text-emerald-700' : 'text-amber-600'} />
+          )}
+          <span className="truncate">{node.name}</span>
+          <span className="ml-auto rounded bg-zinc-100 px-1.5 py-0.5 text-[11px] font-medium text-zinc-500">
+            {countProjectFiles(node)}
+          </span>
+        </button>
+      )}
+
+      {expanded ? (
+        <>
+          {files.map((file) => (
             <button
               key={file.id}
+              ref={(nodeRef) => registerFileRef(file.id, nodeRef)}
               type="button"
-              onClick={() => onFileSelect(file.id)}
-              className={`flex w-full items-start gap-2 rounded-md px-3 py-2 text-left text-sm transition ${
+              onClick={() => {
+                onProjectSelect(file.project);
+                onFileSelect(file.id);
+              }}
+              className={`mb-1 flex w-full items-start gap-2 rounded-md px-2 py-2 text-left text-sm transition ${
                 selectedFile?.id === file.id ? 'bg-teal-50 text-teal-950 ring-1 ring-teal-200' : 'hover:bg-zinc-100'
               }`}
+              style={{ marginLeft: root ? 0 : Math.min(depth, 3) * 2 }}
             >
               <FileCode2 className="mt-0.5 shrink-0 text-zinc-500" size={16} />
               <span className="min-w-0">
-                <span className="block break-all font-medium">{file.path}</span>
+                <span className="block break-all font-medium">{file.fileName}</span>
                 <span className="text-xs text-zinc-500">{file.language}</span>
               </span>
             </button>
           ))}
-        </div>
-        {projects.length === 0 && <EmptyState text="No hay proyectos para la busqueda actual." />}
-      </div>
+
+          {folders.map((child) => (
+            <ProjectTreeNode
+              key={child.path}
+              node={child}
+              selectedProject={selectedProject}
+              selectedFile={selectedFile}
+              onProjectSelect={onProjectSelect}
+              onFileSelect={onFileSelect}
+              expandedPaths={expandedPaths}
+              onToggle={onToggle}
+              forceOpen={forceOpen}
+              registerFileRef={registerFileRef}
+              depth={depth + 1}
+            />
+          ))}
+        </>
+      ) : null}
     </div>
   );
 }
@@ -515,9 +642,7 @@ function ProjectViewer({ project, file, onNavigateDoc, setMode }) {
             compact
           />
         ) : (
-          <pre className="code-pane max-h-[calc(100vh-190px)] overflow-auto bg-zinc-950 p-5 text-sm leading-6 text-zinc-100">
-            <code>{file.content}</code>
-          </pre>
+          <CodeViewer file={file} />
         )}
         <aside className="border-t border-zinc-200 bg-stone-50 p-4 lg:border-l lg:border-t-0">
           <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-zinc-900">
@@ -532,6 +657,70 @@ function ProjectViewer({ project, file, onNavigateDoc, setMode }) {
         </aside>
       </div>
     </article>
+  );
+}
+
+function CodeViewer({ file }) {
+  const [formatted, setFormatted] = useState(file.content);
+  const [formatStatus, setFormatStatus] = useState(formatLabelFor(file.language));
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function formatCode() {
+      const config = await prettierConfigFor(file.language);
+      if (!config) {
+        setFormatted(file.content);
+        setFormatStatus(formatLabelFor(file.language));
+        return;
+      }
+
+      try {
+        const next = await config.prettier.format(file.content, config.options);
+        if (!cancelled) {
+          setFormatted(next.trimEnd());
+          setFormatStatus(`Prettier ${file.language}`);
+        }
+      } catch {
+        if (!cancelled) {
+          setFormatted(file.content);
+          setFormatStatus(`${formatLabelFor(file.language)} sin formatear`);
+        }
+      }
+    }
+
+    formatCode();
+    return () => {
+      cancelled = true;
+    };
+  }, [file]);
+
+  return (
+    <div className="code-pane max-h-[calc(100vh-190px)] overflow-auto bg-zinc-950">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-800 bg-zinc-950/95 px-4 py-2 text-xs text-zinc-400 backdrop-blur">
+        <span>{formatStatus}</span>
+        <span>{file.path}</span>
+      </div>
+      <SyntaxHighlighter
+        language={syntaxLanguageFor(file.language)}
+        style={oneDark}
+        PreTag="div"
+        customStyle={{
+          margin: 0,
+          padding: '1.25rem',
+          background: 'transparent',
+          fontSize: '0.875rem',
+          lineHeight: '1.6',
+        }}
+        codeTagProps={{
+          style: {
+            fontFamily: 'JetBrains Mono, ui-monospace, SFMono-Regular, monospace',
+          },
+        }}
+      >
+        {formatted}
+      </SyntaxHighlighter>
+    </div>
   );
 }
 
@@ -887,6 +1076,183 @@ function countDocs(node) {
     total += countDocs(child);
   }
   return total;
+}
+
+function buildProjectPackages(projects) {
+  const packages = new Map();
+
+  for (const project of projects) {
+    const javaRoots = project.files
+      .filter((file) => file.path.startsWith('src/main/java/') && file.path.endsWith('.java'))
+      .map((file) => file.path.replace(/^src\/main\/java\//, '').split('/').slice(0, -1))
+      .filter((parts) => parts.length > 0);
+
+    packages.set(project.id, commonPathPrefix(javaRoots));
+  }
+
+  return packages;
+}
+
+function commonPathPrefix(paths) {
+  if (paths.length === 0) return [];
+  const [first] = paths;
+  const prefix = [];
+
+  for (let index = 0; index < first.length; index += 1) {
+    const candidate = first[index];
+    if (paths.every((parts) => parts[index] === candidate)) {
+      prefix.push(candidate);
+    } else {
+      break;
+    }
+  }
+
+  return prefix;
+}
+
+function buildProjectTree(projects, projectPackages) {
+  const root = { name: 'proyects', path: 'proyects', children: new Map(), files: [] };
+
+  for (const project of projects) {
+    const projectNode = {
+      name: project.name,
+      path: `proyects/${project.id}`,
+      type: 'project',
+      project,
+      children: new Map(),
+      files: [],
+    };
+    root.children.set(project.id, projectNode);
+
+    for (const file of project.files) {
+      addProjectFile(projectNode, project, file, displayProjectPath(file.path, projectPackages.get(project.id)));
+    }
+  }
+
+  return root;
+}
+
+function addProjectFile(root, project, file, treePath) {
+  const parts = treePath.split('/');
+  const fileName = parts.pop();
+  let current = root;
+
+  for (const part of parts) {
+    const nextPath = `${current.path}/${part}`;
+    if (!current.children.has(part)) {
+      current.children.set(part, {
+        name: part,
+        path: nextPath,
+        packageFolder: isPackageSegment(part),
+        children: new Map(),
+        files: [],
+      });
+    }
+    current = current.children.get(part);
+  }
+
+  current.files.push({
+    ...file,
+    project,
+    treePath,
+    fileName,
+  });
+}
+
+function displayProjectPath(filePath, mainPackage = []) {
+  const mainJavaPrefix = 'src/main/java/';
+  const testJavaPrefix = 'src/test/java/';
+
+  if (mainPackage.length > 0 && filePath.startsWith(mainJavaPrefix)) {
+    return compactJavaPackagePath(filePath, mainJavaPrefix, mainPackage);
+  }
+
+  if (mainPackage.length > 0 && filePath.startsWith(testJavaPrefix)) {
+    return compactJavaPackagePath(filePath, testJavaPrefix, mainPackage);
+  }
+
+  return filePath;
+}
+
+function compactJavaPackagePath(filePath, prefix, mainPackage) {
+  const packagePath = mainPackage.join('/');
+  const relative = filePath.slice(prefix.length);
+
+  if (!relative.startsWith(`${packagePath}/`)) return filePath;
+
+  const rest = relative.slice(packagePath.length + 1);
+  return `${prefix}${mainPackage.join('.')}/${rest}`;
+}
+
+function isPackageSegment(value) {
+  return /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/.test(value);
+}
+
+function folderAncestorsForProjectFile(project, file, projectPackages) {
+  const treePath = displayProjectPath(file.path, projectPackages.get(project.id));
+  const parts = treePath.split('/');
+  parts.pop();
+
+  const ancestors = [`proyects/${project.id}`];
+  let current = `proyects/${project.id}`;
+
+  for (const part of parts) {
+    current = `${current}/${part}`;
+    ancestors.push(current);
+  }
+
+  return ancestors;
+}
+
+function countProjectFiles(node) {
+  let total = node.files.length;
+  for (const child of node.children.values()) {
+    total += countProjectFiles(child);
+  }
+  return total;
+}
+
+async function prettierConfigFor(language) {
+  if (language !== 'java' && language !== 'yaml') return null;
+
+  const prettier = await import('prettier/standalone');
+
+  if (language === 'java') {
+    const javaPrettierPlugin = await import('prettier-plugin-java');
+    return {
+      prettier,
+      options: {
+        parser: 'java',
+        plugins: [javaPrettierPlugin.default ?? javaPrettierPlugin],
+        tabWidth: 4,
+        printWidth: 100,
+      },
+    };
+  }
+
+  if (language === 'yaml') {
+    const yamlPrettierPlugin = await import('prettier/plugins/yaml');
+    return {
+      prettier,
+      options: {
+        parser: 'yaml',
+        plugins: [yamlPrettierPlugin.default ?? yamlPrettierPlugin],
+        tabWidth: 2,
+        printWidth: 100,
+      },
+    };
+  }
+}
+
+function syntaxLanguageFor(language) {
+  if (language === 'yaml') return 'yaml';
+  if (language === 'properties') return 'properties';
+  return language || 'text';
+}
+
+function formatLabelFor(language) {
+  if (language === 'java' || language === 'yaml') return `Prettier ${language}`;
+  return `Resaltado ${language || 'text'}`;
 }
 
 function slugifyHeading(children) {
