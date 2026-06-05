@@ -6,21 +6,28 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import mermaid from 'mermaid';
 import {
+  ArrowRight,
   BookOpen,
+  Braces,
   ChevronDown,
   ChevronRight,
   Code2,
+  Database,
+  ExternalLink,
   FileCode2,
   FileText,
   Folder,
   FolderTree,
-  GraduationCap,
+  Home,
   Layers3,
   LocateFixed,
   Package,
+  Presentation,
+  Rocket,
   PanelLeftClose,
   Search,
   Server,
+  Workflow,
 } from 'lucide-react';
 import content from './generated/content.json';
 import './styles.css';
@@ -67,22 +74,28 @@ const firstDoc =
   allDocs.find((doc) => doc.path.endsWith('/README.md')) ??
   allDocs[0];
 const firstProject = content.projects[0];
+const htmlPages = content.htmlPages ?? [];
+const challengeSites = buildChallengeSites(htmlPages);
+const firstHtmlPage =
+  htmlPages.find((page) => page.path === 'docs/challenges/tic-tac-toe/index.html') ??
+  htmlPages.find((page) => page.path.endsWith('/index.html')) ??
+  htmlPages[0];
 const firstProjectFile =
   firstProject?.files.find((file) => file.path === 'README.md') ??
   firstProject?.files.find((file) => file.path === 'pom.xml') ??
   firstProject?.files[0];
 
 function App() {
-  const [mode, setMode] = useState('lessons');
+  const [mode, setMode] = useState(window.location.hash ? 'lessons' : 'home');
   const [query, setQuery] = useState('');
   const [selectedDocId, setSelectedDocId] = useState(docFromHash()?.id ?? firstDoc?.id ?? '');
+  const [selectedHtmlPageId, setSelectedHtmlPageId] = useState(htmlPageFromHash()?.id ?? firstHtmlPage?.id ?? '');
   const [selectedProjectId, setSelectedProjectId] = useState(firstProject?.id ?? '');
   const [selectedFileId, setSelectedFileId] = useState(firstProjectFile?.id ?? '');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     if (!window.location.hash) {
-      replaceRoute(firstDoc?.path ?? 'docs/README.md');
       return undefined;
     }
 
@@ -93,6 +106,13 @@ function App() {
         setSelectedDocId(doc.id);
         const hash = anchorFromHash();
         scrollToHash(hash);
+        return;
+      }
+
+      const htmlPage = htmlPageFromHash();
+      if (htmlPage) {
+        setMode('challenges');
+        setSelectedHtmlPageId(htmlPage.id);
       }
     }
 
@@ -126,6 +146,16 @@ function App() {
       .filter((project) => project.files.length > 0 || project.name.toLowerCase().includes(needle));
   }, [query]);
 
+  const filteredChallengeSites = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return challengeSites;
+    return challengeSites.filter((site) =>
+      [site.title, site.path, site.summary, ...site.pages.map((page) => `${page.title} ${page.path}`)].some((value) =>
+        value?.toLowerCase().includes(needle),
+      ),
+    );
+  }, [query]);
+
   const selectedDoc =
     allDocs.find((doc) => doc.id === selectedDocId) ?? filteredDocs[0] ?? allDocs[0];
 
@@ -139,6 +169,11 @@ function App() {
     selectedProject?.files.find((file) => file.path === 'README.md') ??
     selectedProject?.files.find((file) => file.path === 'pom.xml') ??
     selectedProject?.files[0];
+
+  const selectedHtmlPage =
+    htmlPages.find((page) => page.id === selectedHtmlPageId) ??
+    filteredChallengeSites[0]?.entry ??
+    htmlPages[0];
 
   function selectProject(project) {
     const nextFile =
@@ -158,16 +193,39 @@ function App() {
     scrollToHash(hash);
   }
 
+  function navigateToHtmlPage(pageId) {
+    const page = htmlPages.find((item) => item.id === pageId);
+    if (!page) return;
+    setMode('challenges');
+    setSelectedHtmlPageId(page.id);
+    pushRoute(page.path);
+  }
+
+  function navigateHome() {
+    setMode('home');
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+  }
+
+  function openLessons() {
+    setMode('lessons');
+    replaceRoute(selectedDoc?.path ?? firstDoc?.path ?? 'docs/README.md');
+  }
+
+  function openChallenges() {
+    setMode('challenges');
+    replaceRoute(selectedHtmlPage?.path ?? firstHtmlPage?.path ?? 'docs/challenges/README.md');
+  }
+
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-950">
-      <header className="border-b border-zinc-200 bg-white">
+    <div className="portal-shell min-h-screen text-zinc-950">
+      <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/88 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-4 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-md bg-emerald-600 text-white">
-              <GraduationCap size={24} aria-hidden="true" />
+            <div className="brand-mark">
+              DS
             </div>
             <div>
-              <h1 className="text-xl font-semibold leading-tight text-zinc-950">DSY1103 Fullstack I</h1>
+              <h1 className="text-xl font-semibold leading-tight text-zinc-950">DSY1103 | Desarrollo Fullstack I</h1>
               <p className="text-sm text-zinc-600">
                 {content.lessons.length} lecciones, {content.projects.length} proyectos, material generado{' '}
                 {formatDate(content.generatedAt)}
@@ -182,12 +240,18 @@ function App() {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 className="h-11 w-full rounded-md border border-zinc-300 bg-white pl-10 pr-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                placeholder="Buscar en documentos y codigo"
+                placeholder="Buscar en documentos, challenges y codigo"
               />
             </div>
-            <div className="grid grid-cols-2 rounded-md border border-zinc-300 bg-zinc-100 p-1">
-              <ModeButton active={mode === 'lessons'} icon={BookOpen} onClick={() => setMode('lessons')}>
+            <div className="grid w-full grid-cols-2 rounded-md border border-zinc-300 bg-zinc-100 p-1 sm:w-auto sm:grid-cols-4">
+              <ModeButton active={mode === 'home'} icon={Home} onClick={navigateHome}>
+                Inicio
+              </ModeButton>
+              <ModeButton active={mode === 'lessons'} icon={BookOpen} onClick={openLessons}>
                 Lecciones
+              </ModeButton>
+              <ModeButton active={mode === 'challenges'} icon={ExternalLink} onClick={openChallenges}>
+                Challenges
               </ModeButton>
               <ModeButton active={mode === 'projects'} icon={Code2} onClick={() => setMode('projects')}>
                 Proyectos
@@ -197,12 +261,21 @@ function App() {
         </div>
       </header>
 
+      {mode === 'home' ? (
+        <HomePortal
+          onOpenLessons={openLessons}
+          onOpenChallenges={openChallenges}
+          onOpenProjects={() => setMode('projects')}
+          onOpenDoc={navigateToDoc}
+          onOpenChallenge={navigateToHtmlPage}
+        />
+      ) : (
       <main className="mx-auto grid max-w-[1600px] gap-4 px-4 py-4 lg:grid-cols-[minmax(280px,380px)_1fr]">
-        {sidebarOpen ? (
+        {mode !== 'challenges' && sidebarOpen ? (
           <aside className="min-h-[calc(100vh-130px)] overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
               <div className="flex items-center gap-2 text-sm font-semibold">
-                {mode === 'lessons' ? <Layers3 size={18} /> : <FolderTree size={18} />}
+                {mode === 'projects' ? <FolderTree size={18} /> : <Layers3 size={18} />}
                 {mode === 'lessons' ? 'docs/' : 'Proyectos Java'}
               </div>
               <button
@@ -226,7 +299,7 @@ function App() {
               />
             )}
           </aside>
-        ) : (
+        ) : mode !== 'challenges' ? (
           <button
             className="flex h-12 items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white text-sm font-medium shadow-sm lg:col-span-1"
             onClick={() => setSidebarOpen(true)}
@@ -234,18 +307,279 @@ function App() {
             <FolderTree size={18} />
             Mostrar navegador
           </button>
-        )}
+        ) : null}
 
-        <section className={sidebarOpen ? 'min-w-0' : 'min-w-0 lg:col-span-2'}>
+        <section className={mode === 'challenges' || !sidebarOpen ? 'min-w-0 lg:col-span-2' : 'min-w-0'}>
           {mode === 'lessons' ? (
             <MarkdownViewer doc={selectedDoc} onNavigate={navigateToDoc} />
+          ) : mode === 'challenges' ? (
+            <ChallengeGallery
+              sites={filteredChallengeSites}
+              selectedPage={selectedHtmlPage}
+              onSelectPage={navigateToHtmlPage}
+            />
           ) : (
             <ProjectViewer project={selectedProject} file={selectedFile} onNavigateDoc={navigateToDoc} setMode={setMode} />
           )}
         </section>
       </main>
+      )}
     </div>
   );
+}
+
+function HomePortal({ onOpenLessons, onOpenChallenges, onOpenProjects, onOpenDoc, onOpenChallenge }) {
+  const featuredLessons = [
+    'docs/lessons/00-git-github/README.md',
+    'docs/lessons/03-first-api/README.md',
+    'docs/lessons/06-crud/README.md',
+    'docs/lessons/10-jpa-intro/README.md',
+    'docs/lessons/14-microservices/README.md',
+    'docs/lessons/19-openapi-oas/README.md',
+  ]
+    .map((path) => allDocs.find((doc) => doc.path === path))
+    .filter(Boolean);
+  const featuredChallenge = challengeSites[0];
+  const featuredProjects = content.projects.slice(0, 6);
+
+  return (
+    <main>
+      <section className="portal-hero">
+        <div className="portal-container grid items-center gap-10 lg:grid-cols-[1.25fr_0.75fr]">
+          <div>
+            <p className="portal-eyebrow">Spring Boot · Java 21 · REST APIs · Microservicios</p>
+            <h2 className="portal-title">DSY1103 Desarrollo Fullstack I</h2>
+            <p className="portal-lead">
+              Portal de clases, challenges y snapshots de proyecto para construir backend Java desde HTTP y REST
+              hasta persistencia, seguridad, documentación OpenAPI y servicios distribuidos.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <button type="button" className="portal-btn portal-btn-main" onClick={onOpenLessons}>
+                <Rocket size={18} />
+                Entrar a las lecciones
+              </button>
+              <button type="button" className="portal-btn portal-btn-ghost" onClick={onOpenChallenges}>
+                <Presentation size={18} />
+                Ver challenges
+              </button>
+            </div>
+          </div>
+
+          <div className="learn-scene" aria-label="Escena visual de arquitectura backend">
+            <div className="console-top">
+              <span className="dot red" />
+              <span className="dot yellow" />
+              <span className="dot green" />
+            </div>
+            <div className="code-panel">
+              <span className="code-line"><span className="kw">@RestController</span></span>
+              <span className="code-line"><span className="kw">@RequestMapping</span>(<span className="str">"/ticket-app/tickets"</span>)</span>
+              <span className="code-line"><span className="kw">class</span> <span className="fn">TicketController</span> {'{'}</span>
+              <span className="code-line">&nbsp;&nbsp;<span className="kw">private final</span> TicketService service;</span>
+              <span className="code-line">&nbsp;&nbsp;<span className="kw">@GetMapping</span></span>
+              <span className="code-line">&nbsp;&nbsp;List&lt;TicketDTO&gt; <span className="fn">findAll</span>() {'{'}</span>
+              <span className="code-line">&nbsp;&nbsp;&nbsp;&nbsp;<span className="kw">return</span> service.findAll();</span>
+              <span className="code-line">&nbsp;&nbsp;{'}'}</span>
+              <span className="code-line">{'}'}</span>
+            </div>
+            <div className="floating-chip chip-a"><Server size={15} /> REST</div>
+            <div className="floating-chip chip-b"><Database size={15} /> JPA</div>
+            <div className="floating-chip chip-c"><Workflow size={15} /> MS</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="actividades" className="portal-section">
+        <div className="portal-container">
+          <div className="section-heading">
+            <p className="portal-eyebrow">Inicio rápido</p>
+            <h2 className="section-title">Material disponible</h2>
+            <p className="section-copy">
+              Accesos principales del ramo organizados como tarjetas, sin depender del arbol de archivos para empezar.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <PortalCard
+              icon={BookOpen}
+              tone="blue"
+              title={`${content.lessons.length} lecciones`}
+              text="Teoría y práctica de HTTP, REST, capas, DTO, persistencia, seguridad, logging y documentación."
+              tags={['docs/', 'Spring Boot', 'Java 21']}
+              action="Abrir lecciones"
+              onClick={onOpenLessons}
+            />
+            <PortalCard
+              icon={Presentation}
+              tone="teal"
+              title={`${challengeSites.length} challenge${challengeSites.length === 1 ? '' : 's'}`}
+              text="Mini sitios evaluativos con enunciados, arquitectura, endpoints, estándares y criterios de entrega."
+              tags={['mini sitios', 'evaluación', 'HTML']}
+              action="Abrir challenges"
+              onClick={onOpenChallenges}
+            />
+            <PortalCard
+              icon={Code2}
+              tone="rose"
+              title={`${content.projects.length} proyectos`}
+              text="Snapshots Maven del proyecto Tickets y microservicios de apoyo para revisar código real por lección."
+              tags={['Maven', 'Tickets', 'microservicios']}
+              action="Abrir proyectos"
+              onClick={onOpenProjects}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section id="material" className="portal-section">
+        <div className="portal-container">
+          <div className="section-heading">
+            <p className="portal-eyebrow">Lecciones y apoyo</p>
+            <h2 className="section-title">Ruta de aprendizaje</h2>
+            <p className="section-copy">
+              Un recorrido sugerido desde fundamentos web hasta servicios con persistencia, seguridad y despliegue local.
+            </p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {featuredLessons.map((doc, index) => (
+              <button
+                key={doc.id}
+                type="button"
+                onClick={() => onOpenDoc(doc.id)}
+                className="material-card"
+              >
+                <span className="material-kicker">Lección {String(index + 1).padStart(2, '0')}</span>
+                <span className="material-title">{cleanPortalTitle(doc.title)}</span>
+                <span className="material-copy">{doc.path}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="challenges" className="portal-section">
+        <div className="portal-container">
+          <div className="section-heading">
+            <p className="portal-eyebrow">Challenge destacado</p>
+            <h2 className="section-title">{featuredChallenge?.title ?? 'Challenges'}</h2>
+            <p className="section-copy">
+              Los challenges se tratan como mini sitios independientes: vista previa, secciones internas y apertura en
+              pestaña sin pasar por el router de documentos.
+            </p>
+          </div>
+
+          {featuredChallenge ? (
+            <div className="ppt-card grid overflow-hidden lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="min-h-[260px] border-b border-zinc-200 bg-zinc-950 lg:border-b-0 lg:border-r">
+                <iframe
+                  title={`Preview ${featuredChallenge.title}`}
+                  srcDoc={htmlPreviewDocument(featuredChallenge.entry)}
+                  className="challenge-preview-frame"
+                  tabIndex={-1}
+                />
+              </div>
+              <div className="p-5">
+                <span className="material-kicker">{featuredChallenge.path}</span>
+                <h3 className="mt-2 text-2xl font-extrabold leading-tight text-zinc-950">{featuredChallenge.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-zinc-600">{featuredChallenge.summary}</p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {featuredChallenge.pages.slice(0, 7).map((page) => (
+                    <button
+                      key={page.id}
+                      type="button"
+                      className="mini-link"
+                      onClick={() => onOpenChallenge(page.id)}
+                    >
+                      {shortHtmlPageTitle(page)}
+                    </button>
+                  ))}
+                </div>
+                <button type="button" className="portal-btn portal-btn-main mt-6" onClick={onOpenChallenges}>
+                  Ver todos los challenges
+                  <ArrowRight size={18} />
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      <section id="proyectos" className="portal-path">
+        <div className="portal-container">
+          <div className="section-heading">
+            <p className="portal-eyebrow">Snapshots Java</p>
+            <h2 className="section-title">Proyectos del ramo</h2>
+            <p className="section-copy">
+              El código se mantiene separado por lección para comparar evolución: in-memory, JPA, bases de datos y
+              microservicios auxiliares.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {featuredProjects.map((project) => (
+              <article key={project.id} className="project-card">
+                <div className="flex items-start gap-3">
+                  <div className="project-icon">
+                    {project.kind?.toLowerCase().includes('micro') ? <Workflow size={20} /> : <Braces size={20} />}
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-zinc-950">{project.name}</h3>
+                    <p className="mt-1 text-sm leading-6 text-zinc-600">{project.description}</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="tag">{project.kind}</span>
+                  <span className="tag">{project.fileCount} archivos</span>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-6">
+            <button type="button" className="portal-btn portal-btn-ghost" onClick={onOpenProjects}>
+              Explorar código de proyectos
+              <ArrowRight size={18} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <footer className="portal-footer">
+        <div className="portal-container flex flex-wrap justify-between gap-3">
+          <span>DSY1103 | Desarrollo Fullstack I</span>
+          <span>Backend Java, Spring Boot y arquitectura por capas</span>
+        </div>
+      </footer>
+    </main>
+  );
+}
+
+function PortalCard({ icon: Icon, tone, title, text, tags, action, onClick }) {
+  return (
+    <article className="activity-card">
+      <div className={`activity-icon bg-${tone}`}>
+        <Icon size={22} />
+      </div>
+      <h3>{title}</h3>
+      <p>{text}</p>
+      <div className="tag-row">
+        {tags.map((tag) => (
+          <span key={tag} className="tag">{tag}</span>
+        ))}
+      </div>
+      <button type="button" className="open-link" onClick={onClick}>
+        {action} <ArrowRight size={16} />
+      </button>
+    </article>
+  );
+}
+
+function cleanPortalTitle(title) {
+  return title
+    .replace(/^LECCIÓN\s+\d+\s*[—-]\s*/i, '')
+    .replace(/^Lección\s+\d+\s*[—-]\s*/i, '')
+    .replace(/^#\s*/, '');
 }
 
 function ModeButton({ active, icon: Icon, children, onClick }) {
@@ -340,6 +674,104 @@ function DocsTree({ docs, selectedDoc, onSelect }) {
         {docs.length === 0 && <EmptyState text="No hay documentos para la busqueda actual." />}
       </div>
     </div>
+  );
+}
+
+function ChallengeGallery({ sites, selectedPage, onSelectPage }) {
+  if (sites.length === 0) return <EmptyState text="No hay challenges para la busqueda actual." />;
+
+  return (
+    <div className="space-y-4">
+      <section className="rounded-md border border-zinc-200 bg-white p-5 shadow-panel">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">docs/challenges</p>
+            <h2 className="mt-1 text-2xl font-semibold leading-tight text-zinc-950">Mini sitios evaluativos</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-600">
+              Cada challenge se publica como un sitio HTML independiente. Las tarjetas muestran una vista previa real,
+              resumen y accesos directos a sus secciones internas.
+            </p>
+          </div>
+          <span className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-600">
+            {sites.length} mini sitio{sites.length === 1 ? '' : 's'}
+          </span>
+        </div>
+      </section>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        {sites.map((site) => (
+          <ChallengeCard
+            key={site.id}
+            site={site}
+            selectedPage={selectedPage}
+            onSelectPage={onSelectPage}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChallengeCard({ site, selectedPage, onSelectPage }) {
+  const activePage = site.pages.find((page) => page.id === selectedPage?.id);
+  const previewPage = activePage ?? site.entry;
+
+  return (
+    <article className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-panel">
+      <div className="aspect-[16/9] border-b border-zinc-200 bg-zinc-950">
+        <iframe
+          title={`Preview ${site.title}`}
+          srcDoc={htmlPreviewDocument(previewPage)}
+          className="challenge-preview-frame"
+          tabIndex={-1}
+        />
+      </div>
+      <div className="space-y-4 p-4">
+        <div>
+          <h3 className="text-lg font-semibold leading-tight text-zinc-950">{site.title}</h3>
+          <p className="mt-1 break-all text-xs text-zinc-500">{site.path}</p>
+          <p className="mt-3 line-clamp-3 text-sm leading-6 text-zinc-700">{site.summary}</p>
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Secciones</p>
+          <div className="flex flex-wrap gap-2">
+            {site.pages.map((page) => (
+              <button
+                key={page.id}
+                type="button"
+                onClick={() => onSelectPage(page.id)}
+                className={`rounded-md border px-2.5 py-1.5 text-xs font-semibold transition ${
+                  selectedPage?.id === page.id
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                    : 'border-zinc-200 bg-white text-zinc-600 hover:border-emerald-400 hover:text-emerald-700'
+                }`}
+              >
+                {shortHtmlPageTitle(page)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-200 pt-3">
+          <button
+            type="button"
+            onClick={() => onSelectPage(site.entry.id)}
+            className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+          >
+            <ExternalLink size={16} />
+            Previsualizar inicio
+          </button>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-emerald-500 hover:text-emerald-700"
+            onClick={() => openHtmlPageInNewTab(activePage ?? site.entry)}
+          >
+            Abrir en pestaña
+          </button>
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -614,6 +1046,32 @@ function MarkdownViewer({ doc, onNavigate }) {
     <article className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-panel">
       <ViewerHeader icon={FileText} title={doc.title} subtitle={doc.path} />
       <MarkdownContent content={doc.content} currentPath={doc.path} onNavigate={onNavigate} />
+    </article>
+  );
+}
+
+function HtmlPageViewer({ page }) {
+  if (!page) return <EmptyState text="No hay pagina seleccionada." />;
+
+  return (
+    <article className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-panel">
+      <ViewerHeader icon={ExternalLink} title={page.title} subtitle={page.path} />
+      <div className="border-b border-zinc-200 bg-stone-50 px-5 py-3">
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-emerald-500 hover:text-emerald-700"
+          onClick={() => openHtmlPageInNewTab(page)}
+        >
+          <ExternalLink size={16} />
+          Abrir en pestaña
+        </button>
+      </div>
+      <iframe
+        key={page.publicPath}
+        title={page.title}
+        srcDoc={htmlStandaloneDocument(page)}
+        className="html-page-frame"
+      />
     </article>
   );
 }
@@ -970,10 +1428,132 @@ function normalizePath(input) {
   return parts.join('/');
 }
 
+function staticAssetPath(path) {
+  const base = import.meta.env.BASE_URL || './';
+  const normalizedBase = base.endsWith('/') ? base : `${base}/`;
+  return `${normalizedBase}${path.replace(/^\/+/, '')}`;
+}
+
+function htmlPreviewDocument(page) {
+  if (!page?.content) return '';
+  return injectHtmlHead(page.content, page, `<style>
+    html, body { width: 100%; min-height: 100%; overflow: hidden; }
+    body { transform: scale(0.56); transform-origin: top left; width: 178%; }
+    * { scrollbar-width: none; }
+    *::-webkit-scrollbar { display: none; }
+  </style><script>
+    window.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }, true);
+  <\/script>`);
+}
+
+function htmlStandaloneDocument(page) {
+  if (!page?.content) return '';
+  return injectHtmlHead(page.content, page);
+}
+
+function injectHtmlHead(content, page, extraHead = '') {
+  const basePath = page.publicPath.includes('/')
+    ? page.publicPath.slice(0, page.publicPath.lastIndexOf('/') + 1)
+    : '';
+  const baseHref = new URL(staticAssetPath(basePath), window.location.href).href;
+  const baseTag = `<base href="${escapeHtmlAttribute(baseHref)}">`;
+  return content.replace(/<head([^>]*)>/i, `<head$1>${baseTag}${extraHead}`);
+}
+
+function openHtmlPageInNewTab(page) {
+  if (!page?.content) return;
+  const blob = new Blob([htmlStandaloneDocument(page)], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const opened = window.open(url, '_blank', 'noopener,noreferrer');
+  if (!opened) {
+    URL.revokeObjectURL(url);
+    return;
+  }
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+function escapeHtmlAttribute(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
+
+function buildChallengeSites(pages) {
+  const grouped = new Map();
+
+  for (const page of pages) {
+    const relative = page.path.replace(/^docs\/challenges\//, '');
+    const parts = relative.split('/');
+    const siteKey = parts.length > 1 ? parts[0] : relative.replace(/\.html$/, '');
+
+    if (!grouped.has(siteKey)) {
+      grouped.set(siteKey, []);
+    }
+    grouped.get(siteKey).push(page);
+  }
+
+  return [...grouped.entries()]
+    .map(([siteKey, sitePages]) => {
+      const entry =
+        sitePages.find((page) => page.path.endsWith('/index.html')) ??
+        sitePages.find((page) => page.path.endsWith(`${siteKey}.html`)) ??
+        sitePages[0];
+      const pagesForSite = sitePages
+        .filter((page) => page.path !== `docs/challenges/${siteKey}.html`)
+        .sort((a, b) => challengePageOrder(a).localeCompare(challengePageOrder(b), undefined, { numeric: true }));
+
+      return {
+        id: `docs/challenges/${siteKey}`,
+        title: entry.title,
+        path: `docs/challenges/${siteKey}`,
+        summary: entry.summary,
+        entry,
+        pages: pagesForSite,
+      };
+    })
+    .sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true }));
+}
+
+function challengePageOrder(page) {
+  const fileName = page.path.split('/').pop();
+  if (fileName === 'index.html') return '00';
+  const order = {
+    arquitectura: '01',
+    'ms-server': '02',
+    'ms-cliente': '03',
+    estandares: '04',
+    extension: '05',
+    entrega: '06',
+    stack: '07',
+  };
+  return order[fileName.replace(/\.html$/, '')] ?? fileName;
+}
+
+function shortHtmlPageTitle(page) {
+  return page.title
+    .replace(/^Juego del Gato\s+—\s+/i, '')
+    .replace(/^00\s+/, 'Intro');
+}
+
 function docFromHash() {
   const { path } = routeFromHash();
   const candidates = candidateDocPaths(path);
   return allDocs.find((doc) => candidates.includes(doc.path)) ?? null;
+}
+
+function htmlPageFromHash() {
+  const { path } = routeFromHash();
+  const normalized = normalizePath(path);
+  const candidates = [
+    normalized,
+    normalized.startsWith('docs/') ? normalized : `docs/${normalized}`,
+  ];
+  return htmlPages.find((page) => candidates.includes(page.path)) ?? null;
 }
 
 function anchorFromHash() {

@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego del Gato — 02 MS Server</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d0d0f;
+            --surface: #141418;
+            --surface2: #1c1c22;
+            --border: #2a2a35;
+            --border-accent: #3d3d50;
+            --text: #e8e8f0;
+            --muted: #7a7a9a;
+            --accent: #7c6aff;
+            --accent3: #6affb8;
+            --accent4: #ffc96a;
+            --x-color: #ff6a6a;
+            --o-color: #6a9fff;
+            --grid-line: #2a2a35;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--bg); color: var(--text);
+            font-family: 'Syne', sans-serif; font-size: 16px;
+            line-height: 1.7; overflow-x: hidden;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+            linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 60px 60px; opacity: 0.35;
+            pointer-events: none; z-index: 0;
+        }
+        body > * { position: relative; z-index: 1; }
+
+        /* NAV */
+        .top-nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(13,13,15,0.93); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border); padding: 0.55rem 0;
+        }
+        .nav-inner {
+            max-width: 1100px; margin: 0 auto; padding: 0 1.5rem;
+            display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+        }
+        .nav-brand {
+            font-size: 0.82rem; font-weight: 700; letter-spacing: 0.12em;
+            text-transform: uppercase; color: var(--accent); margin-right: auto; white-space: nowrap;
+        }
+        .nav-btn {
+            background: transparent; border: 1px solid var(--border);
+            color: var(--muted); font-family: 'Space Mono', monospace;
+            font-size: 0.68rem; padding: 0.3rem 0.7rem; border-radius: 4px;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+        .nav-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border-accent); }
+        .nav-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(124,106,255,0.07); }
+
+        /* PAGES */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* WRAP */
+        .wrap { max-width: 1000px; margin: 0 auto; padding: 3rem 1.5rem; }
+
+        /* HERO */
+        .hero {
+            min-height: calc(100svh - 58px);
+            padding: clamp(1.5rem, 5svh, 4.5rem) 1.5rem clamp(1rem, 3svh, 2rem);
+            max-width: 1000px; margin: 0 auto; text-align: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .hero-tag {
+            display: inline-block; font-family: 'Space Mono', monospace;
+            font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+            color: var(--accent3); border: 1px solid var(--accent3);
+            padding: 0.28rem 0.9rem; border-radius: 2px; margin-bottom: clamp(0.9rem, 2.2svh, 2rem);
+        }
+        .hero h1 {
+            font-size: clamp(2.35rem, min(7vw, 9svh), 5.2rem); font-weight: 800;
+            line-height: 1.03; letter-spacing: -0.02em; margin-bottom: clamp(0.8rem, 2svh, 1.5rem);
+        }
+        .hero h1 .x { color: var(--x-color); }
+        .hero h1 .o { color: var(--o-color); }
+        .hero h1 .slash { color: var(--muted); }
+        .hero-sub {
+            font-family: 'Space Mono', monospace; font-size: clamp(0.74rem, 1.7svh, 0.86rem);
+            color: var(--muted); max-width: 580px; margin: 0 auto clamp(1rem, 3svh, 2.3rem); line-height: 1.65;
+        }
+        .hero-meta {
+            display: flex; flex-wrap: wrap; gap: clamp(0.35rem, 1.2svh, 0.8rem);
+            justify-content: center; margin-bottom: clamp(1rem, 3.4svh, 2.6rem);
+        }
+        .meta-pill {
+            font-family: 'Space Mono', monospace; font-size: 0.7rem;
+            background: var(--surface2); border: 1px solid var(--border);
+            padding: 0.35rem 0.9rem; border-radius: 20px; color: var(--muted);
+        }
+        .meta-pill span { color: var(--text); }
+
+        /* BOARD DECO */
+        .board-deco {
+            display: grid; grid-template-columns: repeat(3, clamp(42px, 7svh, 60px));
+            grid-template-rows: repeat(3, clamp(42px, 7svh, 60px)); gap: clamp(4px, 0.8svh, 7px);
+            margin: 0 auto clamp(1rem, 3.2svh, 2.8rem); width: fit-content;
+        }
+        .cell {
+            width: clamp(42px, 7svh, 60px); height: clamp(42px, 7svh, 60px); border: 1px solid var(--border-accent);
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            font-family: 'Space Mono', monospace; font-weight: 700; font-size: clamp(1rem, 2.8svh, 1.5rem);
+        }
+        .cell.x { color: var(--x-color); border-color: rgba(255,106,106,0.35); background: rgba(255,106,106,0.06); }
+        .cell.o { color: var(--o-color); border-color: rgba(106,159,255,0.35); background: rgba(106,159,255,0.06); }
+        .cell.e { background: var(--surface); }
+
+        /* SECTION TITLES */
+        .section-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+        .section-num { font-family: 'Space Mono', monospace; font-size: 0.68rem; color: var(--accent); letter-spacing: 0.1em; white-space: nowrap; }
+        .section-title h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
+        .section-line { flex: 1; height: 1px; background: var(--border); }
+
+        /* CARDS */
+        .card-dark {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 1.4rem 1.5rem; margin-bottom: 1.2rem;
+        }
+        .card-dark h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.7rem; }
+        .card-dark h4 {
+            font-size: 0.8rem; font-weight: 600; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 0.5rem;
+        }
+        .card-dark p, .card-dark li { font-size: 0.88rem; color: #b0b0c8; line-height: 1.7; }
+        .card-dark ul, .card-dark ol { padding-left: 1.25rem; }
+        .card-dark li { margin-bottom: 0.35rem; }
+        .card-accent-left  { border-left: 3px solid var(--accent); }
+        .card-accent-x     { border-left: 3px solid var(--x-color); }
+        .card-accent-o     { border-left: 3px solid var(--o-color); }
+        .card-accent-green { border-left: 3px solid var(--accent3); }
+        .card-accent-yellow{ border-left: 3px solid var(--accent4); }
+
+        /* MS GRID */
+        .ms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        @media (max-width: 680px) { .ms-grid { grid-template-columns: 1fr; } }
+        .ms-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; }
+        .ms-badge {
+            display: inline-block; font-family: 'Space Mono', monospace;
+            font-size: 0.63rem; letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 0.22rem 0.55rem; border-radius: 3px; margin-bottom: 0.8rem;
+        }
+        .badge-server { background: rgba(124,106,255,0.15); color: var(--accent); border: 1px solid rgba(124,106,255,0.3); }
+        .badge-client { background: rgba(106,255,184,0.1); color: var(--accent3); border: 1px solid rgba(106,255,184,0.25); }
+        .badge-fallback { background: rgba(255,201,106,0.12); color: var(--accent4); border: 1px solid rgba(255,201,106,0.3); }
+        .ms-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.6rem; }
+        .ms-card p { font-size: 0.86rem; color: #a0a0be; line-height: 1.7; margin-bottom: 0.8rem; }
+        .ms-card ul { list-style: none; padding: 0; }
+        .ms-card li {
+            font-size: 0.82rem; color: #8888aa; padding: 0.25rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .ms-card li::before { content: '→'; color: var(--accent); font-family: 'Space Mono', monospace; font-size: 0.73rem; flex-shrink: 0; }
+        .ms-card li:last-child { border-bottom: none; }
+        .port {
+            font-family: 'Space Mono', monospace; font-size: 0.7rem;
+            background: var(--surface2); border: 1px solid var(--border-accent);
+            color: var(--accent4); padding: 0.18rem 0.5rem; border-radius: 3px; margin-left: 0.4rem;
+        }
+
+        /* INSTANCE DIAGRAM */
+        .instance-diagram {
+            display: grid; grid-template-columns: 1fr 60px 1fr 60px 1fr;
+            align-items: center; gap: 0; margin: 1.5rem 0;
+        }
+        .inst-box {
+            background: var(--surface2); border: 1px solid var(--border-accent);
+            border-radius: 8px; padding: 1rem; text-align: center;
+        }
+        .inst-box.server-box { border-color: rgba(124,106,255,0.5); }
+        .inst-box.client-box { border-color: rgba(106,255,184,0.4); }
+        .inst-label { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem; }
+        .inst-name { font-size: 0.85rem; font-weight: 700; }
+        .inst-port { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--accent4); margin-top: 0.2rem; }
+        .inst-arrow { text-align: center; font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+
+        /* ENDPOINTS */
+        .endpoint-group { margin-bottom: 2.5rem; }
+        .endpoint-group-title {
+            font-family: 'Space Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em;
+            text-transform: uppercase; color: var(--accent); margin-bottom: 1rem;
+            padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
+        }
+        .endpoint {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; margin-bottom: 0.8rem; overflow: hidden;
+        }
+        .endpoint-header {
+            display: flex; align-items: flex-start; gap: 0.75rem;
+            padding: 0.85rem 1.1rem; cursor: pointer; flex-wrap: wrap;
+        }
+        .endpoint-header:hover { background: var(--surface2); }
+        .method {
+            font-family: 'Space Mono', monospace; font-size: 0.68rem; font-weight: 700;
+            padding: 0.22rem 0.55rem; border-radius: 3px; flex-shrink: 0;
+            min-width: 50px; text-align: center;
+        }
+        .method-get    { background: rgba(106,255,184,0.12); color: var(--accent3); border: 1px solid rgba(106,255,184,0.25); }
+        .method-post   { background: rgba(124,106,255,0.12); color: var(--accent);  border: 1px solid rgba(124,106,255,0.25); }
+        .method-put    { background: rgba(255,201,106,0.12); color: var(--accent4); border: 1px solid rgba(255,201,106,0.25); }
+        .method-delete { background: rgba(255,106,106,0.12); color: var(--x-color); border: 1px solid rgba(255,106,106,0.25); }
+        .method-patch  { background: rgba(106,159,255,0.12); color: var(--o-color); border: 1px solid rgba(106,159,255,0.25); }
+        .endpoint-path { font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--text); flex: 1; word-break: break-all; }
+        .endpoint-path .path-param { color: var(--accent4); }
+        .endpoint-desc { font-size: 0.8rem; color: var(--muted); width: 100%; margin-top: 0.2rem; padding-left: calc(50px + 0.75rem); }
+        .endpoint-body { border-top: 1px solid var(--border); padding: 1rem 1.1rem; display: none; }
+        .endpoint-body.open { display: block; }
+        .io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 680px) { .io-grid { grid-template-columns: 1fr; } }
+        .io-label {
+            font-family: 'Space Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem;
+        }
+        pre {
+            background: #0a0a0e; border: 1px solid var(--border); border-radius: 6px;
+            padding: 0.75rem 1rem; font-family: 'Space Mono', monospace; font-size: 0.72rem;
+            line-height: 1.65; color: #c8c8e0; overflow-x: auto; white-space: pre;
+        }
+        .code-sample { position: relative; }
+        .code-copy-btn {
+            position: absolute; top: 0.45rem; right: 0.45rem; z-index: 2;
+            font-family: 'Space Mono', monospace; font-size: 0.6rem;
+            background: rgba(28,28,34,0.92); border: 1px solid var(--border-accent);
+            color: var(--muted); padding: 0.22rem 0.5rem; border-radius: 4px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .code-copy-btn:hover, .code-copy-btn:focus {
+            color: var(--accent3); border-color: var(--accent3);
+            background: rgba(106,255,184,0.08);
+        }
+        .code-copy-btn.copied { color: var(--accent3); border-color: var(--accent3); }
+        .code-sample pre { padding-right: 4.8rem; }
+        .json-key  { color: #7c9bff; }
+        .json-str  { color: #98ffb8; }
+        .json-num  { color: #ffb86c; }
+        .json-bool { color: #ff79c6; }
+        .json-null { color: var(--muted); }
+        .arrow-toggle { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--muted); flex-shrink: 0; transition: transform 0.2s; }
+        .endpoint.open .arrow-toggle { transform: rotate(90deg); }
+
+        /* BOARD MINI */
+        .board-example { display: grid; grid-template-columns: repeat(3, 44px); gap: 4px; margin: 0.8rem 0; }
+        .bc {
+            width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+            border: 1px solid var(--border-accent); border-radius: 4px;
+            font-family: 'Space Mono', monospace; font-weight: 700; font-size: 1rem; background: var(--surface2);
+        }
+        .bc.X { color: var(--x-color); } .bc.O { color: var(--o-color); }
+        .bc.dot { color: var(--border-accent); font-size: 0.65rem; }
+
+        /* RICHARDSON */
+        .level-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .level-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; position: relative; }
+        .level-num { font-family: 'Space Mono', monospace; font-size: 2rem; font-weight: 700; line-height: 1; margin-bottom: 0.4rem; }
+        .level-name { font-size: 0.82rem; font-weight: 600; margin-bottom: 0.4rem; }
+        .level-desc { font-size: 0.77rem; color: var(--muted); line-height: 1.6; }
+        .level-required {
+            position: absolute; top: 0.75rem; right: 0.75rem;
+            font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase;
+            background: rgba(106,255,184,0.1); color: var(--accent3); border: 1px solid rgba(106,255,184,0.25);
+            padding: 0.13rem 0.42rem; border-radius: 2px;
+        }
+
+        /* FALLBACK STATES */
+        .fallback-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+        @media (max-width: 680px) { .fallback-grid { grid-template-columns: 1fr; } }
+        .fallback-card {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 8px; padding: 1rem;
+        }
+        .fallback-label {
+            font-family: 'Space Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em;
+            text-transform: uppercase; margin-bottom: 0.5rem;
+        }
+        .fallback-card p { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+        /* GAME TYPE TOGGLE */
+        .gametype-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+        @media (max-width: 640px) { .gametype-grid { grid-template-columns: 1fr; } }
+        .gametype-card {
+            background: var(--surface2); border: 1px solid var(--border-accent);
+            border-radius: 8px; padding: 1.2rem;
+        }
+        .gametype-card.timed { border-color: rgba(255,201,106,0.4); }
+        .gametype-card.notime { border-color: rgba(106,255,184,0.3); }
+        .gametype-badge {
+            font-family: 'Space Mono', monospace; font-size: 0.63rem; letter-spacing: 0.09em;
+            text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 3px; margin-bottom: 0.7rem; display: inline-block;
+        }
+        .badge-timed  { background: rgba(255,201,106,0.12); color: var(--accent4); border: 1px solid rgba(255,201,106,0.3); }
+        .badge-notime { background: rgba(106,255,184,0.1); color: var(--accent3); border: 1px solid rgba(106,255,184,0.2); }
+        .gametype-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .gametype-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.65; }
+
+        /* HTTP TABLE */
+        .criteria-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin-bottom: 1.5rem; }
+        .criteria-table th {
+            font-family: 'Space Mono', monospace; font-size: 0.68rem; letter-spacing: 0.08em;
+            text-transform: uppercase; color: var(--muted); text-align: left;
+            padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--border);
+        }
+        .criteria-table td { padding: 0.65rem 0.8rem; border-bottom: 1px solid var(--border); color: #b0b0c8; vertical-align: top; }
+        .criteria-table tr:last-child td { border-bottom: none; }
+        .pct { font-family: 'Space Mono', monospace; font-size: 0.85rem; color: var(--accent4); font-weight: 700; white-space: nowrap; }
+
+        /* REQ BOX */
+        .req-box {
+            background: rgba(124,106,255,0.05); border: 1px dashed rgba(124,106,255,0.35);
+            border-radius: 8px; padding: 1.3rem 1.5rem; margin-bottom: 1.5rem;
+        }
+        .req-box-title {
+            font-family: 'Space Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em;
+            text-transform: uppercase; color: var(--accent); margin-bottom: 0.7rem;
+        }
+
+        /* ALERT */
+        .alert-box {
+            background: rgba(255,201,106,0.07); border: 1px solid rgba(255,201,106,0.28);
+            border-radius: 8px; padding: 0.9rem 1.2rem; font-size: 0.83rem; color: #c8a86a; margin-bottom: 1.2rem;
+        }
+        .alert-box strong { color: var(--accent4); }
+        .alert-info {
+            background: rgba(124,106,255,0.07); border: 1px solid rgba(124,106,255,0.28);
+            border-radius: 8px; padding: 0.9rem 1.2rem; font-size: 0.83rem; color: #a090e0; margin-bottom: 1.2rem;
+        }
+        .alert-info strong { color: var(--accent); }
+
+        /* INLINE CODE */
+        code {
+            font-family: 'Space Mono', monospace; font-size: 0.77em;
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--accent4); padding: 0.1em 0.4em; border-radius: 3px;
+        }
+
+        /* FLOW */
+        .flow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding: 0.8rem 0; font-size: 0.82rem; }
+        .flow-node {
+            background: var(--surface2); border: 1px solid var(--border-accent);
+            border-radius: 6px; padding: 0.45rem 0.85rem;
+            font-family: 'Space Mono', monospace; font-size: 0.72rem; white-space: nowrap;
+        }
+        .flow-node.client { border-color: rgba(106,255,184,0.4); color: var(--accent3); }
+        .flow-node.server { border-color: rgba(124,106,255,0.4); color: var(--accent); }
+        .flow-node.db     { border-color: rgba(255,106,106,0.4); color: var(--x-color); }
+        .flow-arrow { color: var(--muted); font-size: 0.9rem; }
+
+        /* BUTTONS */
+        .start-btn {
+            display: inline-block; background: var(--accent); color: white;
+            border: none; font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+            padding: 0.85rem 2.4rem; border-radius: 6px; cursor: pointer; letter-spacing: 0.03em;
+            transition: all 0.2s; text-decoration: none;
+        }
+        .start-btn:hover { background: #9a82ff; transform: translateY(-1px); color: white; text-decoration: none; }
+        .page-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 2rem 0; border-top: 1px solid var(--border); margin-top: 3rem;
+        }
+        .page-nav-btn {
+            font-family: 'Space Mono', monospace; font-size: 0.76rem;
+            background: transparent; border: 1px solid var(--border-accent);
+            color: var(--muted); padding: 0.5rem 1.1rem; border-radius: 4px; cursor: pointer; transition: all 0.2s;
+        }
+        .page-nav-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(124,106,255,0.07); }
+        .page-nav-btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+        .page-nav-btn.primary:hover { background: #9a82ff; border-color: #9a82ff; }
+
+        footer {
+            text-align: center; padding: 2rem;
+            font-family: 'Space Mono', monospace; font-size: 0.7rem;
+            color: var(--muted); border-top: 1px solid var(--border); margin-top: 2rem;
+        }
+
+        /* ENUNCIADO NARRATIVO */
+        .intro-deck {
+            height: min(760px, calc(100svh - 112px));
+            min-height: 520px;
+            scroll-margin-top: 82px;
+            display: flex; flex-direction: column;
+            justify-content: flex-start;
+            padding-top: 1rem;
+        }
+        .intro-slide {
+            display: none;
+            flex-direction: column;
+            justify-content: flex-start;
+            min-height: 0;
+            flex: 1 1 auto;
+            overflow: auto;
+            padding: 0;
+        }
+        .intro-slide.active {
+            display: flex;
+            animation: fadeInUp 0.28s ease both;
+        }
+        .intro-slide-nav {
+            flex: 0 0 auto;
+            z-index: 10;
+            background: rgba(13,13,15,0.9); backdrop-filter: blur(12px);
+            border: 1px solid var(--border); border-radius: 8px;
+            display: flex; flex-wrap: wrap; gap: 0.45rem;
+            padding: 0.55rem; margin-bottom: 0.75rem;
+        }
+        .intro-slide-nav button {
+            font-family: 'Space Mono', monospace; font-size: 0.64rem;
+            color: var(--muted); background: transparent; cursor: pointer;
+            border: 1px solid var(--border); border-radius: 4px;
+            padding: 0.28rem 0.55rem; transition: all 0.2s;
+        }
+        .intro-slide-nav button:hover,
+        .intro-slide-nav button:focus,
+        .intro-slide-nav button.active {
+            color: var(--accent3); border-color: var(--accent3);
+            background: rgba(106,255,184,0.07);
+        }
+        .intro-slide-controls {
+            flex: 0 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 1rem; border-top: 1px solid var(--border);
+            padding-top: 0.8rem; margin-top: 0.8rem;
+        }
+        .intro-slide-count {
+            font-family: 'Space Mono', monospace; font-size: 0.68rem;
+            color: var(--muted);
+        }
+        .intro-slide-actions { display: flex; gap: 0.65rem; flex-wrap: wrap; justify-content: flex-end; }
+        #introSpecButton { display: none; }
+        @media (max-width: 720px) {
+            .intro-deck {
+                height: auto;
+                min-height: calc(100svh - 92px);
+                padding-top: 0.5rem;
+            }
+            .intro-slide {
+                min-height: 0;
+                max-height: none;
+                overflow: visible;
+            }
+            .intro-slide-controls { align-items: stretch; flex-direction: column; }
+            .intro-slide-actions { justify-content: stretch; }
+            .intro-slide-actions .page-nav-btn { flex: 1; }
+        }
+
+        .brief-header {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 1.8rem 2rem;
+            position: relative; overflow: hidden;
+        }
+        .brief-header::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent3), var(--accent4));
+        }
+        .brief-from {
+            font-family: 'Space Mono', monospace; font-size: 0.68rem;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 1.2rem;
+            display: flex; flex-wrap: wrap; gap: 1.5rem;
+        }
+        .brief-from span { color: var(--text); }
+        .brief-header h2 {
+            font-size: 1.4rem; font-weight: 800; margin-bottom: 0.8rem;
+            letter-spacing: -0.01em;
+        }
+        .brief-header p { font-size: 0.92rem; color: #b8b8d0; line-height: 1.8; }
+
+        .brief-section h3 {
+            font-family: 'Space Mono', monospace; font-size: 0.72rem;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--accent3); margin-bottom: 0.9rem;
+            padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
+        }
+        .intro-slide.brief-section {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 1.3rem 1.5rem;
+        }
+        .brief-section p { font-size: 0.92rem; color: #b8b8d0; line-height: 1.85; margin-bottom: 0.8rem; }
+        .intro-slide.brief-section p { font-size: 0.86rem; line-height: 1.65; }
+        .brief-section p:last-child { margin-bottom: 0; }
+
+        .brief-quote {
+            border-left: 3px solid var(--accent);
+            background: rgba(124,106,255,0.06);
+            padding: 1rem 1.4rem; border-radius: 0 8px 8px 0;
+            margin: 1.2rem 0; font-size: 0.9rem; color: #c0c0e0;
+            line-height: 1.8; font-style: italic;
+        }
+        .intro-slide .brief-quote {
+            padding: 0.85rem 1rem; margin: 0.9rem 0;
+            font-size: 0.84rem; line-height: 1.6;
+        }
+
+        .constraint-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.8rem; margin-top: 1rem;
+        }
+        .constraint-item {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 6px; padding: 0.9rem 1rem;
+            font-size: 0.83rem; color: #a0a0c0; line-height: 1.6;
+        }
+        .constraint-item strong { color: var(--text); display: block; margin-bottom: 0.2rem; font-size: 0.82rem; }
+
+        .deliverable-list { list-style: none; padding: 0; }
+        .deliverable-list li {
+            display: flex; gap: 0.8rem; align-items: flex-start;
+            padding: 0.6rem 0; border-bottom: 1px solid var(--border);
+            font-size: 0.88rem; color: #b0b0c8;
+        }
+        .deliverable-list li:last-child { border-bottom: none; }
+        .deliverable-list li::before {
+            content: '▸'; color: var(--accent3); font-size: 0.8rem;
+            flex-shrink: 0; margin-top: 0.15rem;
+        }
+
+        @media (max-height: 760px) {
+            .hero { padding-top: 0.8rem; padding-bottom: 0.8rem; }
+            .hero-tag { margin-bottom: 0.65rem; }
+            .board-deco {
+                grid-template-columns: repeat(3, 38px);
+                grid-template-rows: repeat(3, 38px);
+                gap: 4px; margin-bottom: 0.8rem;
+            }
+            .cell { width: 38px; height: 38px; font-size: 0.92rem; }
+            .hero h1 { font-size: clamp(2rem, 8svh, 3.2rem); margin-bottom: 0.65rem; }
+            .hero-sub { font-size: 0.72rem; line-height: 1.45; margin-bottom: 0.8rem; }
+            .hero-meta { gap: 0.35rem; margin-bottom: 0.9rem; }
+            .meta-pill { font-size: 0.61rem; padding: 0.22rem 0.55rem; }
+            .start-btn { font-size: 0.86rem; padding: 0.62rem 1.35rem; }
+            .intro-deck {
+                height: calc(100svh - 92px);
+                min-height: 440px;
+                scroll-margin-top: 72px;
+            }
+            .intro-slide-nav { gap: 0.3rem; padding: 0.45rem; margin-bottom: 0.55rem; }
+            .intro-slide-nav button { font-size: 0.58rem; padding: 0.22rem 0.42rem; }
+            .intro-slide-controls { padding-top: 0.55rem; margin-top: 0.55rem; }
+            .intro-slide.brief-section { padding: 1rem 1.15rem; }
+            .brief-header { padding: 1.25rem 1.4rem; }
+            .brief-header h2 { font-size: 1.12rem; }
+            .brief-header p,
+            .intro-slide.brief-section p,
+            .deliverable-list li,
+            .constraint-item { font-size: 0.78rem; line-height: 1.48; }
+            .brief-section h3 { font-size: 0.64rem; margin-bottom: 0.65rem; }
+            .intro-slide .brief-quote { font-size: 0.76rem; line-height: 1.45; padding: 0.65rem 0.85rem; margin: 0.65rem 0; }
+            .constraint-grid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.55rem; }
+            .constraint-item { padding: 0.65rem 0.75rem; }
+            .deliverable-list li { padding: 0.42rem 0; }
+        }
+
+        @media (max-height: 620px) {
+            .board-deco { display: none; }
+            .hero h1 { font-size: clamp(1.85rem, 8svh, 2.65rem); }
+            .hero-sub br { display: none; }
+            .hero-meta { margin-bottom: 0.75rem; }
+        }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .page.active .card-dark, .page.active .ms-card, .page.active .endpoint, .page.active .level-card { animation: fadeInUp 0.3s ease both; }
+        .page.active .card-dark:nth-child(2), .page.active .level-card:nth-child(2) { animation-delay: 0.07s; }
+        .page.active .card-dark:nth-child(3), .page.active .level-card:nth-child(3) { animation-delay: 0.12s; }
+        .page.active .card-dark:nth-child(4), .page.active .level-card:nth-child(4) { animation-delay: 0.17s; }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="top-nav">
+    <div class="nav-inner">
+        <a class="nav-brand" href="index.html">⬛ Gato MS — Fullstack I</a>
+        <a class="nav-btn" href="index.html">00 Intro</a>
+        <a class="nav-btn" href="arquitectura.html">01 Arquitectura</a>
+        <a class="nav-btn active" href="ms-server.html">02 MS Server</a>
+        <a class="nav-btn" href="ms-cliente.html">03 MS Cliente</a>
+        <a class="nav-btn" href="estandares.html">04 Estándares</a>
+        <a class="nav-btn" href="extension.html">05 Extensión</a>
+        <a class="nav-btn" href="entrega.html">06 Entrega</a>
+        <a class="nav-btn" style="border-color:rgba(255,201,106,0.5);color:var(--accent4);" href="stack.html">⚙ Stack</a>
+    </div>
+</nav>
+
+<div class="page active" id="page-2">
+    <div class="wrap">
+        <div class="section-title">
+            <span class="section-num">// 02</span>
+            <h2>MS Server — gato-server</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="ms-badge badge-server" style="margin-bottom:1.2rem;">Puerto 8080</div>
+
+        <!-- TIPO DE PARTIDA -->
+        <div class="section-title" style="margin-top:0.3rem;">
+            <span class="section-num">02.1</span>
+            <h2 style="font-size:1.1rem;">Tipos de partida</h2>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="gametype-grid">
+            <div class="gametype-card notime">
+                <div class="gametype-badge badge-notime">NO_TIME</div>
+                <h3>Sin límite de tiempo</h3>
+                <p>No hay restricción de tiempo por turno. El jugador puede tomarse todo el tiempo que necesite. La partida sólo termina por victoria, empate o abandono.</p>
+                <p style="margin-top:0.5rem; font-size:0.78rem;">Campo: <code>turnTimeoutSeconds: null</code></p>
+            </div>
+            <div class="gametype-card timed">
+                <div class="gametype-badge badge-timed">TIMED</div>
+                <h3>Con límite de tiempo</h3>
+                <p>Cada turno tiene un máximo de segundos. Si el jugador en turno no mueve a tiempo, <strong>pierde automáticamente la partida</strong>. El server detecta el timeout en cada consulta de estado o intento de movimiento.</p>
+                <p style="margin-top:0.5rem; font-size:0.78rem;">Campo: <code>turnTimeoutSeconds: 30</code> (mínimo 10 seg, máximo 300 seg)</p>
+            </div>
+        </div>
+
+        <div class="card-dark card-accent-yellow">
+            <h3>Detección de timeout</h3>
+            <p>El server no requiere un scheduler activo. La detección es <strong>lazy</strong>: al recibir cualquier request sobre una partida TIMED en curso, el server calcula si el tiempo del turno actual expiró comparando <code>lastMoveAt</code> (o <code>startedAt</code> para el primer movimiento) con el momento actual.</p>
+            <ul style="margin-top:0.5rem;">
+                <li>Si el tiempo expiró → la partida pasa a <code>FINISHED</code>, el jugador en turno pierde, y se retorna la respuesta con <code>winner</code> correspondiente.</li>
+                <li>El campo <code>lastMoveAt</code> se actualiza en cada movimiento válido.</li>
+                <li>El campo <code>remainingSeconds</code> puede incluirse en la respuesta de estado para que el cliente informe al jugador.</li>
+            </ul>
+        </div>
+
+        <!-- MODELO -->
+        <div class="section-title" style="margin-top:2rem;">
+            <span class="section-num">02.2</span>
+            <h2 style="font-size:1.1rem;">Modelo de dominio</h2>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="card-dark">
+            <h4>Entidad: Game</h4>
+            <ul>
+                <li><code>id</code> — Long, generado automáticamente</li>
+                <li><code>playerXId</code> — Long, jugador que crea la partida (rol X)</li>
+                <li><code>playerOId</code> — Long nullable, jugador que se une (rol O)</li>
+                <li><code>board</code> — String de 9 chars: <code>X</code>, <code>O</code>, <code>.</code> (posiciones 0–8)</li>
+                <li><code>currentTurn</code> — Enum: <code>X</code> | <code>O</code></li>
+                <li><code>status</code> — Enum: <code>WAITING</code> | <code>IN_PROGRESS</code> | <code>FINISHED</code></li>
+                <li><code>winner</code> — Enum nullable: <code>X</code> | <code>O</code> | <code>DRAW</code> | <code>TIMEOUT</code></li>
+                <li><code>gameType</code> — Enum: <code>NO_TIME</code> | <code>TIMED</code></li>
+                <li><code>turnTimeoutSeconds</code> — Integer nullable (sólo si gameType = TIMED)</li>
+                <li><code>lastMoveAt</code> — LocalDateTime, actualizado en cada jugada</li>
+                <li><code>createdAt</code> — LocalDateTime</li>
+                <li><code>startedAt</code> — LocalDateTime, cuando el segundo jugador se une</li>
+            </ul>
+        </div>
+
+        <div class="card-dark card-accent-yellow">
+            <h4>Entidad: RegisteredClient</h4>
+            <p style="font-size:0.83rem; color:var(--muted); margin-bottom:0.6rem;">Representa un MS Cliente autorizado a usar este server. Se crea automáticamente en el primer arranque del cliente.</p>
+            <ul>
+                <li><code>id</code> — Long, generado automáticamente</li>
+                <li><code>clientId</code> — String único, identifica al MS Cliente (ej: <code>gato-client-1</code>)</li>
+                <li><code>clientSecret</code> — String, hasheado con BCrypt en el server</li>
+                <li><code>baseUrl</code> — String, URL base del cliente (ej: <code>http://localhost:8081</code>)</li>
+                <li><code>registeredAt</code> — LocalDateTime</li>
+                <li><code>active</code> — Boolean</li>
+            </ul>
+            <p style="font-size:0.83rem; color:var(--muted); margin-top:0.7rem;">El server usa esta tabla como <code>UserDetailsService</code> para Spring Security: el <code>clientId</code> es el username y el <code>clientSecret</code> hasheado es el password. Migración Flyway obligatoria.</p>
+        </div>
+
+        <!-- REGLAS -->
+        <div class="section-title" style="margin-top:2rem;">
+            <span class="section-num">02.3</span>
+            <h2 style="font-size:1.1rem;">Reglas de negocio obligatorias</h2>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="card-dark card-accent-green">
+            <h3>Validaciones de movimiento (en orden)</h3>
+            <ol>
+                <li>La partida existe → 404 si no.</li>
+                <li>La partida está en estado <code>IN_PROGRESS</code> → 422 si está WAITING o FINISHED.</li>
+                <li>Para partidas TIMED: verificar si el turno expiró → si expiró, finalizar y retornar resultado.</li>
+                <li>El jugador es participante de la partida (X u O) → 403 si no.</li>
+                <li>Es el turno del jugador que mueve → 400 con mensaje descriptivo.</li>
+                <li>La posición es válida (0–8) → 400 si está fuera de rango.</li>
+                <li>La casilla no está ocupada → 400 con mensaje descriptivo.</li>
+            </ol>
+        </div>
+
+        <div class="card-dark card-accent-green">
+            <h3>Detección de fin de partida</h3>
+            <p>Tras cada movimiento válido, el server evalúa en orden:</p>
+            <ul>
+                <li>¿Línea ganadora? (8 combinaciones: 3 filas, 3 columnas, 2 diagonales) → <code>winner = X|O</code>, <code>status = FINISHED</code></li>
+                <li>¿Todas las casillas ocupadas sin ganador? → <code>winner = DRAW</code>, <code>status = FINISHED</code></li>
+                <li>Ninguna condición → cambiar turno, actualizar <code>lastMoveAt</code>, continuar.</li>
+            </ul>
+        </div>
+
+        <!-- ENDPOINTS SERVER -->
+        <div class="section-title" style="margin-top:2rem;">
+            <span class="section-num">02.4</span>
+            <h2 style="font-size:1.1rem;">Endpoints</h2>
+            <div class="section-line"></div>
+        </div>
+        <p style="font-size:0.83rem; color:var(--muted); margin-bottom:1.5rem;">Clic en cada endpoint para ver ejemplos de entrada/salida.</p>
+
+        <div class="endpoint-group">
+            <div class="endpoint-group-title">Gestión de partidas — /api/games</div>
+
+            <!-- POST /api/games -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this.closest('.endpoint'))">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/api/games</span>
+                    <span class="arrow-toggle">▶</span>
+                    <span class="endpoint-desc">Crea una partida. El creador es el jugador X. Se especifica el tipo NO_TIME o TIMED.</span>
+                </div>
+                <div class="endpoint-body">
+                    <div class="io-grid">
+                        <div>
+                            <div class="io-label">Request Body — partida sin tiempo</div>
+                            <pre>{
+  <span class="json-key">"playerXId"</span>: <span class="json-num">42</span>,
+  <span class="json-key">"gameType"</span>: <span class="json-str">"NO_TIME"</span>
+}</pre>
+                            <div class="io-label" style="margin-top:0.8rem;">Request Body — partida temporizada</div>
+                            <pre>{
+  <span class="json-key">"playerXId"</span>: <span class="json-num">42</span>,
+  <span class="json-key">"gameType"</span>: <span class="json-str">"TIMED"</span>,
+  <span class="json-key">"turnTimeoutSeconds"</span>: <span class="json-num">30</span>
+}</pre>
+                        </div>
+                        <div>
+                            <div class="io-label">Response 201 Created</div>
+                            <pre>{
+  <span class="json-key">"id"</span>: <span class="json-num">1</span>,
+  <span class="json-key">"playerXId"</span>: <span class="json-num">42</span>,
+  <span class="json-key">"playerOId"</span>: <span class="json-null">null</span>,
+  <span class="json-key">"board"</span>: <span class="json-str">"........."</span>,
+  <span class="json-key">"status"</span>: <span class="json-str">"WAITING"</span>,
+  <span class="json-key">"currentTurn"</span>: <span class="json-str">"X"</span>,
+  <span class="json-key">"gameType"</span>: <span class="json-str">"TIMED"</span>,
+  <span class="json-key">"turnTimeoutSeconds"</span>: <span class="json-num">30</span>,
+  <span class="json-key">"winner"</span>: <span class="json-null">null</span>
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GET /api/games -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this.closest('.endpoint'))">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/api/games</span>
+                    <span class="arrow-toggle">▶</span>
+                    <span class="endpoint-desc">Lista partidas. Soporta filtros por status y gameType.</span>
+                </div>
+                <div class="endpoint-body">
+                    <div class="io-grid">
+                        <div>
+                            <div class="io-label">Query Params (opcionales)</div>
+                            <pre>?status=WAITING
+?status=IN_PROGRESS
+?gameType=TIMED
+?gameType=NO_TIME</pre>
+                        </div>
+                        <div>
+                            <div class="io-label">Response 200 OK</div>
+                            <pre>[
+  {
+    <span class="json-key">"id"</span>: <span class="json-num">1</span>,
+    <span class="json-key">"status"</span>: <span class="json-str">"WAITING"</span>,
+    <span class="json-key">"gameType"</span>: <span class="json-str">"TIMED"</span>,
+    <span class="json-key">"turnTimeoutSeconds"</span>: <span class="json-num">30</span>,
+    <span class="json-key">"playerXId"</span>: <span class="json-num">42</span>,
+    <span class="json-key">"playerOId"</span>: <span class="json-null">null</span>
+  }
+]</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GET /api/games/{id} -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this.closest('.endpoint'))">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/api/games/<span class="path-param">{gameId}</span></span>
+                    <span class="arrow-toggle">▶</span>
+                    <span class="endpoint-desc">Estado completo de la partida. En partidas TIMED incluye remainingSeconds. Detecta timeout lazy.</span>
+                </div>
+                <div class="endpoint-body">
+                    <div class="io-grid">
+                        <div>
+                            <div class="io-label">Response 200 OK (TIMED en curso)</div>
+                            <pre>{
+  <span class="json-key">"id"</span>: <span class="json-num">1</span>,
+  <span class="json-key">"board"</span>: <span class="json-str">"X.O......"</span>,
+  <span class="json-key">"status"</span>: <span class="json-str">"IN_PROGRESS"</span>,
+  <span class="json-key">"currentTurn"</span>: <span class="json-str">"O"</span>,
+  <span class="json-key">"gameType"</span>: <span class="json-str">"TIMED"</span>,
+  <span class="json-key">"turnTimeoutSeconds"</span>: <span class="json-num">30</span>,
+  <span class="json-key">"remainingSeconds"</span>: <span class="json-num">18</span>,
+  <span class="json-key">"winner"</span>: <span class="json-null">null</span>
+}</pre>
+                        </div>
+                        <div>
+                            <div class="io-label">Response 200 OK (timeout detectado)</div>
+                            <pre>{
+  <span class="json-key">"id"</span>: <span class="json-num">1</span>,
+  <span class="json-key">"board"</span>: <span class="json-str">"X.O......"</span>,
+  <span class="json-key">"status"</span>: <span class="json-str">"FINISHED"</span>,
+  <span class="json-key">"currentTurn"</span>: <span class="json-str">"O"</span>,
+  <span class="json-key">"winner"</span>: <span class="json-str">"X"</span>,
+  <span class="json-key">"message"</span>: <span class="json-str">"O superó el tiempo límite. ¡X gana!"</span>
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- POST /api/games/{id}/join -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this.closest('.endpoint'))">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/api/games/<span class="path-param">{gameId}</span>/join</span>
+                    <span class="arrow-toggle">▶</span>
+                    <span class="endpoint-desc">Acción: un jugador se une como O. Cambia status a IN_PROGRESS e inicia el reloj si es TIMED.</span>
+                </div>
+                <div class="endpoint-body">
+                    <div class="io-grid">
+                        <div>
+                            <div class="io-label">Request Body</div>
+                            <pre>{ <span class="json-key">"playerOId"</span>: <span class="json-num">99</span> }</pre>
+                            <div class="io-label" style="margin-top:0.8rem;">Validaciones</div>
+                            <pre>· Partida existe
+· status == WAITING
+· playerOId ≠ playerXId</pre>
+                        </div>
+                        <div>
+                            <div class="io-label">Response 200 OK</div>
+                            <pre>{
+  <span class="json-key">"id"</span>: <span class="json-num">1</span>,
+  <span class="json-key">"playerOId"</span>: <span class="json-num">99</span>,
+  <span class="json-key">"status"</span>: <span class="json-str">"IN_PROGRESS"</span>,
+  <span class="json-key">"currentTurn"</span>: <span class="json-str">"X"</span>,
+  <span class="json-key">"gameType"</span>: <span class="json-str">"TIMED"</span>,
+  <span class="json-key">"turnTimeoutSeconds"</span>: <span class="json-num">30</span>,
+  <span class="json-key">"message"</span>: <span class="json-str">"¡La partida comenzó! Turno de X (30 seg)"</span>
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- POST /api/games/{id}/move -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this.closest('.endpoint'))">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/api/games/<span class="path-param">{gameId}</span>/move</span>
+                    <span class="arrow-toggle">▶</span>
+                    <span class="endpoint-desc">Acción principal: registra una jugada. Valida orden completo, actualiza tablero, detecta fin, aplica timeout si aplica.</span>
+                </div>
+                <div class="endpoint-body">
+                    <div class="io-grid">
+                        <div>
+                            <div class="io-label">Request Body</div>
+                            <pre>{
+  <span class="json-key">"playerId"</span>: <span class="json-num">42</span>,
+  <span class="json-key">"position"</span>: <span class="json-num">4</span>
+}</pre>
+                            <div class="io-label" style="margin-top:0.8rem;">Tablero resultante</div>
+                            <div class="board-example">
+                                <div class="bc dot">·</div><div class="bc dot">·</div><div class="bc dot">·</div>
+                                <div class="bc dot">·</div><div class="bc X">X</div><div class="bc dot">·</div>
+                                <div class="bc dot">·</div><div class="bc dot">·</div><div class="bc dot">·</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="io-label">Response 200 OK (continúa)</div>
+                            <pre>{
+  <span class="json-key">"board"</span>: <span class="json-str">"....X...."</span>,
+  <span class="json-key">"currentTurn"</span>: <span class="json-str">"O"</span>,
+  <span class="json-key">"status"</span>: <span class="json-str">"IN_PROGRESS"</span>,
+  <span class="json-key">"remainingSeconds"</span>: <span class="json-num">30</span>,
+  <span class="json-key">"winner"</span>: <span class="json-null">null</span>
+}</pre>
+                            <div class="io-label" style="margin-top:0.8rem;">Response 400 (turno incorrecto)</div>
+                            <pre>{
+  <span class="json-key">"error"</span>: <span class="json-str">"WRONG_TURN"</span>,
+  <span class="json-key">"message"</span>: <span class="json-str">"No es tu turno. Turno actual: O"</span>
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GET /api/games/player/{playerId} -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this.closest('.endpoint'))">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/api/games/player/<span class="path-param">{playerId}</span></span>
+                    <span class="arrow-toggle">▶</span>
+                    <span class="endpoint-desc">Todas las partidas de un jugador en este server (activas e historial) con estadísticas.</span>
+                </div>
+                <div class="endpoint-body">
+                    <div class="io-grid">
+                        <div>
+                            <div class="io-label">Path Variable</div>
+                            <pre>playerId: 42</pre>
+                        </div>
+                        <div>
+                            <div class="io-label">Response 200 OK</div>
+                            <pre>{
+  <span class="json-key">"playerId"</span>: <span class="json-num">42</span>,
+  <span class="json-key">"active"</span>: [ <span class="json-str">/* lista de partidas */</span> ],
+  <span class="json-key">"finished"</span>: [ <span class="json-str">/* historial */</span> ],
+  <span class="json-key">"stats"</span>: {
+    <span class="json-key">"wins"</span>: <span class="json-num">3</span>,
+    <span class="json-key">"losses"</span>: <span class="json-num">1</span>,
+    <span class="json-key">"draws"</span>: <span class="json-num">1</span>,
+    <span class="json-key">"timeouts"</span>: <span class="json-num">0</span>
+  }
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint-group">
+            <div class="endpoint-group-title">Registro de MS Clientes — /api/clients</div>
+
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this.closest('.endpoint'))">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/api/clients/register</span>
+                    <span class="arrow-toggle">▶</span>
+                    <span class="endpoint-desc">Endpoint público. Registra un MS Cliente autorizado. Lo llama automáticamente el cliente al arrancar. Si ya existe, actualiza baseUrl y retorna 200.</span>
+                </div>
+                <div class="endpoint-body">
+                    <div class="io-grid">
+                        <div>
+                            <div class="io-label">Request Body</div>
+                            <pre>{
+  <span class="json-key">"clientId"</span>:     <span class="json-str">"gato-client-1"</span>,
+  <span class="json-key">"clientSecret"</span>: <span class="json-str">"s3cr3t-client-1"</span>,
+  <span class="json-key">"baseUrl"</span>:      <span class="json-str">"http://localhost:8081"</span>
+}</pre>
+                            <div class="io-label" style="margin-top:0.8rem;">Comportamiento</div>
+                            <pre>· Si clientId no existe → crea, hashea secret → 201
+· Si clientId ya existe → actualiza baseUrl → 200
+· El server usa clientId/clientSecret
+  como UserDetails para Spring Security</pre>
+                        </div>
+                        <div>
+                            <div class="io-label">Response 201 Created</div>
+                            <pre>{
+  <span class="json-key">"clientId"</span>:      <span class="json-str">"gato-client-1"</span>,
+  <span class="json-key">"baseUrl"</span>:       <span class="json-str">"http://localhost:8081"</span>,
+  <span class="json-key">"registeredAt"</span>: <span class="json-str">"2025-06-01T10:00:00"</span>,
+  <span class="json-key">"message"</span>:       <span class="json-str">"Cliente registrado correctamente"</span>
+}
+</pre>
+                            <div class="io-label" style="margin-top:0.8rem;">Response 200 OK (ya existía)</div>
+                            <pre>{
+  <span class="json-key">"clientId"</span>: <span class="json-str">"gato-client-1"</span>,
+  <span class="json-key">"message"</span>: <span class="json-str">"Cliente ya registrado, baseUrl actualizada"</span>
+}</pre>
+                        </div>
+                    </div>
+                    <div class="alert-info" style="margin-top:1rem;">
+                        <strong>Importante:</strong> Este es el único endpoint del server que no requiere autenticación. Todos los demás endpoints del server exigen el header <code>Authorization: Basic {clientId:clientSecret}</code> con credenciales de un MS Cliente registrado. Sin credenciales válidas → <code>401 Unauthorized</code>.
+                    </div>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this.closest('.endpoint'))">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/api/clients</span>
+                    <span class="arrow-toggle">▶</span>
+                    <span class="endpoint-desc">Lista los MS Clientes registrados en este server. Requiere autenticación de MS. Útil para diagnóstico.</span>
+                </div>
+                <div class="endpoint-body">
+                    <div class="io-grid">
+                        <div>
+                            <div class="io-label">Headers</div>
+                            <pre>Authorization: Basic Z2F0by1jbGllbnQtMTpzM2NyM3Q=</pre>
+                        </div>
+                        <div>
+                            <div class="io-label">Response 200 OK</div>
+                            <pre>[
+  {
+    <span class="json-key">"clientId"</span>:      <span class="json-str">"gato-client-1"</span>,
+    <span class="json-key">"baseUrl"</span>:       <span class="json-str">"http://localhost:8081"</span>,
+    <span class="json-key">"registeredAt"</span>: <span class="json-str">"2025-06-01T10:00:00"</span>,
+    <span class="json-key">"active"</span>:        <span class="json-bool">true</span>
+  },
+  {
+    <span class="json-key">"clientId"</span>:      <span class="json-str">"gato-client-2"</span>,
+    <span class="json-key">"baseUrl"</span>:       <span class="json-str">"http://localhost:8082"</span>,
+    <span class="json-key">"registeredAt"</span>: <span class="json-str">"2025-06-01T10:01:00"</span>,
+    <span class="json-key">"active"</span>:        <span class="json-bool">true</span>
+  }
+]</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-nav">
+            <a class="page-nav-btn" href="arquitectura.html">← 01 Arquitectura</a>
+            <a class="page-nav-btn primary" href="ms-cliente.html">03 MS Cliente →</a>
+        </div>
+    </div>
+</div>
+
+<footer>
+    Fullstack I — Ingeniería en Informática / Analista en Programación ·
+    Escuela de Ingeniería en Informática y Telecomunicaciones · FPY-1101
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+
+    function toggleEndpoint(el) {
+        const body = el.querySelector('.endpoint-body');
+        const isOpen = el.classList.contains('open');
+        el.classList.toggle('open');
+        body.classList.toggle('open', !isOpen);
+    }
+
+    async function copyCode(button) {
+        const pre = button.closest('.code-sample').querySelector('pre');
+        const text = pre.textContent.trimEnd();
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.setAttribute('readonly', '');
+                textarea.style.position = 'fixed';
+                textarea.style.top = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                textarea.remove();
+            }
+            button.textContent = 'Copiado';
+            button.classList.add('copied');
+            window.setTimeout(() => {
+                button.textContent = 'Copiar';
+                button.classList.remove('copied');
+            }, 1200);
+        } catch (error) {
+            button.textContent = 'Error';
+            window.setTimeout(() => { button.textContent = 'Copiar'; }, 1200);
+        }
+    }
+
+    document.querySelectorAll('.endpoint-body pre').forEach(pre => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'code-sample';
+        pre.parentNode.insertBefore(wrapper, pre);
+        wrapper.appendChild(pre);
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'code-copy-btn';
+        button.textContent = 'Copiar';
+        button.addEventListener('click', event => {
+            event.stopPropagation();
+            copyCode(button);
+        });
+        wrapper.appendChild(button);
+    });
+</script>
+</body>
+</html>

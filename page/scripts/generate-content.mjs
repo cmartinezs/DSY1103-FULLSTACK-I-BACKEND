@@ -3,9 +3,12 @@ import path from 'node:path';
 
 const pageDir = process.cwd();
 const repoRoot = path.resolve(pageDir, '..');
-const projectsRoot = path.join(repoRoot, 'proyects');
+const projectsRoot = (await pathExists(path.join(repoRoot, 'projects')))
+  ? path.join(repoRoot, 'projects')
+  : path.join(repoRoot, 'proyects');
 const outDir = path.join(pageDir, 'src', 'generated');
 const outFile = path.join(outDir, 'content.json');
+const publicDir = path.join(pageDir, 'public');
 
 const projectNames = [
   'Tickets',
@@ -179,10 +182,69 @@ async function buildAllDocs() {
   return docs;
 }
 
+async function buildHtmlPages() {
+  const challengesRoot = path.join(repoRoot, 'docs', 'challenges');
+  if (!(await pathExists(challengesRoot))) return [];
+
+  const files = await listFiles(challengesRoot, {
+    maxFiles: 120,
+    filter: (relative) => relative.endsWith('.html'),
+  });
+
+  const publicChallengesRoot = path.join(publicDir, 'docs', 'challenges');
+  await fs.rm(publicChallengesRoot, { recursive: true, force: true });
+  await fs.mkdir(publicChallengesRoot, { recursive: true });
+
+  const pages = [];
+  for (const file of files) {
+    const content = await readText(file.absolute);
+    const outPath = path.join(publicChallengesRoot, file.relative);
+    await fs.mkdir(path.dirname(outPath), { recursive: true });
+    await fs.copyFile(file.absolute, outPath);
+
+    pages.push({
+      id: `docs/challenges/${file.relative}`,
+      title: titleFromHtml(file.relative, content),
+      path: `docs/challenges/${file.relative}`,
+      publicPath: `docs/challenges/${file.relative}`,
+      summary: htmlSummary(content),
+      content,
+    });
+  }
+
+  return pages;
+}
+
 function titleFromMarkdown(relative, content) {
   const firstHeading = content.match(/^#\s+(.+)$/m);
   if (firstHeading) return firstHeading[1].trim();
   return relative.replace(/\.md$/, '').replaceAll('_', ' ').replaceAll('-', ' ');
+}
+
+function titleFromHtml(relative, content) {
+  const title = content.match(/<title>([\s\S]*?)<\/title>/i)?.[1];
+  if (title) return decodeHtml(title).replace(/\s+/g, ' ').trim();
+  const heading = content.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1];
+  if (heading) return stripHtml(heading).trim();
+  return relative.replace(/\.html$/, '').replaceAll('_', ' ').replaceAll('-', ' ');
+}
+
+function htmlSummary(content) {
+  const text = stripHtml(content).replace(/\s+/g, ' ').trim();
+  return text.length > 180 ? `${text.slice(0, 180)}...` : text;
+}
+
+function stripHtml(value) {
+  return decodeHtml(value.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' '));
+}
+
+function decodeHtml(value) {
+  return value
+    .replaceAll('&amp;', '&')
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&quot;', '"')
+    .replaceAll('&#39;', "'");
 }
 
 function projectDescription(name, pomContent, readmeContent) {
@@ -268,6 +330,7 @@ function languageFor(relative) {
 
 const lessons = await buildLessons();
 const allDocs = await buildAllDocs();
+const htmlPages = await buildHtmlPages();
 const projects = await buildProjects();
 const generatedAt = new Date().toISOString();
 
@@ -278,6 +341,7 @@ await fs.writeFile(
     {
       generatedAt,
       allDocs,
+      htmlPages,
       lessons: lessons.lessons,
       rootDocs: lessons.rootDocs,
       projects,
@@ -288,5 +352,5 @@ await fs.writeFile(
 );
 
 console.log(
-  `Generated ${allDocs.length} docs, ${lessons.lessons.length} lessons and ${projects.length} projects.`,
+  `Generated ${allDocs.length} docs, ${htmlPages.length} html pages, ${lessons.lessons.length} lessons and ${projects.length} projects.`,
 );

@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego del Gato — Stack técnico</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d0d0f;
+            --surface: #141418;
+            --surface2: #1c1c22;
+            --border: #2a2a35;
+            --border-accent: #3d3d50;
+            --text: #e8e8f0;
+            --muted: #7a7a9a;
+            --accent: #7c6aff;
+            --accent3: #6affb8;
+            --accent4: #ffc96a;
+            --x-color: #ff6a6a;
+            --o-color: #6a9fff;
+            --grid-line: #2a2a35;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--bg); color: var(--text);
+            font-family: 'Syne', sans-serif; font-size: 16px;
+            line-height: 1.7; overflow-x: hidden;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+            linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 60px 60px; opacity: 0.35;
+            pointer-events: none; z-index: 0;
+        }
+        body > * { position: relative; z-index: 1; }
+
+        /* NAV */
+        .top-nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(13,13,15,0.93); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border); padding: 0.55rem 0;
+        }
+        .nav-inner {
+            max-width: 1100px; margin: 0 auto; padding: 0 1.5rem;
+            display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+        }
+        .nav-brand {
+            font-size: 0.82rem; font-weight: 700; letter-spacing: 0.12em;
+            text-transform: uppercase; color: var(--accent); margin-right: auto; white-space: nowrap;
+        }
+        .nav-btn {
+            background: transparent; border: 1px solid var(--border);
+            color: var(--muted); font-family: 'Space Mono', monospace;
+            font-size: 0.68rem; padding: 0.3rem 0.7rem; border-radius: 4px;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+        .nav-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border-accent); }
+        .nav-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(124,106,255,0.07); }
+
+        /* PAGES */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* WRAP */
+        .wrap { max-width: 1000px; margin: 0 auto; padding: 3rem 1.5rem; }
+
+        /* HERO */
+        .hero {
+            min-height: calc(100svh - 58px);
+            padding: clamp(1.5rem, 5svh, 4.5rem) 1.5rem clamp(1rem, 3svh, 2rem);
+            max-width: 1000px; margin: 0 auto; text-align: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .hero-tag {
+            display: inline-block; font-family: 'Space Mono', monospace;
+            font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+            color: var(--accent3); border: 1px solid var(--accent3);
+            padding: 0.28rem 0.9rem; border-radius: 2px; margin-bottom: clamp(0.9rem, 2.2svh, 2rem);
+        }
+        .hero h1 {
+            font-size: clamp(2.35rem, min(7vw, 9svh), 5.2rem); font-weight: 800;
+            line-height: 1.03; letter-spacing: -0.02em; margin-bottom: clamp(0.8rem, 2svh, 1.5rem);
+        }
+        .hero h1 .x { color: var(--x-color); }
+        .hero h1 .o { color: var(--o-color); }
+        .hero h1 .slash { color: var(--muted); }
+        .hero-sub {
+            font-family: 'Space Mono', monospace; font-size: clamp(0.74rem, 1.7svh, 0.86rem);
+            color: var(--muted); max-width: 580px; margin: 0 auto clamp(1rem, 3svh, 2.3rem); line-height: 1.65;
+        }
+        .hero-meta {
+            display: flex; flex-wrap: wrap; gap: clamp(0.35rem, 1.2svh, 0.8rem);
+            justify-content: center; margin-bottom: clamp(1rem, 3.4svh, 2.6rem);
+        }
+        .meta-pill {
+            font-family: 'Space Mono', monospace; font-size: 0.7rem;
+            background: var(--surface2); border: 1px solid var(--border);
+            padding: 0.35rem 0.9rem; border-radius: 20px; color: var(--muted);
+        }
+        .meta-pill span { color: var(--text); }
+
+        /* BOARD DECO */
+        .board-deco {
+            display: grid; grid-template-columns: repeat(3, clamp(42px, 7svh, 60px));
+            grid-template-rows: repeat(3, clamp(42px, 7svh, 60px)); gap: clamp(4px, 0.8svh, 7px);
+            margin: 0 auto clamp(1rem, 3.2svh, 2.8rem); width: fit-content;
+        }
+        .cell {
+            width: clamp(42px, 7svh, 60px); height: clamp(42px, 7svh, 60px); border: 1px solid var(--border-accent);
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            font-family: 'Space Mono', monospace; font-weight: 700; font-size: clamp(1rem, 2.8svh, 1.5rem);
+        }
+        .cell.x { color: var(--x-color); border-color: rgba(255,106,106,0.35); background: rgba(255,106,106,0.06); }
+        .cell.o { color: var(--o-color); border-color: rgba(106,159,255,0.35); background: rgba(106,159,255,0.06); }
+        .cell.e { background: var(--surface); }
+
+        /* SECTION TITLES */
+        .section-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+        .section-num { font-family: 'Space Mono', monospace; font-size: 0.68rem; color: var(--accent); letter-spacing: 0.1em; white-space: nowrap; }
+        .section-title h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
+        .section-line { flex: 1; height: 1px; background: var(--border); }
+
+        /* CARDS */
+        .card-dark {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 1.4rem 1.5rem; margin-bottom: 1.2rem;
+        }
+        .card-dark h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.7rem; }
+        .card-dark h4 {
+            font-size: 0.8rem; font-weight: 600; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 0.5rem;
+        }
+        .card-dark p, .card-dark li { font-size: 0.88rem; color: #b0b0c8; line-height: 1.7; }
+        .card-dark ul, .card-dark ol { padding-left: 1.25rem; }
+        .card-dark li { margin-bottom: 0.35rem; }
+        .card-accent-left  { border-left: 3px solid var(--accent); }
+        .card-accent-x     { border-left: 3px solid var(--x-color); }
+        .card-accent-o     { border-left: 3px solid var(--o-color); }
+        .card-accent-green { border-left: 3px solid var(--accent3); }
+        .card-accent-yellow{ border-left: 3px solid var(--accent4); }
+
+        /* MS GRID */
+        .ms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        @media (max-width: 680px) { .ms-grid { grid-template-columns: 1fr; } }
+        .ms-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; }
+        .ms-badge {
+            display: inline-block; font-family: 'Space Mono', monospace;
+            font-size: 0.63rem; letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 0.22rem 0.55rem; border-radius: 3px; margin-bottom: 0.8rem;
+        }
+        .badge-server { background: rgba(124,106,255,0.15); color: var(--accent); border: 1px solid rgba(124,106,255,0.3); }
+        .badge-client { background: rgba(106,255,184,0.1); color: var(--accent3); border: 1px solid rgba(106,255,184,0.25); }
+        .badge-fallback { background: rgba(255,201,106,0.12); color: var(--accent4); border: 1px solid rgba(255,201,106,0.3); }
+        .ms-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.6rem; }
+        .ms-card p { font-size: 0.86rem; color: #a0a0be; line-height: 1.7; margin-bottom: 0.8rem; }
+        .ms-card ul { list-style: none; padding: 0; }
+        .ms-card li {
+            font-size: 0.82rem; color: #8888aa; padding: 0.25rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .ms-card li::before { content: '→'; color: var(--accent); font-family: 'Space Mono', monospace; font-size: 0.73rem; flex-shrink: 0; }
+        .ms-card li:last-child { border-bottom: none; }
+        .port {
+            font-family: 'Space Mono', monospace; font-size: 0.7rem;
+            background: var(--surface2); border: 1px solid var(--border-accent);
+            color: var(--accent4); padding: 0.18rem 0.5rem; border-radius: 3px; margin-left: 0.4rem;
+        }
+
+        /* INSTANCE DIAGRAM */
+        .instance-diagram {
+            display: grid; grid-template-columns: 1fr 60px 1fr 60px 1fr;
+            align-items: center; gap: 0; margin: 1.5rem 0;
+        }
+        .inst-box {
+            background: var(--surface2); border: 1px solid var(--border-accent);
+            border-radius: 8px; padding: 1rem; text-align: center;
+        }
+        .inst-box.server-box { border-color: rgba(124,106,255,0.5); }
+        .inst-box.client-box { border-color: rgba(106,255,184,0.4); }
+        .inst-label { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem; }
+        .inst-name { font-size: 0.85rem; font-weight: 700; }
+        .inst-port { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--accent4); margin-top: 0.2rem; }
+        .inst-arrow { text-align: center; font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+
+        /* ENDPOINTS */
+        .endpoint-group { margin-bottom: 2.5rem; }
+        .endpoint-group-title {
+            font-family: 'Space Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em;
+            text-transform: uppercase; color: var(--accent); margin-bottom: 1rem;
+            padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
+        }
+        .endpoint {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; margin-bottom: 0.8rem; overflow: hidden;
+        }
+        .endpoint-header {
+            display: flex; align-items: flex-start; gap: 0.75rem;
+            padding: 0.85rem 1.1rem; cursor: pointer; flex-wrap: wrap;
+        }
+        .endpoint-header:hover { background: var(--surface2); }
+        .method {
+            font-family: 'Space Mono', monospace; font-size: 0.68rem; font-weight: 700;
+            padding: 0.22rem 0.55rem; border-radius: 3px; flex-shrink: 0;
+            min-width: 50px; text-align: center;
+        }
+        .method-get    { background: rgba(106,255,184,0.12); color: var(--accent3); border: 1px solid rgba(106,255,184,0.25); }
+        .method-post   { background: rgba(124,106,255,0.12); color: var(--accent);  border: 1px solid rgba(124,106,255,0.25); }
+        .method-put    { background: rgba(255,201,106,0.12); color: var(--accent4); border: 1px solid rgba(255,201,106,0.25); }
+        .method-delete { background: rgba(255,106,106,0.12); color: var(--x-color); border: 1px solid rgba(255,106,106,0.25); }
+        .method-patch  { background: rgba(106,159,255,0.12); color: var(--o-color); border: 1px solid rgba(106,159,255,0.25); }
+        .endpoint-path { font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--text); flex: 1; word-break: break-all; }
+        .endpoint-path .path-param { color: var(--accent4); }
+        .endpoint-desc { font-size: 0.8rem; color: var(--muted); width: 100%; margin-top: 0.2rem; padding-left: calc(50px + 0.75rem); }
+        .endpoint-body { border-top: 1px solid var(--border); padding: 1rem 1.1rem; display: none; }
+        .endpoint-body.open { display: block; }
+        .io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 680px) { .io-grid { grid-template-columns: 1fr; } }
+        .io-label {
+            font-family: 'Space Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem;
+        }
+        pre {
+            background: #0a0a0e; border: 1px solid var(--border); border-radius: 6px;
+            padding: 0.75rem 1rem; font-family: 'Space Mono', monospace; font-size: 0.72rem;
+            line-height: 1.65; color: #c8c8e0; overflow-x: auto; white-space: pre;
+        }
+        .json-key  { color: #7c9bff; }
+        .json-str  { color: #98ffb8; }
+        .json-num  { color: #ffb86c; }
+        .json-bool { color: #ff79c6; }
+        .json-null { color: var(--muted); }
+        .arrow-toggle { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--muted); flex-shrink: 0; transition: transform 0.2s; }
+        .endpoint.open .arrow-toggle { transform: rotate(90deg); }
+
+        /* BOARD MINI */
+        .board-example { display: grid; grid-template-columns: repeat(3, 44px); gap: 4px; margin: 0.8rem 0; }
+        .bc {
+            width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+            border: 1px solid var(--border-accent); border-radius: 4px;
+            font-family: 'Space Mono', monospace; font-weight: 700; font-size: 1rem; background: var(--surface2);
+        }
+        .bc.X { color: var(--x-color); } .bc.O { color: var(--o-color); }
+        .bc.dot { color: var(--border-accent); font-size: 0.65rem; }
+
+        /* RICHARDSON */
+        .level-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .level-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; position: relative; }
+        .level-num { font-family: 'Space Mono', monospace; font-size: 2rem; font-weight: 700; line-height: 1; margin-bottom: 0.4rem; }
+        .level-name { font-size: 0.82rem; font-weight: 600; margin-bottom: 0.4rem; }
+        .level-desc { font-size: 0.77rem; color: var(--muted); line-height: 1.6; }
+        .level-required {
+            position: absolute; top: 0.75rem; right: 0.75rem;
+            font-family: 'Space Mono', monospace; font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase;
+            background: rgba(106,255,184,0.1); color: var(--accent3); border: 1px solid rgba(106,255,184,0.25);
+            padding: 0.13rem 0.42rem; border-radius: 2px;
+        }
+
+        /* FALLBACK STATES */
+        .fallback-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+        @media (max-width: 680px) { .fallback-grid { grid-template-columns: 1fr; } }
+        .fallback-card {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 8px; padding: 1rem;
+        }
+        .fallback-label {
+            font-family: 'Space Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em;
+            text-transform: uppercase; margin-bottom: 0.5rem;
+        }
+        .fallback-card p { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+        /* GAME TYPE TOGGLE */
+        .gametype-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+        @media (max-width: 640px) { .gametype-grid { grid-template-columns: 1fr; } }
+        .gametype-card {
+            background: var(--surface2); border: 1px solid var(--border-accent);
+            border-radius: 8px; padding: 1.2rem;
+        }
+        .gametype-card.timed { border-color: rgba(255,201,106,0.4); }
+        .gametype-card.notime { border-color: rgba(106,255,184,0.3); }
+        .gametype-badge {
+            font-family: 'Space Mono', monospace; font-size: 0.63rem; letter-spacing: 0.09em;
+            text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 3px; margin-bottom: 0.7rem; display: inline-block;
+        }
+        .badge-timed  { background: rgba(255,201,106,0.12); color: var(--accent4); border: 1px solid rgba(255,201,106,0.3); }
+        .badge-notime { background: rgba(106,255,184,0.1); color: var(--accent3); border: 1px solid rgba(106,255,184,0.2); }
+        .gametype-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .gametype-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.65; }
+
+        /* HTTP TABLE */
+        .criteria-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin-bottom: 1.5rem; }
+        .criteria-table th {
+            font-family: 'Space Mono', monospace; font-size: 0.68rem; letter-spacing: 0.08em;
+            text-transform: uppercase; color: var(--muted); text-align: left;
+            padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--border);
+        }
+        .criteria-table td { padding: 0.65rem 0.8rem; border-bottom: 1px solid var(--border); color: #b0b0c8; vertical-align: top; }
+        .criteria-table tr:last-child td { border-bottom: none; }
+        .pct { font-family: 'Space Mono', monospace; font-size: 0.85rem; color: var(--accent4); font-weight: 700; white-space: nowrap; }
+
+        /* REQ BOX */
+        .req-box {
+            background: rgba(124,106,255,0.05); border: 1px dashed rgba(124,106,255,0.35);
+            border-radius: 8px; padding: 1.3rem 1.5rem; margin-bottom: 1.5rem;
+        }
+        .req-box-title {
+            font-family: 'Space Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em;
+            text-transform: uppercase; color: var(--accent); margin-bottom: 0.7rem;
+        }
+
+        /* ALERT */
+        .alert-box {
+            background: rgba(255,201,106,0.07); border: 1px solid rgba(255,201,106,0.28);
+            border-radius: 8px; padding: 0.9rem 1.2rem; font-size: 0.83rem; color: #c8a86a; margin-bottom: 1.2rem;
+        }
+        .alert-box strong { color: var(--accent4); }
+        .alert-info {
+            background: rgba(124,106,255,0.07); border: 1px solid rgba(124,106,255,0.28);
+            border-radius: 8px; padding: 0.9rem 1.2rem; font-size: 0.83rem; color: #a090e0; margin-bottom: 1.2rem;
+        }
+        .alert-info strong { color: var(--accent); }
+
+        /* INLINE CODE */
+        code {
+            font-family: 'Space Mono', monospace; font-size: 0.77em;
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--accent4); padding: 0.1em 0.4em; border-radius: 3px;
+        }
+
+        /* FLOW */
+        .flow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding: 0.8rem 0; font-size: 0.82rem; }
+        .flow-node {
+            background: var(--surface2); border: 1px solid var(--border-accent);
+            border-radius: 6px; padding: 0.45rem 0.85rem;
+            font-family: 'Space Mono', monospace; font-size: 0.72rem; white-space: nowrap;
+        }
+        .flow-node.client { border-color: rgba(106,255,184,0.4); color: var(--accent3); }
+        .flow-node.server { border-color: rgba(124,106,255,0.4); color: var(--accent); }
+        .flow-node.db     { border-color: rgba(255,106,106,0.4); color: var(--x-color); }
+        .flow-arrow { color: var(--muted); font-size: 0.9rem; }
+
+        /* BUTTONS */
+        .start-btn {
+            display: inline-block; background: var(--accent); color: white;
+            border: none; font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+            padding: 0.85rem 2.4rem; border-radius: 6px; cursor: pointer; letter-spacing: 0.03em;
+            transition: all 0.2s; text-decoration: none;
+        }
+        .start-btn:hover { background: #9a82ff; transform: translateY(-1px); color: white; text-decoration: none; }
+        .page-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 2rem 0; border-top: 1px solid var(--border); margin-top: 3rem;
+        }
+        .page-nav-btn {
+            font-family: 'Space Mono', monospace; font-size: 0.76rem;
+            background: transparent; border: 1px solid var(--border-accent);
+            color: var(--muted); padding: 0.5rem 1.1rem; border-radius: 4px; cursor: pointer; transition: all 0.2s;
+        }
+        .page-nav-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(124,106,255,0.07); }
+        .page-nav-btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+        .page-nav-btn.primary:hover { background: #9a82ff; border-color: #9a82ff; }
+
+        footer {
+            text-align: center; padding: 2rem;
+            font-family: 'Space Mono', monospace; font-size: 0.7rem;
+            color: var(--muted); border-top: 1px solid var(--border); margin-top: 2rem;
+        }
+
+        /* ENUNCIADO NARRATIVO */
+        .intro-deck {
+            height: min(760px, calc(100svh - 112px));
+            min-height: 520px;
+            scroll-margin-top: 82px;
+            display: flex; flex-direction: column;
+            justify-content: flex-start;
+            padding-top: 1rem;
+        }
+        .intro-slide {
+            display: none;
+            flex-direction: column;
+            justify-content: flex-start;
+            min-height: 0;
+            flex: 1 1 auto;
+            overflow: auto;
+            padding: 0;
+        }
+        .intro-slide.active {
+            display: flex;
+            animation: fadeInUp 0.28s ease both;
+        }
+        .intro-slide-nav {
+            flex: 0 0 auto;
+            z-index: 10;
+            background: rgba(13,13,15,0.9); backdrop-filter: blur(12px);
+            border: 1px solid var(--border); border-radius: 8px;
+            display: flex; flex-wrap: wrap; gap: 0.45rem;
+            padding: 0.55rem; margin-bottom: 0.75rem;
+        }
+        .intro-slide-nav button {
+            font-family: 'Space Mono', monospace; font-size: 0.64rem;
+            color: var(--muted); background: transparent; cursor: pointer;
+            border: 1px solid var(--border); border-radius: 4px;
+            padding: 0.28rem 0.55rem; transition: all 0.2s;
+        }
+        .intro-slide-nav button:hover,
+        .intro-slide-nav button:focus,
+        .intro-slide-nav button.active {
+            color: var(--accent3); border-color: var(--accent3);
+            background: rgba(106,255,184,0.07);
+        }
+        .intro-slide-controls {
+            flex: 0 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 1rem; border-top: 1px solid var(--border);
+            padding-top: 0.8rem; margin-top: 0.8rem;
+        }
+        .intro-slide-count {
+            font-family: 'Space Mono', monospace; font-size: 0.68rem;
+            color: var(--muted);
+        }
+        .intro-slide-actions { display: flex; gap: 0.65rem; flex-wrap: wrap; justify-content: flex-end; }
+        #introSpecButton { display: none; }
+        @media (max-width: 720px) {
+            .intro-deck {
+                height: auto;
+                min-height: calc(100svh - 92px);
+                padding-top: 0.5rem;
+            }
+            .intro-slide {
+                min-height: 0;
+                max-height: none;
+                overflow: visible;
+            }
+            .intro-slide-controls { align-items: stretch; flex-direction: column; }
+            .intro-slide-actions { justify-content: stretch; }
+            .intro-slide-actions .page-nav-btn { flex: 1; }
+        }
+
+        .brief-header {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 1.8rem 2rem;
+            position: relative; overflow: hidden;
+        }
+        .brief-header::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent3), var(--accent4));
+        }
+        .brief-from {
+            font-family: 'Space Mono', monospace; font-size: 0.68rem;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 1.2rem;
+            display: flex; flex-wrap: wrap; gap: 1.5rem;
+        }
+        .brief-from span { color: var(--text); }
+        .brief-header h2 {
+            font-size: 1.4rem; font-weight: 800; margin-bottom: 0.8rem;
+            letter-spacing: -0.01em;
+        }
+        .brief-header p { font-size: 0.92rem; color: #b8b8d0; line-height: 1.8; }
+
+        .brief-section h3 {
+            font-family: 'Space Mono', monospace; font-size: 0.72rem;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--accent3); margin-bottom: 0.9rem;
+            padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
+        }
+        .intro-slide.brief-section {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 1.3rem 1.5rem;
+        }
+        .brief-section p { font-size: 0.92rem; color: #b8b8d0; line-height: 1.85; margin-bottom: 0.8rem; }
+        .intro-slide.brief-section p { font-size: 0.86rem; line-height: 1.65; }
+        .brief-section p:last-child { margin-bottom: 0; }
+
+        .brief-quote {
+            border-left: 3px solid var(--accent);
+            background: rgba(124,106,255,0.06);
+            padding: 1rem 1.4rem; border-radius: 0 8px 8px 0;
+            margin: 1.2rem 0; font-size: 0.9rem; color: #c0c0e0;
+            line-height: 1.8; font-style: italic;
+        }
+        .intro-slide .brief-quote {
+            padding: 0.85rem 1rem; margin: 0.9rem 0;
+            font-size: 0.84rem; line-height: 1.6;
+        }
+
+        .constraint-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.8rem; margin-top: 1rem;
+        }
+        .constraint-item {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 6px; padding: 0.9rem 1rem;
+            font-size: 0.83rem; color: #a0a0c0; line-height: 1.6;
+        }
+        .constraint-item strong { color: var(--text); display: block; margin-bottom: 0.2rem; font-size: 0.82rem; }
+
+        .deliverable-list { list-style: none; padding: 0; }
+        .deliverable-list li {
+            display: flex; gap: 0.8rem; align-items: flex-start;
+            padding: 0.6rem 0; border-bottom: 1px solid var(--border);
+            font-size: 0.88rem; color: #b0b0c8;
+        }
+        .deliverable-list li:last-child { border-bottom: none; }
+        .deliverable-list li::before {
+            content: '▸'; color: var(--accent3); font-size: 0.8rem;
+            flex-shrink: 0; margin-top: 0.15rem;
+        }
+
+        @media (max-height: 760px) {
+            .hero { padding-top: 0.8rem; padding-bottom: 0.8rem; }
+            .hero-tag { margin-bottom: 0.65rem; }
+            .board-deco {
+                grid-template-columns: repeat(3, 38px);
+                grid-template-rows: repeat(3, 38px);
+                gap: 4px; margin-bottom: 0.8rem;
+            }
+            .cell { width: 38px; height: 38px; font-size: 0.92rem; }
+            .hero h1 { font-size: clamp(2rem, 8svh, 3.2rem); margin-bottom: 0.65rem; }
+            .hero-sub { font-size: 0.72rem; line-height: 1.45; margin-bottom: 0.8rem; }
+            .hero-meta { gap: 0.35rem; margin-bottom: 0.9rem; }
+            .meta-pill { font-size: 0.61rem; padding: 0.22rem 0.55rem; }
+            .start-btn { font-size: 0.86rem; padding: 0.62rem 1.35rem; }
+            .intro-deck {
+                height: calc(100svh - 92px);
+                min-height: 440px;
+                scroll-margin-top: 72px;
+            }
+            .intro-slide-nav { gap: 0.3rem; padding: 0.45rem; margin-bottom: 0.55rem; }
+            .intro-slide-nav button { font-size: 0.58rem; padding: 0.22rem 0.42rem; }
+            .intro-slide-controls { padding-top: 0.55rem; margin-top: 0.55rem; }
+            .intro-slide.brief-section { padding: 1rem 1.15rem; }
+            .brief-header { padding: 1.25rem 1.4rem; }
+            .brief-header h2 { font-size: 1.12rem; }
+            .brief-header p,
+            .intro-slide.brief-section p,
+            .deliverable-list li,
+            .constraint-item { font-size: 0.78rem; line-height: 1.48; }
+            .brief-section h3 { font-size: 0.64rem; margin-bottom: 0.65rem; }
+            .intro-slide .brief-quote { font-size: 0.76rem; line-height: 1.45; padding: 0.65rem 0.85rem; margin: 0.65rem 0; }
+            .constraint-grid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.55rem; }
+            .constraint-item { padding: 0.65rem 0.75rem; }
+            .deliverable-list li { padding: 0.42rem 0; }
+        }
+
+        @media (max-height: 620px) {
+            .board-deco { display: none; }
+            .hero h1 { font-size: clamp(1.85rem, 8svh, 2.65rem); }
+            .hero-sub br { display: none; }
+            .hero-meta { margin-bottom: 0.75rem; }
+        }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .page.active .card-dark, .page.active .ms-card, .page.active .endpoint, .page.active .level-card { animation: fadeInUp 0.3s ease both; }
+        .page.active .card-dark:nth-child(2), .page.active .level-card:nth-child(2) { animation-delay: 0.07s; }
+        .page.active .card-dark:nth-child(3), .page.active .level-card:nth-child(3) { animation-delay: 0.12s; }
+        .page.active .card-dark:nth-child(4), .page.active .level-card:nth-child(4) { animation-delay: 0.17s; }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="top-nav">
+    <div class="nav-inner">
+        <a class="nav-brand" href="index.html">⬛ Gato MS — Fullstack I</a>
+        <a class="nav-btn" href="index.html">00 Intro</a>
+        <a class="nav-btn" href="arquitectura.html">01 Arquitectura</a>
+        <a class="nav-btn" href="ms-server.html">02 MS Server</a>
+        <a class="nav-btn" href="ms-cliente.html">03 MS Cliente</a>
+        <a class="nav-btn" href="estandares.html">04 Estándares</a>
+        <a class="nav-btn" href="extension.html">05 Extensión</a>
+        <a class="nav-btn" href="entrega.html">06 Entrega</a>
+        <a class="nav-btn active" style="border-color:rgba(255,201,106,0.5);color:var(--accent4);" href="stack.html">⚙ Stack</a>
+    </div>
+</nav>
+
+<div class="page active" id="page-7">
+    <div class="wrap">
+        <div class="section-title">
+            <span class="section-num">// ⚙</span>
+            <h2>Stack técnico requerido</h2>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="alert-info" style="margin-bottom:2rem;">
+            <strong>Nota:</strong> Esta sección no explica las tecnologías — ya las conoces. Es un recordatorio explícito de qué se espera de cada una <strong>en este proyecto</strong>. Todo lo listado aquí es obligatorio y evaluado.
+        </div>
+
+        <!-- GRID DE FICHAS -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.2rem;">
+
+            <!-- LOMBOK -->
+            <div class="card-dark card-accent-left">
+                <h3 style="font-family:'Space Mono',monospace; font-size:0.85rem; letter-spacing:0.05em;">LOMBOK</h3>
+                <ul>
+                    <li><code>@RequiredArgsConstructor</code> en controllers y services — sin <code>@Autowired</code></li>
+                    <li><code>@Builder</code> en todos los DTOs y entidades</li>
+                    <li><code>@Slf4j</code> en cada clase que loguea — sin instanciar <code>LoggerFactory</code> a mano</li>
+                    <li><code>@Data</code> sólo donde corresponde. En entidades preferir <code>@Getter</code> + <code>@Setter</code> explícito</li>
+                </ul>
+            </div>
+
+            <!-- LOGGING -->
+            <div class="card-dark card-accent-o">
+                <h3 style="font-family:'Space Mono',monospace; font-size:0.85rem; letter-spacing:0.05em;">LOGGING — Logback + SLF4J</h3>
+                <ul>
+                    <li><code>log.info</code> — flujo normal: partida creada, movimiento registrado, jugador unido</li>
+                    <li><code>log.warn</code> — situación recuperable: fallback activado, timeout detectado</li>
+                    <li><code>log.error</code> — fallo real: excepción inesperada, error de base de datos</li>
+                    <li>Cero <code>System.out.println</code> en todo el proyecto</li>
+                    <li>Mensaje con contexto: <code>log.info("Movimiento registrado: game={} player={} pos={}", ...)</code></li>
+                </ul>
+            </div>
+
+            <!-- SPRING SECURITY -->
+            <div class="card-dark card-accent-x" style="grid-column: 1 / -1;">
+                <h3 style="font-family:'Space Mono',monospace; font-size:0.85rem; letter-spacing:0.05em;">SPRING SECURITY — Basic Auth (ambos MS, roles distintos)</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:0.8rem;">
+                    <div>
+                        <div class="io-label" style="margin-bottom:0.5rem;">MS Cliente — credenciales de jugador</div>
+                        <ul>
+                            <li>Basic Auth con <code>username</code> + <code>password</code> del jugador registrado</li>
+                            <li>El jugador autenticado se obtiene del <code>SecurityContext</code> — sin <code>X-Player-Id</code> manual</li>
+                            <li>Password hasheado con <code>BCryptPasswordEncoder</code> — nunca texto plano en DB</li>
+                            <li><code>POST /api/players</code> (registro) es el único endpoint público</li>
+                            <li>Todo lo demás requiere autenticación de jugador</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="io-label" style="margin-bottom:0.5rem;">MS Server — credenciales de microservicio</div>
+                        <ul>
+                            <li>Basic Auth con credenciales de MS, no de jugador</li>
+                            <li>Sólo los MS Clientes registrados pueden llamar al server</li>
+                            <li>El server expone <code>POST /api/clients/register</code> como endpoint público para el auto-registro</li>
+                            <li>Todos los demás endpoints del server requieren autenticación de MS</li>
+                            <li>Credenciales del cliente en <code>application.yml</code> via variables de entorno: <code>${CLIENT_ID}</code> / <code>${CLIENT_SECRET}</code></li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border);">
+                    <div class="io-label" style="margin-bottom:0.5rem;">Auto-registro al arranque — ApplicationRunner en el MS Cliente</div>
+                    <ul>
+                        <li>Al iniciar, el MS Cliente ejecuta un <code>ApplicationRunner</code> (o <code>CommandLineRunner</code>) que llama a <code>POST /api/clients/register</code> en el server</li>
+                        <li>Envía: <code>clientId</code>, <code>clientSecret</code> (hasheado en server), <code>baseUrl</code> del cliente</li>
+                        <li>Si el cliente ya está registrado (<code>clientId</code> existe), el server responde <code>200 OK</code> sin error</li>
+                        <li>Si el server no está disponible al arranque, el cliente loguea un <code>warn</code> y continúa — el registro se puede reintentar</li>
+                        <li>Una vez registrado, todas las llamadas del cliente al server incluyen el header <code>Authorization: Basic ...</code> con las credenciales del MS</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- DTOs -->
+            <div class="card-dark card-accent-green">
+                <h3 style="font-family:'Space Mono',monospace; font-size:0.85rem; letter-spacing:0.05em;">DTOs POR CAPAS</h3>
+                <ul>
+                    <li><code>*Request</code> / <code>*Response</code> — en la capa controller (entrada y salida HTTP)</li>
+                    <li><code>*Command</code> / <code>*Result</code> — entre controller y service</li>
+                    <li>Las <code>*Entity</code> nunca salen del service hacia el controller</li>
+                    <li>Sin clases llamadas <code>*Model</code>, <code>*Domain</code>, <code>*VO</code> por ahora</li>
+                    <li>Todos los DTOs con <code>@Builder</code> y validaciones <code>javax.validation</code> donde corresponde</li>
+                </ul>
+            </div>
+
+            <!-- VALIDACIÓN -->
+            <div class="card-dark card-accent-yellow">
+                <h3 style="font-family:'Space Mono',monospace; font-size:0.85rem; letter-spacing:0.05em;">BEAN VALIDATION</h3>
+                <ul>
+                    <li><code>@Valid</code> en todos los parámetros <code>@RequestBody</code> de los controllers</li>
+                    <li><code>@NotNull</code>, <code>@NotBlank</code>, <code>@Min</code>, <code>@Max</code> en los <code>*Request</code> que lo requieran</li>
+                    <li>Errores de validación capturados en <code>@ControllerAdvice</code> → retornan <code>400</code> con body estructurado</li>
+                    <li>Sin validar campos a mano en el service cuando Bean Validation lo puede hacer</li>
+                </ul>
+            </div>
+
+            <!-- YAML -->
+            <div class="card-dark card-accent-left">
+                <h3 style="font-family:'Space Mono',monospace; font-size:0.85rem; letter-spacing:0.05em;">CONFIGURACIÓN — YAML</h3>
+                <ul>
+                    <li>Solo archivos <code>.yml</code> — cero <code>.properties</code> en el proyecto</li>
+                    <li>Perfil <code>dev</code> separado: <code>application-dev.yml</code></li>
+                    <li>En <code>dev</code>: consola H2/logs en DEBUG habilitados. En producción: deshabilitados.</li>
+                    <li>Todo valor configurable vía variable de entorno: <code>${DB_URL}</code>, <code>${SERVER_PORT}</code>, <code>${TARGET_SERVER_URL}</code></li>
+                    <li>Sin strings hardcodeados de URLs, puertos ni credenciales en el código Java</li>
+                </ul>
+            </div>
+
+            <!-- FLYWAY -->
+            <div class="card-dark card-accent-o">
+                <h3 style="font-family:'Space Mono',monospace; font-size:0.85rem; letter-spacing:0.05em;">FLYWAY</h3>
+                <ul>
+                    <li>Migraciones en <code>src/main/resources/db/migration/</code></li>
+                    <li>Nomenclatura: <code>V1__create_games.sql</code>, <code>V2__add_game_type.sql</code>, etc.</li>
+                    <li><code>spring.jpa.hibernate.ddl-auto: validate</code> — nunca <code>create</code> ni <code>update</code> en ningún perfil</li>
+                    <li>Cada tabla tiene su migración. Cambios de esquema = nueva migración, no editar versiones anteriores</li>
+                    <li>Ambos microservicios tienen sus propias migraciones independientes</li>
+                </ul>
+            </div>
+
+            <!-- MYSQL -->
+            <div class="card-dark card-accent-x">
+                <h3 style="font-family:'Space Mono',monospace; font-size:0.85rem; letter-spacing:0.05em;">BASE DE DATOS — MySQL</h3>
+                <ul>
+                    <li>MySQL para ambos microservicios — sin H2 en producción</li>
+                    <li>Credenciales solo en variables de entorno, no en el <code>yml</code> commiteado</li>
+                    <li>Cada microservicio tiene su propia base de datos — nunca comparten esquema</li>
+                    <li>Nombres de tablas en <code>snake_case</code>: <code>games</code>, <code>game_registry</code>, <code>players</code></li>
+                </ul>
+            </div>
+
+            <!-- DOCKER -->
+            <div class="card-dark card-accent-green">
+                <h3 style="font-family:'Space Mono',monospace; font-size:0.85rem; letter-spacing:0.05em;">DOCKER + DOCKER COMPOSE</h3>
+                <ul>
+                    <li><code>Dockerfile</code> multistage en cada MS: stage Maven para compilar, stage JRE slim para correr</li>
+                    <li>Un solo <code>docker-compose.yml</code> en la raíz que levante todo el sistema</li>
+                    <li>Servicios mínimos en Compose: <code>gato-server</code>, <code>gato-client-1</code>, <code>gato-client-2</code>, <code>db-server</code>, <code>db-client-1</code>, <code>db-client-2</code></li>
+                    <li><code>gato-client-1</code> y <code>gato-client-2</code> usan la <strong>misma imagen</strong>, distinta configuración via <code>environment:</code></li>
+                    <li><code>depends_on</code> configurado: los MS esperan a que la DB esté lista</li>
+                    <li><code>docker compose up</code> desde la raíz levanta todo. Sin pasos manuales adicionales.</li>
+                </ul>
+            </div>
+
+            <!-- JUNIT + MOCKITO -->
+            <div class="card-dark card-accent-yellow">
+                <h3 style="font-family:'Space Mono',monospace; font-size:0.85rem; letter-spacing:0.05em;">JUNIT 5 + MOCKITO</h3>
+                <ul>
+                    <li>Tests en <code>src/test/java</code>, misma estructura de paquetes que el código fuente</li>
+                    <li><strong>Obligatorio en server:</strong> tests unitarios de <code>GameValidatorService</code> — un test por cada regla de validación</li>
+                    <li><strong>Obligatorio en server:</strong> tests del detector de victoria — las 8 combinaciones ganadoras + empate + tablero sin resultado</li>
+                    <li><strong>Obligatorio en cliente:</strong> test del fallback — mockear <code>RestTemplate</code> lanzando <code>ResourceAccessException</code>, verificar respuesta 503 estructurada</li>
+                    <li><code>mvn test</code> debe pasar sin errores antes de entregar</li>
+                    <li>Sin <code>@SpringBootTest</code> en los tests unitarios — tests de unidad pura con Mockito</li>
+                </ul>
+            </div>
+
+            <!-- OPENAPI / SWAGGER -->
+            <div class="card-dark card-accent-left">
+                <h3 style="font-family:'Space Mono',monospace; font-size:0.85rem; letter-spacing:0.05em;">OPENAPI — Springdoc</h3>
+                <ul>
+                    <li>Dependencia <code>springdoc-openapi-starter-webmvc-ui</code> en ambos MS</li>
+                    <li><code>/swagger-ui.html</code> accesible y funcional en cada servicio</li>
+                    <li><code>@Tag</code> en cada controller, <code>@Operation</code> en cada endpoint</li>
+                    <li><code>@ApiResponse</code> documentando al menos los códigos de éxito y el error principal por endpoint</li>
+                    <li>En producción/Railway: Swagger puede quedar habilitado para este ejercicio</li>
+                </ul>
+            </div>
+
+            <!-- DEPLOY -->
+            <div class="card-dark card-accent-o">
+                <h3 style="font-family:'Space Mono',monospace; font-size:0.85rem; letter-spacing:0.05em;">DEPLOY — Railway / Render</h3>
+                <ul>
+                    <li>Al menos el <strong>MS Server</strong> desplegado y con URL pública funcional</li>
+                    <li>Al menos <strong>una instancia del MS Cliente</strong> desplegada</li>
+                    <li>Variables de entorno configuradas en la plataforma — sin credenciales en el repo</li>
+                    <li>La colección Postman incluye un segundo environment: <code>prod</code> con las URLs de Railway/Render</li>
+                    <li>El README documenta las URLs públicas del deploy</li>
+                </ul>
+            </div>
+
+        </div><!-- /grid fichas -->
+
+        <!-- DOCKER COMPOSE EJEMPLO -->
+        <div class="section-title" style="margin-top:2.5rem;">
+            <span class="section-num">⚙.1</span>
+            <h2 style="font-size:1.1rem;">Estructura esperada del docker-compose.yml</h2>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="card-dark">
+      <pre>
+services:
+
+  db-server:
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: gatoserver
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - db-server-data:/var/lib/mysql
+
+  gato-server:
+    build: ./gato-server
+    ports: ["8080:8080"]
+    depends_on: [db-server]
+    environment:
+      DB_URL: jdbc:mysql://db-server:3306/gatoserver
+      DB_USER: root
+      DB_PASS: ${DB_ROOT_PASSWORD}
+
+  db-client-1:
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: gatoclient1
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - db-client1-data:/var/lib/mysql
+
+  gato-client-1:
+    build: ./gato-client          <span class="json-key"># misma imagen</span>
+    ports: ["8081:8081"]
+    depends_on: [db-client-1, gato-server]
+    environment:
+      SERVER_PORT: 8081
+      DB_URL: jdbc:mysql://db-client-1:3306/gatoclient1
+      TARGET_SERVER_URL: http://gato-server:8080
+
+  gato-client-2:
+    build: ./gato-client          <span class="json-key"># misma imagen</span>
+    ports: ["8082:8082"]
+    depends_on: [db-client-2, gato-server]
+    environment:
+      SERVER_PORT: 8082
+      DB_URL: jdbc:mysql://db-client-2:3306/gatoclient2
+      TARGET_SERVER_URL: http://gato-server:8080
+
+volumes:
+  db-server-data:
+  db-client1-data:
+  db-client2-data:</pre>
+        </div>
+
+        <!-- DOCKERFILE EJEMPLO -->
+        <div class="section-title" style="margin-top:2rem;">
+            <span class="section-num">⚙.2</span>
+            <h2 style="font-size:1.1rem;">Estructura esperada del Dockerfile (multistage)</h2>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="card-dark">
+      <pre>
+<span class="json-key"># Stage 1 — compilar</span>
+FROM maven:3.9-eclipse-temurin-21 AS builder
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline
+COPY src ./src
+RUN mvn package -DskipTests
+
+<span class="json-key"># Stage 2 — ejecutar</span>
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]</pre>
+        </div>
+
+        <!-- ESTRUCTURA DE TESTS -->
+        <div class="section-title" style="margin-top:2rem;">
+            <span class="section-num">⚙.3</span>
+            <h2 style="font-size:1.1rem;">Tests mínimos esperados</h2>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="ms-grid">
+            <div class="ms-card">
+                <div class="ms-badge badge-server">gato-server</div>
+                <ul>
+                    <li><code>GameValidatorServiceTest</code> — turno incorrecto</li>
+                    <li><code>GameValidatorServiceTest</code> — casilla ocupada</li>
+                    <li><code>GameValidatorServiceTest</code> — partida no iniciada</li>
+                    <li><code>GameValidatorServiceTest</code> — partida ya finalizada</li>
+                    <li><code>GameValidatorServiceTest</code> — jugador no participante</li>
+                    <li><code>GameValidatorServiceTest</code> — posición fuera de rango</li>
+                    <li><code>WinDetectorTest</code> — las 8 combinaciones ganadoras</li>
+                    <li><code>WinDetectorTest</code> — tablero lleno sin ganador (DRAW)</li>
+                    <li><code>WinDetectorTest</code> — tablero incompleto sin resultado</li>
+                </ul>
+            </div>
+            <div class="ms-card">
+                <div class="ms-badge badge-client">gato-client</div>
+                <ul>
+                    <li><code>ServerGatewayServiceTest</code> — fallback cuando <code>RestTemplate</code> lanza <code>ResourceAccessException</code></li>
+                    <li><code>ServerGatewayServiceTest</code> — fallback cuando server retorna 500</li>
+                    <li><code>GameRegistryServiceTest</code> — registra gameId→serverUrl correctamente</li>
+                    <li><code>GameRegistryServiceTest</code> — lanza excepción si gameId no está registrado</li>
+                    <li><code>PlayerServiceTest</code> — lanza excepción si username ya existe</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="alert-box">
+            <strong>Recuerda:</strong> <code>mvn test</code> debe ejecutarse sin errores en ambos proyectos antes de la entrega. Un proyecto con tests que fallan descuenta el 100% del criterio de tests, aunque el código funcione manualmente.
+        </div>
+
+        <div class="page-nav">
+            <a class="page-nav-btn" href="entrega.html">← 06 Entrega</a>
+            <a class="page-nav-btn primary" href="index.html">↩ Inicio</a>
+        </div>
+    </div>
+</div>
+
+<footer>
+    Fullstack I — Ingeniería en Informática / Analista en Programación ·
+    Escuela de Ingeniería en Informática y Telecomunicaciones · FPY-1101
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+
+    function toggleEndpoint(el) {
+        const body = el.querySelector('.endpoint-body');
+        const isOpen = el.classList.contains('open');
+        el.classList.toggle('open');
+        body.classList.toggle('open', !isOpen);
+    }
+</script>
+</body>
+</html>
