@@ -21,7 +21,7 @@ Construir APIs REST con buenas prácticas desde el inicio:
 
 ## Estructura del repositorio
 
-- [`Tickets/`](./Tickets/README.md): proyecto Spring Boot principal del curso
+- [`Tickets/`](proyects/Tickets/README.md): proyecto Spring Boot principal del curso
 - [`docs/`](./docs/README.md): documentación del curso (lecciones y material de apoyo)
 
 ## Requisitos

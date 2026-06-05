@@ -1,4 +1,4 @@
-# Lección 20 — Implementación de HATEOAS en la Documentación de APIs
+# Lección 21 — Implementación de HATEOAS en la Documentación de APIs
 
 **Aprende a enriquecer respuestas REST con enlaces navegables y a documentar APIs que guían al consumidor hacia las siguientes acciones disponibles.**
 
@@ -63,4 +63,4 @@ Con HATEOAS, la respuesta también incluye enlaces:
 
 ---
 
-*Lección 20 - [← Volver al Índice](../INDICE_COMPLETO.md)*
+*Lección 21 - [← Volver al Índice](../INDICE_COMPLETO.md)*

@@ -1,4 +1,4 @@
-# Lección 21 — Pruebas Unitarias en Proyectos de Microservicios
+# Lección 22 — Pruebas Unitarias en Proyectos de Microservicios
 
 **Aprende a proteger la lógica de tus microservicios con pruebas unitarias, JUnit 5, Mockito y el modelo Given When Then.**
 
@@ -87,4 +87,4 @@ class TicketServiceTest {
 
 ---
 
-*Lección 21 - [← Volver al Índice](../INDICE_COMPLETO.md)*
+*Lección 22 - [← Volver al Índice](../INDICE_COMPLETO.md)*

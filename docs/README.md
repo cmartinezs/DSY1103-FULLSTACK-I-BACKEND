@@ -56,6 +56,15 @@ Documentación generada por cada lección del curso. Incluye objetivos, guiones,
 | 11 | [Configuración de base de datos](./lessons/11-database-config/) | Conectar a MySQL local (XAMPP) y a Supabase (PostgreSQL en la nube); opciones de `ddl-auto` | [Objetivo y alcance](./lessons/11-database-config/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/11-database-config/02_guion_paso_a_paso.md) · [MySQL vs PostgreSQL](./lessons/11-database-config/03_mysql_vs_postgresql.md) · [Rúbrica mínima](./lessons/11-database-config/04_checklist_rubrica_minima.md) · [Actividad individual](./lessons/11-database-config/05_actividad_individual.md) |
 | 12 | [Relaciones entre entidades](./lessons/12-relations/) | `@ManyToOne`, `@OneToMany`, `@JoinColumn` y `@Column`; entidad `User` con usuario creador y asignado en `Ticket` | [Objetivo y alcance](./lessons/12-relations/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/12-relations/02_guion_paso_a_paso.md) · [Relaciones JPA](./lessons/12-relations/03_relaciones_jpa.md) · [Rúbrica mínima](./lessons/12-relations/04_checklist_rubrica_minima.md) · [Actividad individual](./lessons/12-relations/05_actividad_individual.md) |
 | 13 | [Tabla de historial](./lessons/13-history/) | `@OneToMany` con `CascadeType.ALL`; entidad `TicketHistory` y registro automático de cambios de estado en el `Service` | [Objetivo y alcance](./lessons/13-history/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/13-history/02_guion_paso_a_paso.md) · [Historial y auditoría](./lessons/13-history/03_historial_y_auditoria.md) · [Rúbrica mínima](./lessons/13-history/04_checklist_rubrica_minima.md) · [Actividad individual](./lessons/13-history/05_actividad_individual.md) |
+| 14 | [Comunicación entre microservicios](./lessons/14-microservices/) | Comunicación HTTP entre servicios independientes con RestClient, RestTemplate y FeignClient | [README](./lessons/14-microservices/README.md) · [Objetivo y alcance](./lessons/14-microservices/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/14-microservices/05_guion_paso_a_paso.md) |
+| 15 | [Migraciones Flyway](./lessons/15-flyway-migrations/) | Versionado profesional de cambios de base de datos con migraciones SQL | [README](./lessons/15-flyway-migrations/README.md) · [Objetivo y alcance](./lessons/15-flyway-migrations/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/15-flyway-migrations/02_guion_paso_a_paso.md) |
+| 16 | [Spring Security](./lessons/16-spring-security/) | Autenticación, autorización, roles y protección de endpoints REST | [README](./lessons/16-spring-security/README.md) · [Objetivo y alcance](./lessons/16-spring-security/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/16-spring-security/02_guion_paso_a_paso.md) |
+| 17 | [Logging](./lessons/17-logging/) | Auditoría e investigación con SLF4J, Logback y niveles de log | [README](./lessons/17-logging/README.md) · [Objetivo y alcance](./lessons/17-logging/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/17-logging/02_guion_paso_a_paso.md) |
+| 18 | [Exception Handling Global](./lessons/18-global-exception-handling/) | Manejo centralizado de errores con `@ControllerAdvice` y respuestas uniformes | [README](./lessons/18-global-exception-handling/README.md) · [Objetivo y alcance](./lessons/18-global-exception-handling/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/18-global-exception-handling/02_guion_paso_a_paso.md) |
+| 19 | [OpenAPI Specification](./lessons/19-openapi-oas/) | Documentación estándar de APIs REST con OAS y Swagger UI | [README](./lessons/19-openapi-oas/README.md) · [Objetivo y alcance](./lessons/19-openapi-oas/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/19-openapi-oas/03_guion_paso_a_paso.md) |
+| 20 | [Docker, Docker Compose y Docker Desktop](./lessons/20-docker-compose-desktop/) | Ambientes reproducibles con contenedores para Windows, Linux y macOS | [README](./lessons/20-docker-compose-desktop/README.md) · [Objetivo y alcance](./lessons/20-docker-compose-desktop/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/20-docker-compose-desktop/03_guion_paso_a_paso.md) |
+| 21 | [HATEOAS en APIs](./lessons/21-hateoas-api-docs/) | Respuestas REST con enlaces navegables y documentación de `_links` | [README](./lessons/21-hateoas-api-docs/README.md) · [Objetivo y alcance](./lessons/21-hateoas-api-docs/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/21-hateoas-api-docs/03_guion_paso_a_paso.md) |
+| 22 | [Pruebas Unitarias en Microservicios](./lessons/22-unit-testing-microservices/) | Testing con JUnit 5, Mockito, buenas prácticas y modelo Given When Then | [README](./lessons/22-unit-testing-microservices/README.md) · [Objetivo y alcance](./lessons/22-unit-testing-microservices/01_objetivo_y_alcance.md) · [Guión paso a paso](./lessons/22-unit-testing-microservices/03_guion_paso_a_paso.md) |
 
 ---
 
@@ -93,10 +102,9 @@ Se estudian de forma **autónoma** en paralelo al curso.
 | Recurso | Enlace |
 |---------|--------|
 | README principal | [`../README.md`](../README.md) |
-| Proyecto Tickets (API) | [`../Tickets/README.md`](../Tickets/README.md) |
+| Proyecto Tickets (API) | [`../Tickets/README.md`](../proyects/Tickets/README.md) |
 | 🗺️ Roadmap de estudio | [`roadmap.md`](./roadmap.md) |
 
 ---
 
 *Última actualización: Marzo 2026 — DSY1103 Fullstack I Backend*
-

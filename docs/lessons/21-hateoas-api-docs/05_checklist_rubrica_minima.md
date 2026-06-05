@@ -1,4 +1,4 @@
-# Lección 20 — Checklist y Rúbrica Mínima
+# Lección 21 — Checklist y Rúbrica Mínima
 
 ## Checklist antes de entregar
 

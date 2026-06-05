@@ -1,4 +1,4 @@
-# Lección 21 — Objetivo y Alcance
+# Lección 22 — Objetivo y Alcance
 
 ## ¿De dónde venimos?
 

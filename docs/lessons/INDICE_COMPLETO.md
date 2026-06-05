@@ -1,4 +1,4 @@
-# 📚 Índice Completo del Curso — 22 Lecciones
+# 📚 Índice Completo del Curso — 23 Lecciones
 
 ## 🎓 Estructura del Curso
 
@@ -69,14 +69,15 @@ Seguridad, auditoría y manejo de errores
 
 ---
 
-### 🟤 Producción III (Lecciones 19-21)
-Documentación, navegabilidad y testing
+### 🟤 Producción III (Lecciones 19-22)
+Documentación, contenedores, navegabilidad y testing
 
 | # | Título | Status | Destacado |
 |---|--------|--------|-----------|
 | 19 | OpenAPI Specification (OAS) | ✅ Completada | **Swagger UI, Contratos de API, Ejemplos** |
-| 20 | HATEOAS en APIs | ✅ Completada | **Links, _links, Respuestas Navegables** |
-| 21 | Pruebas Unitarias en Microservicios | ✅ Completada | **JUnit 5, Mockito, Given When Then** |
+| 20 | Docker, Docker Compose y Docker Desktop | ✅ Completada | **Contenedores, Compose, Windows/Linux/macOS** |
+| 21 | HATEOAS en APIs | ✅ Completada | **Links, _links, Respuestas Navegables** |
+| 22 | Pruebas Unitarias en Microservicios | ✅ Completada | **JUnit 5, Mockito, Given When Then** |
 
 ---
 
@@ -103,8 +104,9 @@ Avanzado
 ├─ Lección 17     (Logging)
 ├─ Lección 18     (Manejo global de errores)
 ├─ Lección 19     (Documentación OpenAPI)
-├─ Lección 20     (HATEOAS)
-└─ Lección 21     (Pruebas unitarias)
+├─ Lección 20     (Docker y Docker Compose)
+├─ Lección 21     (HATEOAS)
+└─ Lección 22     (Pruebas unitarias)
 ```
 
 ---
@@ -210,7 +212,28 @@ Avanzado
 
 ---
 
-## 🎯 Lección 20 — Implementación de HATEOAS en la Documentación de APIs
+## 🎯 Lección 20 — Docker, Docker Compose y Docker Desktop
+
+**Tema:** Ambientes reproducibles con contenedores
+
+- ✅ Docker Engine y Docker Desktop
+- ✅ Docker Compose para MySQL y PostgreSQL
+- ✅ Dockerfile para Spring Boot
+- ✅ Configuración para Windows, Linux y macOS
+- ✅ Variables de entorno y redes entre servicios
+
+**Documentos:** 7 archivos (objetivo, conceptos, guión, sistemas operativos, ejemplos, checklist, actividad)
+
+**Habilidades:**
+- [ ] Explicar qué es Docker
+- [ ] Levantar bases de datos con Docker Compose
+- [ ] Crear un Dockerfile para Spring Boot
+- [ ] Configurar ambientes Windows/Linux/macOS
+- [ ] Distinguir `localhost` de nombres de servicio dentro de Docker
+
+---
+
+## 🎯 Lección 21 — Implementación de HATEOAS en la Documentación de APIs
 
 **Tema:** Respuestas REST con enlaces navegables
 
@@ -230,7 +253,7 @@ Avanzado
 
 ---
 
-## 🎯 Lección 21 — Pruebas Unitarias en Proyectos de Microservicios
+## 🎯 Lección 22 — Pruebas Unitarias en Proyectos de Microservicios
 
 **Tema:** Testing unitario con JUnit 5 y Mockito
 
@@ -266,6 +289,8 @@ Spring Boot 4.0.5
 ├─ springdoc-openapi (OpenAPI / Swagger UI)
 ├─ JUnit 5 (Testing)
 ├─ Mockito (Mocks)
+├─ Docker (Contenedores)
+├─ Docker Compose (Ambientes locales)
 └─ Spring Boot DevTools (Hot reload)
 
 Databases
@@ -277,7 +302,8 @@ Tools
 ├─ Maven (Builds)
 ├─ Git (Versionado)
 ├─ IntelliJ IDEA (IDE)
-└─ Docker (Opcional)
+├─ Docker Desktop (Windows/macOS)
+└─ Docker Engine (Linux)
 ```
 
 ---
@@ -293,7 +319,7 @@ Lección 12-13:  Relaciones/Auditría ░░░░░░░░░░░░░░
 Lección 14:     Migraciones Flyway  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (87%)
 Lección 15:     Microservicios      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (71%)
 Lección 16-18:  Producción II       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (86%)
-Lección 19-21:  Docs y Testing      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (100%)
+Lección 19-22:  Docs, Docker y Test ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (100%)
 ```
 
 ---
@@ -329,12 +355,18 @@ Lección 19-21:  Docs y Testing      ░░░░░░░░░░░░░░�
 - ✅ DTOs y errores documentados
 
 ### Lección 20
+- ✅ Docker instalado y validado
+- ✅ Docker Compose para MySQL/PostgreSQL
+- ✅ Dockerfile para Spring Boot
+- ✅ Configuración Windows/Linux/macOS documentada
+
+### Lección 21
 - ✅ Respuestas con `_links`
 - ✅ `self` en recurso individual
 - ✅ Links útiles de negocio
 - ✅ OpenAPI actualizado con formato HATEOAS
 
-### Lección 21
+### Lección 22
 - ✅ Pruebas unitarias con JUnit 5
 - ✅ Mockito para repositories y clientes externos
 - ✅ Casos felices, errores y fallbacks

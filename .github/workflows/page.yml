@@ -7,12 +7,12 @@ on:
     paths:
       - 'page/**'
       - 'docs/**'
-      - 'Tickets/**'
+      - '../../proyects/Tickets/**'
       - 'Tickets-*/**'
-      - 'NotificationService/**'
+      - '../../proyects/NotificationService/**'
       - 'AuditService/**'
-      - 'SearchService/**'
-      - 'SLAService/**'
+      - '../../proyects/SearchService/**'
+      - '../../proyects/SLAService/**'
       - '.github/workflows/page.yml'
   workflow_dispatch:
 

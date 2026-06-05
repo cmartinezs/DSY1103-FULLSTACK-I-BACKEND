@@ -1,4 +1,4 @@
-# Lección 21 — Actividad Individual
+# Lección 22 — Actividad Individual
 
 ## Objetivo
 
