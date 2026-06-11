@@ -7,6 +7,7 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import mermaid from 'mermaid';
 import {
   ArrowRight,
+  BookMarked,
   BookOpen,
   Braces,
   ChevronDown,
@@ -75,6 +76,7 @@ const firstDoc =
   allDocs[0];
 const firstProject = content.projects[0];
 const htmlPages = content.htmlPages ?? [];
+const guidePages = content.guides ?? [];
 const challengeSites = buildChallengeSites(htmlPages);
 const firstHtmlPage =
   htmlPages.find((page) => page.path === 'docs/challenges/tic-tac-toe/index.html') ??
@@ -90,6 +92,7 @@ function App() {
   const [query, setQuery] = useState('');
   const [selectedDocId, setSelectedDocId] = useState(docFromHash()?.id ?? firstDoc?.id ?? '');
   const [selectedHtmlPageId, setSelectedHtmlPageId] = useState(htmlPageFromHash()?.id ?? firstHtmlPage?.id ?? '');
+  const [selectedGuideId, setSelectedGuideId] = useState(guidePages[0]?.id ?? '');
   const [selectedProjectId, setSelectedProjectId] = useState(firstProject?.id ?? '');
   const [selectedFileId, setSelectedFileId] = useState(firstProjectFile?.id ?? '');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -156,6 +159,14 @@ function App() {
     );
   }, [query]);
 
+  const filteredGuides = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return guidePages;
+    return guidePages.filter((guide) =>
+      [guide.title, guide.path, guide.summary].some((value) => value?.toLowerCase().includes(needle)),
+    );
+  }, [query]);
+
   const selectedDoc =
     allDocs.find((doc) => doc.id === selectedDocId) ?? filteredDocs[0] ?? allDocs[0];
 
@@ -216,6 +227,10 @@ function App() {
     replaceRoute(selectedHtmlPage?.path ?? firstHtmlPage?.path ?? 'docs/challenges/README.md');
   }
 
+  function openGuides() {
+    setMode('guides');
+  }
+
   return (
     <div className="portal-shell min-h-screen text-zinc-950">
       <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/88 backdrop-blur-xl">
@@ -243,7 +258,7 @@ function App() {
                 placeholder="Buscar en documentos, challenges y codigo"
               />
             </div>
-            <div className="grid w-full grid-cols-2 rounded-md border border-zinc-300 bg-zinc-100 p-1 sm:w-auto sm:grid-cols-4">
+            <div className="grid w-full grid-cols-3 rounded-md border border-zinc-300 bg-zinc-100 p-1 sm:w-auto sm:grid-cols-5">
               <ModeButton active={mode === 'home'} icon={Home} onClick={navigateHome}>
                 Inicio
               </ModeButton>
@@ -252,6 +267,9 @@ function App() {
               </ModeButton>
               <ModeButton active={mode === 'challenges'} icon={ExternalLink} onClick={openChallenges}>
                 Challenges
+              </ModeButton>
+              <ModeButton active={mode === 'guides'} icon={BookMarked} onClick={openGuides}>
+                Guías
               </ModeButton>
               <ModeButton active={mode === 'projects'} icon={Code2} onClick={() => setMode('projects')}>
                 Proyectos
@@ -271,7 +289,7 @@ function App() {
         />
       ) : (
       <main className="mx-auto grid max-w-[1600px] gap-4 px-4 py-4 lg:grid-cols-[minmax(280px,380px)_1fr]">
-        {mode !== 'challenges' && sidebarOpen ? (
+        {mode !== 'challenges' && mode !== 'guides' && sidebarOpen ? (
           <aside className="min-h-[calc(100vh-130px)] overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
               <div className="flex items-center gap-2 text-sm font-semibold">
@@ -299,7 +317,7 @@ function App() {
               />
             )}
           </aside>
-        ) : mode !== 'challenges' ? (
+        ) : mode !== 'challenges' && mode !== 'guides' ? (
           <button
             className="flex h-12 items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white text-sm font-medium shadow-sm lg:col-span-1"
             onClick={() => setSidebarOpen(true)}
@@ -309,7 +327,7 @@ function App() {
           </button>
         ) : null}
 
-        <section className={mode === 'challenges' || !sidebarOpen ? 'min-w-0 lg:col-span-2' : 'min-w-0'}>
+        <section className={mode === 'challenges' || mode === 'guides' || !sidebarOpen ? 'min-w-0 lg:col-span-2' : 'min-w-0'}>
           {mode === 'lessons' ? (
             <MarkdownViewer doc={selectedDoc} onNavigate={navigateToDoc} />
           ) : mode === 'challenges' ? (
@@ -318,6 +336,8 @@ function App() {
               selectedPage={selectedHtmlPage}
               onSelectPage={navigateToHtmlPage}
             />
+          ) : mode === 'guides' ? (
+            <GuidesGallery guides={filteredGuides} />
           ) : (
             <ProjectViewer project={selectedProject} file={selectedFile} onNavigateDoc={navigateToDoc} setMode={setMode} />
           )}
@@ -767,6 +787,66 @@ function ChallengeCard({ site, selectedPage, onSelectPage }) {
             className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-emerald-500 hover:text-emerald-700"
             onClick={() => openHtmlPageInNewTab(activePage ?? site.entry)}
           >
+            Abrir en pestaña
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function GuidesGallery({ guides }) {
+  if (guides.length === 0) return <EmptyState text="No hay guías disponibles." />;
+
+  return (
+    <div className="space-y-4">
+      <section className="rounded-md border border-zinc-200 bg-white p-5 shadow-panel">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">docs/guides</p>
+            <h2 className="mt-1 text-2xl font-semibold leading-tight text-zinc-950">Guías de referencia</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-600">
+              Documentos HTML independientes con referencia técnica y guías de uso para el ramo.
+            </p>
+          </div>
+          <span className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-600">
+            {guides.length} guía{guides.length === 1 ? '' : 's'}
+          </span>
+        </div>
+      </section>
+      <div className="grid gap-4 xl:grid-cols-2">
+        {guides.map((guide) => (
+          <GuideCard key={guide.id} guide={guide} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GuideCard({ guide }) {
+  return (
+    <article className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-panel">
+      <div className="aspect-[16/9] border-b border-zinc-200 bg-zinc-950">
+        <iframe
+          title={`Preview ${guide.title}`}
+          srcDoc={htmlPreviewDocument(guide)}
+          className="challenge-preview-frame"
+          tabIndex={-1}
+        />
+      </div>
+      <div className="space-y-4 p-4">
+        <div>
+          <h3 className="text-lg font-semibold leading-tight text-zinc-950">{guide.title}</h3>
+          <p className="mt-1 break-all text-xs text-zinc-500">{guide.path}</p>
+          <p className="mt-3 line-clamp-3 text-sm leading-6 text-zinc-700">{guide.summary}</p>
+        </div>
+        <div className="flex items-center gap-2 border-t border-zinc-200 pt-3">
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-emerald-500 hover:text-emerald-700"
+            onClick={() => openHtmlPageInNewTab(guide)}
+          >
+            <ExternalLink size={16} />
             Abrir en pestaña
           </button>
         </div>

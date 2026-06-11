@@ -23,6 +23,7 @@ const projectNames = [
   'Tickets-18',
   'Tickets-19',
   'Tickets-20',
+  'Tickets-21',
   'NotificationService',
   'AuditService',
   'SearchService',
@@ -216,6 +217,39 @@ async function buildHtmlPages() {
   return pages;
 }
 
+async function buildGuides() {
+  const guidesRoot = path.join(repoRoot, 'docs', 'guides');
+  if (!(await pathExists(guidesRoot))) return [];
+
+  const files = await listFiles(guidesRoot, {
+    maxFiles: 60,
+    filter: (relative) => relative.endsWith('.html'),
+  });
+
+  const publicGuidesRoot = path.join(publicDir, 'docs', 'guides');
+  await fs.rm(publicGuidesRoot, { recursive: true, force: true });
+  await fs.mkdir(publicGuidesRoot, { recursive: true });
+
+  const guides = [];
+  for (const file of files) {
+    const content = await readText(file.absolute);
+    const outPath = path.join(publicGuidesRoot, file.relative);
+    await fs.mkdir(path.dirname(outPath), { recursive: true });
+    await fs.copyFile(file.absolute, outPath);
+
+    guides.push({
+      id: `docs/guides/${file.relative}`,
+      title: titleFromHtml(file.relative, content),
+      path: `docs/guides/${file.relative}`,
+      publicPath: `docs/guides/${file.relative}`,
+      summary: htmlSummary(content),
+      content,
+    });
+  }
+
+  return guides;
+}
+
 function titleFromMarkdown(relative, content) {
   const firstHeading = content.match(/^#\s+(.+)$/m);
   if (firstHeading) return firstHeading[1].trim();
@@ -337,6 +371,7 @@ function languageFor(relative) {
 const lessons = await buildLessons();
 const allDocs = await buildAllDocs();
 const htmlPages = await buildHtmlPages();
+const guides = await buildGuides();
 const projects = await buildProjects();
 const generatedAt = new Date().toISOString();
 
@@ -348,6 +383,7 @@ await fs.writeFile(
       generatedAt,
       allDocs,
       htmlPages,
+      guides,
       lessons: lessons.lessons,
       rootDocs: lessons.rootDocs,
       projects,
@@ -358,5 +394,5 @@ await fs.writeFile(
 );
 
 console.log(
-  `Generated ${allDocs.length} docs, ${htmlPages.length} html pages, ${lessons.lessons.length} lessons and ${projects.length} projects.`,
+  `Generated ${allDocs.length} docs, ${htmlPages.length} html pages, ${guides.length} guides, ${lessons.lessons.length} lessons and ${projects.length} projects.`,
 );
