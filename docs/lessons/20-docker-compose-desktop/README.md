@@ -36,6 +36,8 @@ Docker permite describir el ambiente como código.
 
 ### Levantar base de datos con Docker Compose
 
+Archivo `compose.yml` (nombre canónico desde Docker Compose V2):
+
 ```yaml
 services:
   mysql:
@@ -67,8 +69,8 @@ docker compose logs -f mysql
 ## Lo que construirás
 
 1. Instalar y validar Docker según tu sistema operativo
-2. Crear `docker-compose.yml` para MySQL y PostgreSQL
-3. Crear un `Dockerfile` para un proyecto Spring Boot
+2. Crear `compose.yml` para MySQL y PostgreSQL (sin clave `version:` obsoleta)
+3. Crear un `Dockerfile` para un proyecto Spring Boot con usuario no-root
 4. Levantar servicios de apoyo con Compose
 5. Configurar variables de entorno para perfiles Spring
 6. Documentar comandos de uso en README

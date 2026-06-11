@@ -44,7 +44,9 @@ docker run --name mysql-demo -p 3306:3306 mysql:8.4
 
 ## ¿Qué es Docker Compose?
 
-Docker Compose permite definir varios servicios en un archivo `docker-compose.yml`.
+Docker Compose permite definir varios servicios en un archivo `compose.yml`.
+
+> **Nombre de archivo preferido:** A partir de Docker Compose V2 (integrado en Docker CLI), el nombre canónico es `compose.yml`. El nombre `docker-compose.yml` sigue funcionando pero es la forma heredada.
 
 Sin Compose:
 
@@ -98,4 +100,25 @@ En Linux normalmente se instala Docker Engine directamente; Docker Desktop es op
 - Usar nombres de servicio como host dentro de Compose
 - Mantener Dockerfile simple para proyectos educativos
 - No copiar `target/` al repositorio
+- Usar `compose.yml` en lugar de `docker-compose.yml` (convención actual)
+- No incluir la clave `version:` en `compose.yml` — es obsoleta en Compose Specification
+- Ejecutar procesos con usuario no-root dentro del contenedor (`USER authuser`)
+
+---
+
+## Versiones actuales
+
+| Componente | Versión estable |
+|------------|----------------|
+| Docker Engine | 27.x |
+| Docker Desktop | 4.x |
+| Docker Compose (plugin) | v2.x |
+| Compose Specification | sin `version:` (schema unificado) |
+
+Verifica tus versiones:
+
+```bash
+docker --version
+docker compose version
+```
 

@@ -18,7 +18,7 @@ El snapshot parte desde `Tickets-19` y agrega un ambiente reproducible con conte
 
 ### Dockerfile para Tickets
 
-`Dockerfile` usa build multi-stage:
+`Dockerfile` usa build multi-stage y corre el proceso como usuario no-root:
 
 ```dockerfile
 FROM eclipse-temurin:21-jdk AS build
@@ -26,12 +26,16 @@ RUN chmod +x mvnw && ./mvnw package -DskipTests
 
 FROM eclipse-temurin:21-jre
 COPY --from=build /workspace/target/*.jar app.jar
+RUN addgroup -S authgroup && adduser -S authuser -G authgroup
+USER authuser
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
+El mismo patrón se aplica a los Dockerfiles de NotificationService, AuditService, SearchService y SLAService.
+
 ### Docker Compose completo
 
-`docker-compose.yml` levanta base de datos, API principal y microservicios auxiliares.
+`compose.yml` (nombre canónico desde Docker Compose V2) levanta base de datos, API principal y microservicios auxiliares.
 
 MySQL monta las migraciones existentes como scripts de inicializacion:
 
@@ -82,10 +86,10 @@ Se agrego `Dockerfile` y `.dockerignore` en:
 
 ## Requisitos
 
-- Docker Desktop en Windows/macOS, o Docker Engine en Linux
-- Docker Compose v2
+- Docker Desktop 4.x en Windows/macOS, o Docker Engine 27.x en Linux
+- Docker Compose v2 (integrado en Docker CLI como plugin)
 
-Validar:
+Verifica versiones:
 
 ```bash
 docker --version
@@ -95,7 +99,7 @@ docker run hello-world
 
 ## Ejecutar todo con Docker Compose
 
-Desde este directorio:
+Desde este directorio (el archivo `compose.yml` es detectado automáticamente):
 
 ```bash
 cd projects/Tickets-20

@@ -2,6 +2,8 @@
 
 ## Ejemplo 1: Compose solo para bases de datos
 
+Archivo: `compose.yml`
+
 ```yaml
 services:
   mysql:
@@ -49,17 +51,25 @@ RUN ./mvnw package -DskipTests
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
+
 COPY --from=build /workspace/target/*.jar app.jar
+
+RUN addgroup -S authgroup && adduser -S authuser -G authgroup
+USER authuser
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
+
+La etapa `build` compila con JDK; la etapa final usa JRE y corre como usuario no-root (`authuser`).
 
 En Windows, si usas `mvnw.cmd`, puedes empaquetar fuera de Docker y usar el Dockerfile simple de la guía.
 
 ---
 
 ## Ejemplo 3: Compose con Tickets API y MySQL
+
+Archivo: `compose.yml`
 
 ```yaml
 services:
@@ -99,6 +109,8 @@ Dentro de Docker, `DB_HOST` debe ser `mysql`, no `localhost`.
 ---
 
 ## Ejemplo 4: Compose para microservicios de apoyo
+
+Archivo: `compose.yml`
 
 ```yaml
 services:

@@ -12,9 +12,9 @@ Si `hello-world` se ejecuta correctamente, Docker está listo.
 
 ---
 
-## Paso 2: Crear `docker-compose.yml`
+## Paso 2: Crear `compose.yml`
 
-En la raíz del repositorio:
+En la raíz del repositorio crea el archivo `compose.yml` (nombre preferido desde Docker Compose V2):
 
 ```yaml
 services:
@@ -49,6 +49,8 @@ volumes:
   mysql_data:
   postgres_data:
 ```
+
+> No incluyas la clave `version:` al inicio del archivo. Es obsoleta en la Compose Specification actual y Docker la ignora con advertencia.
 
 ---
 
@@ -121,10 +123,16 @@ WORKDIR /app
 
 COPY target/*.jar app.jar
 
+RUN addgroup -S authgroup && adduser -S authuser -G authgroup
+USER authuser
+
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
+
+- `addgroup -S` / `adduser -S` crean un grupo y usuario de sistema (sin contraseña, sin directorio home).
+- `USER authuser` hace que el proceso Java corra con permisos mínimos, no como `root`.
 
 Primero empaqueta:
 

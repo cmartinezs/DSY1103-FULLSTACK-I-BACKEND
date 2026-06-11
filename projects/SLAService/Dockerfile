@@ -8,7 +8,11 @@ RUN chmod +x mvnw && ./mvnw package -DskipTests
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
+
 COPY --from=build /workspace/target/*.jar app.jar
+
+RUN addgroup -S authgroup && adduser -S authuser -G authgroup
+USER authuser
 
 EXPOSE 8085
 
