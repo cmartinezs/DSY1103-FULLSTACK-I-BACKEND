@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./mvnw.cmd package *)"
+      "Bash(./mvnw.cmd package *)",
+      "Bash(cp *)",
+      "Bash(./mvnw compile *)",
+      "Bash(chmod +x /home/carlos/projects/DSY1103-FULLSTACK-I-BACKEND/projects/Tickets-21/mvnw)"
     ]
   }
 }
