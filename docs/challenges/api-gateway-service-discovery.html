@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microservicios en Acción · Gateway + Eureka</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+    <style>
+        :root{
+            --bg-primary:#0d1117;
+            --bg-secondary:#0a0e14;
+            --bg-surface:#161b22;
+            --bg-card:#1c2128;
+            --bg-card-hover:#22272e;
+            --border:#30363d;
+            --border-muted:#21262d;
+            --text-primary:#e6edf3;
+            --text-secondary:#9198a1;
+            --text-muted:#6e7681;
+            --green:#3fb950;
+            --green-dim:#2ea043;
+            --blue:#58a6ff;
+            --purple:#bc8cff;
+            --orange:#d29922;
+            --red:#f85149;
+            --font-mono:'JetBrains Mono', monospace;
+            --font-sans:'Inter', sans-serif;
+        }
+
+        *{box-sizing:border-box; margin:0; padding:0;}
+
+        html{scroll-behavior:smooth;}
+
+        body{
+            background:var(--bg-primary);
+            color:var(--text-primary);
+            font-family:var(--font-sans);
+            line-height:1.6;
+            -webkit-font-smoothing:antialiased;
+        }
+
+        ::selection{background:rgba(63,185,80,0.3); color:#fff;}
+
+        /* ---------- SPLASH ---------- */
+        #splash{
+            position:fixed; inset:0; z-index:999;
+            background:var(--bg-secondary);
+            display:flex; align-items:center; justify-content:center;
+            transition:opacity .6s ease, visibility .6s ease;
+        }
+        #splash.hidden{opacity:0; visibility:hidden; pointer-events:none;}
+        .terminal{
+            width:min(640px, 88vw);
+            background:var(--bg-card);
+            border:1px solid var(--border);
+            border-radius:10px;
+            box-shadow:0 20px 60px rgba(0,0,0,.5);
+            overflow:hidden;
+        }
+        .terminal-bar{
+            background:var(--bg-surface);
+            padding:10px 14px;
+            display:flex; align-items:center; gap:8px;
+            border-bottom:1px solid var(--border);
+        }
+        .dot{width:11px; height:11px; border-radius:50%;}
+        .dot.r{background:#f85149;} .dot.y{background:#d29922;} .dot.g{background:#3fb950;}
+        .terminal-title{
+            margin-left:10px; font-family:var(--font-mono); font-size:12px; color:var(--text-muted);
+        }
+        .terminal-body{
+            padding:22px 24px 26px;
+            font-family:var(--font-mono);
+            font-size:13.5px;
+            min-height:230px;
+        }
+        .term-line{display:block; color:var(--text-secondary); margin-bottom:7px; opacity:0; white-space:pre-wrap;}
+        .term-line .ok{color:var(--green); font-weight:600;}
+        .term-line .svc{color:var(--blue);}
+        .term-line .warn{color:var(--orange);}
+        .cursor{display:inline-block; width:8px; height:14px; background:var(--green); vertical-align:middle; animation:blink 1s steps(1) infinite;}
+        @keyframes blink{50%{opacity:0;}}
+        .splash-cta{
+            margin-top:18px; text-align:center; opacity:0; transition:opacity .4s ease;
+        }
+        .splash-cta.show{opacity:1;}
+        .splash-cta button{
+            font-family:var(--font-mono); font-size:13px; font-weight:600;
+            background:var(--green-dim); color:#04140a; border:none;
+            padding:10px 22px; border-radius:6px; cursor:pointer;
+            letter-spacing:.3px;
+        }
+        .splash-cta button:hover{background:var(--green);}
+        .splash-foot{
+            text-align:center; margin-top:10px; color:var(--text-muted); font-size:11.5px; font-family:var(--font-mono);
+        }
+
+        /* ---------- PROGRESS BAR ---------- */
+        #progress{
+            position:fixed; top:0; left:0; height:3px; width:0%;
+            background:linear-gradient(90deg, var(--green), var(--blue));
+            z-index:500; transition:width .1s linear;
+        }
+
+        /* ---------- LAYOUT ---------- */
+        .layout{display:flex; max-width:1280px; margin:0 auto;}
+
+        .sidebar{
+            width:252px; flex-shrink:0;
+            position:sticky; top:0; height:100vh;
+            border-right:1px solid var(--border-muted);
+            padding:28px 18px;
+            overflow-y:auto;
+        }
+        .side-brand{
+            font-family:var(--font-mono); font-size:11px; color:var(--text-muted);
+            letter-spacing:1px; text-transform:uppercase; margin-bottom:22px; padding-left:10px;
+        }
+        .side-brand span{color:var(--green);}
+        .nav-group{margin-bottom:4px;}
+        .nav-link{
+            display:flex; align-items:center; gap:10px;
+            padding:9px 10px; border-radius:6px;
+            color:var(--text-secondary); text-decoration:none;
+            font-size:13.5px; font-weight:500;
+            border-left:2px solid transparent;
+            transition:background .15s, color .15s, border-color .15s;
+        }
+        .nav-link:hover{background:var(--bg-card); color:var(--text-primary);}
+        .nav-link.active{color:var(--text-primary); border-left-color:var(--green); background:var(--bg-card);}
+        .nav-dot{width:6px; height:6px; border-radius:50%; background:var(--text-muted); flex-shrink:0;}
+        .nav-link.active .nav-dot{background:var(--green);}
+        .side-points{
+            margin-top:26px; padding:14px; background:var(--bg-card);
+            border:1px solid var(--border); border-radius:8px;
+        }
+        .side-points .label{font-size:10.5px; color:var(--text-muted); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.5px;}
+        .side-points .value{font-family:var(--font-mono); font-size:22px; font-weight:700; color:var(--green); margin-top:4px;}
+        .side-points .sub{font-size:11.5px; color:var(--text-secondary); margin-top:2px;}
+
+        .main{flex:1; min-width:0; padding:0 0 80px;}
+
+        /* ---------- HERO ---------- */
+        .hero{
+            padding:64px 56px 48px;
+            border-bottom:1px solid var(--border-muted);
+            background:
+                    radial-gradient(circle at 85% -10%, rgba(88,166,255,.10), transparent 45%),
+                    radial-gradient(circle at 10% 110%, rgba(63,185,80,.10), transparent 45%);
+        }
+        .eyebrow{
+            font-family:var(--font-mono); font-size:12px; color:var(--green);
+            letter-spacing:1.5px; text-transform:uppercase; margin-bottom:14px;
+            display:flex; align-items:center; gap:8px;
+        }
+        .eyebrow::before{content:''; width:18px; height:1px; background:var(--green);}
+        h1.hero-title{
+            font-size:clamp(34px, 4.5vw, 52px); font-weight:800; letter-spacing:-1px; line-height:1.08;
+        }
+        .hero-title .accent{color:var(--blue);}
+        .hero-sub{margin-top:16px; color:var(--text-secondary); font-size:16.5px; max-width:640px;}
+        .hero-tags{display:flex; flex-wrap:wrap; gap:8px; margin-top:24px;}
+        .tag{
+            font-family:var(--font-mono); font-size:11.5px; padding:5px 10px; border-radius:5px;
+            border:1px solid var(--border); color:var(--text-secondary); background:var(--bg-card);
+        }
+        .tag.g{color:var(--green); border-color:rgba(63,185,80,.35);}
+        .tag.b{color:var(--blue); border-color:rgba(88,166,255,.35);}
+        .tag.o{color:var(--orange); border-color:rgba(210,153,34,.35);}
+
+        /* ---------- SECTIONS ---------- */
+        section{padding:52px 56px; border-bottom:1px solid var(--border-muted);}
+        section:last-of-type{border-bottom:none;}
+        .sec-head{display:flex; align-items:baseline; gap:12px; margin-bottom:22px;}
+        .sec-num{font-family:var(--font-mono); color:var(--text-muted); font-size:14px;}
+        h2{font-size:25px; font-weight:700; letter-spacing:-.3px;}
+        h3{font-size:16.5px; font-weight:700; margin-bottom:8px; color:var(--text-primary);}
+        p{color:var(--text-secondary); font-size:15px; margin-bottom:12px;}
+        strong{color:var(--text-primary); font-weight:600;}
+        code{
+            font-family:var(--font-mono); background:var(--bg-card); border:1px solid var(--border);
+            padding:1px 6px; border-radius:4px; font-size:13px; color:var(--blue);
+        }
+
+        /* contexto cards */
+        .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:18px;}
+        .card{
+            background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:20px;
+        }
+        .card .icon{
+            width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+            font-family:var(--font-mono); font-weight:700; font-size:14px; margin-bottom:12px;
+        }
+        .icon.problem{background:rgba(248,81,73,.12); color:var(--red);}
+        .icon.solution{background:rgba(63,185,80,.12); color:var(--green);}
+        .card p{font-size:14px; margin-bottom:0;}
+
+        /* objetivos */
+        .obj-list{list-style:none; margin-top:18px; display:flex; flex-direction:column; gap:10px;}
+        .obj-list li{
+            display:flex; gap:12px; align-items:flex-start;
+            background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:13px 16px;
+        }
+        .obj-list .mark{color:var(--green); font-family:var(--font-mono); font-weight:700; flex-shrink:0;}
+        .obj-list span.txt{font-size:14.5px; color:var(--text-primary);}
+
+        /* dinamica steps */
+        .steps{margin-top:20px; position:relative;}
+        .step{
+            display:flex; gap:18px; padding:18px 0; border-bottom:1px dashed var(--border);
+        }
+        .step:last-child{border-bottom:none;}
+        .step-num{
+            font-family:var(--font-mono); font-weight:800; font-size:13px;
+            width:38px; height:38px; border-radius:50%; flex-shrink:0;
+            display:flex; align-items:center; justify-content:center;
+            background:var(--bg-card); border:1px solid var(--border); color:var(--blue);
+        }
+        .step.timed .step-num{color:var(--orange); border-color:rgba(210,153,34,.4);}
+        .step-body h3{margin-bottom:4px;}
+        .step-time{
+            font-family:var(--font-mono); font-size:11px; color:var(--orange);
+            background:rgba(210,153,34,.1); border:1px solid rgba(210,153,34,.3);
+            padding:2px 8px; border-radius:20px; margin-left:8px;
+        }
+        .step-body p{margin-bottom:0; font-size:14px;}
+
+        /* requisitos */
+        .req-block{margin-top:8px; margin-bottom:22px;}
+        .req-list{list-style:none; display:flex; flex-direction:column; gap:8px; margin-top:10px;}
+        .req-list li{
+            font-size:14.5px; color:var(--text-secondary); padding-left:20px; position:relative;
+        }
+        .req-list li::before{
+            content:'→'; position:absolute; left:0; color:var(--green); font-family:var(--font-mono);
+        }
+        .req-list li strong{color:var(--text-primary);}
+
+        .case-chips{display:flex; flex-wrap:wrap; gap:9px; margin-top:14px;}
+        .chip{
+            font-family:var(--font-mono); font-size:12.5px; padding:7px 13px;
+            border:1px solid var(--border); border-radius:20px; color:var(--text-secondary);
+            background:var(--bg-card);
+        }
+
+        /* checklist */
+        .checklist-wrap{
+            margin-top:18px; background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:20px 22px;
+        }
+        .checklist-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+        #checkCounter{font-family:var(--font-mono); font-size:13px; color:var(--green);}
+        .check-item{
+            display:flex; align-items:center; gap:11px; padding:9px 4px; cursor:pointer;
+            border-bottom:1px solid var(--border-muted); font-size:14px;
+        }
+        .check-item:last-child{border-bottom:none;}
+        .box{
+            width:18px; height:18px; border:1.5px solid var(--text-muted); border-radius:4px;
+            flex-shrink:0; display:flex; align-items:center; justify-content:center;
+            font-family:var(--font-mono); font-size:12px; transition:all .15s;
+        }
+        .check-item.checked .box{background:var(--green-dim); border-color:var(--green-dim); color:#04140a;}
+        .check-item.checked span.lbl{color:var(--text-muted); text-decoration:line-through;}
+        .check-item span.lbl{color:var(--text-primary);}
+
+        /* arquitectura */
+        .diagram-wrap{
+            margin-top:18px; background:var(--bg-card); border:1px solid var(--border); border-radius:10px;
+            padding:24px; overflow-x:auto;
+        }
+        .legend{display:flex; gap:18px; flex-wrap:wrap; margin-top:14px; font-size:12.5px; color:var(--text-secondary); font-family:var(--font-mono);}
+        .legend .li{display:flex; align-items:center; gap:6px;}
+        .legend .sw{width:10px; height:10px; border-radius:2px;}
+
+        /* repo tree */
+        .tree-wrap{
+            margin-top:18px; background:#090c10; border:1px solid var(--border); border-radius:10px;
+            padding:22px 26px; font-family:var(--font-mono); font-size:13.5px; line-height:2;
+            overflow-x:auto;
+        }
+        .tree-wrap .d{color:var(--blue);}
+        .tree-wrap .f{color:var(--text-secondary);}
+        .tree-wrap .req{color:var(--green);}
+        .tree-wrap .muted{color:var(--text-muted);}
+
+        /* entrega */
+        .deliver-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:18px;}
+        .deliver-card{
+            background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:18px;
+            position:relative;
+        }
+        .deliver-card .n{
+            font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:8px; display:block;
+        }
+        .deliver-card h3{font-size:14.5px;}
+        .deliver-card p{font-size:13px; margin-bottom:0;}
+
+        /* rubrica */
+        table{width:100%; border-collapse:collapse; margin-top:18px; font-size:14px;}
+        th{
+            text-align:left; font-family:var(--font-mono); font-size:11.5px; text-transform:uppercase;
+            letter-spacing:.5px; color:var(--text-muted); padding:10px 14px; border-bottom:1px solid var(--border);
+        }
+        td{padding:13px 14px; border-bottom:1px solid var(--border-muted); color:var(--text-secondary);}
+        tr:last-child td{border-bottom:none;}
+        td.pts{font-family:var(--font-mono); color:var(--green); font-weight:700; white-space:nowrap;}
+        tr.total td{border-top:1px solid var(--border); font-weight:700;}
+        tr.total td.pts{color:var(--text-primary); font-size:16px;}
+        tr.total td:first-child{color:var(--text-primary);}
+
+        /* recursos */
+        .res-list{list-style:none; margin-top:16px; display:flex; flex-direction:column; gap:10px;}
+        .res-list li{
+            font-size:14px; color:var(--text-secondary); display:flex; gap:10px;
+        }
+        .res-list code{flex-shrink:0;}
+
+        footer{
+            padding:36px 56px; text-align:center; color:var(--text-muted); font-size:12.5px; font-family:var(--font-mono);
+        }
+
+        /* mobile */
+        .menu-toggle{display:none;}
+        @media (max-width:880px){
+            .sidebar{
+                position:fixed; left:0; top:0; bottom:0; z-index:400;
+                transform:translateX(-100%); transition:transform .25s ease;
+                background:var(--bg-primary); width:78vw; max-width:300px;
+            }
+            .sidebar.open{transform:translateX(0); box-shadow:20px 0 50px rgba(0,0,0,.5);}
+            .menu-toggle{
+                display:flex; position:fixed; top:14px; left:14px; z-index:450;
+                width:38px; height:38px; border-radius:8px; background:var(--bg-card);
+                border:1px solid var(--border); align-items:center; justify-content:center; cursor:pointer;
+            }
+            .menu-toggle span, .menu-toggle span::before, .menu-toggle span::after{
+                content:''; display:block; width:16px; height:2px; background:var(--text-primary); position:relative;
+            }
+            .menu-toggle span::before{position:absolute; top:-5px;} .menu-toggle span::after{position:absolute; top:5px;}
+            section, .hero{padding-left:24px; padding-right:24px;}
+            .grid2, .deliver-grid{grid-template-columns:1fr;}
+            h1.hero-title{font-size:32px;}
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============ SPLASH ============ -->
+<div id="splash">
+    <div>
+        <div class="terminal">
+            <div class="terminal-bar">
+                <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+                <div class="terminal-title">actividad-clases.sh</div>
+            </div>
+            <div class="terminal-body" id="termBody"></div>
+        </div>
+        <div class="splash-cta" id="splashCta">
+            <button onclick="closeSplash()">Entrar a la actividad →</button>
+        </div>
+        <div class="splash-foot">Fullstack I Backend · Spring Cloud Gateway + Eureka</div>
+    </div>
+</div>
+
+<div id="progress"></div>
+
+<div class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"><span></span></div>
+
+<div class="layout">
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar">
+        <div class="side-brand">Fullstack I · <span>Backend</span></div>
+        <nav>
+            <div class="nav-group">
+                <a class="nav-link" href="#contexto"><span class="nav-dot"></span>Contexto</a>
+                <a class="nav-link" href="#objetivos"><span class="nav-dot"></span>Objetivos</a>
+                <a class="nav-link" href="#dinamica"><span class="nav-dot"></span>Dinámica de la clase</a>
+                <a class="nav-link" href="#requisitos"><span class="nav-dot"></span>Requisitos del proyecto</a>
+                <a class="nav-link" href="#arquitectura"><span class="nav-dot"></span>Arquitectura esperada</a>
+                <a class="nav-link" href="#repositorio"><span class="nav-dot"></span>Estructura del repo</a>
+                <a class="nav-link" href="#entrega"><span class="nav-dot"></span>Entrega</a>
+                <a class="nav-link" href="#rubrica"><span class="nav-dot"></span>Rúbrica</a>
+                <a class="nav-link" href="#recursos"><span class="nav-dot"></span>Recursos</a>
+            </div>
+        </nav>
+        <div class="side-points">
+            <div class="label">Ponderación</div>
+            <div class="value">0,5 pts</div>
+            <div class="sub">5 décimas para nota 3</div>
+        </div>
+    </aside>
+
+    <!-- ============ MAIN ============ -->
+    <main class="main">
+
+        <div class="hero">
+            <div class="eyebrow">Actividad en clases</div>
+            <h1 class="hero-title">Microservicios en Acción:<br><span class="accent">Gateway</span> + <span style="color:var(--green)">Eureka</span></h1>
+            <p class="hero-sub">Vas a diseñar tu propio caso, levantar los requerimientos en 5 minutos y construir una arquitectura de microservicios real, con descubrimiento de servicios y un punto de entrada único.</p>
+            <div class="hero-tags">
+                <span class="tag g">Spring Cloud Gateway</span>
+                <span class="tag g">Netflix Eureka</span>
+                <span class="tag b">Mínimo 3 microservicios</span>
+                <span class="tag o">Tema libre</span>
+                <span class="tag">Entrega vía GitHub + AVA</span>
+            </div>
+        </div>
+
+        <!-- CONTEXTO -->
+        <section id="contexto">
+            <div class="sec-head"><h2>Contexto</h2></div>
+            <p>Hasta ahora cada microservicio que has construido vive solo: tú sabes su puerto, tú lo llamas directo. Eso funciona con uno o dos servicios corriendo en tu máquina. No funciona en un sistema real, donde los servicios se levantan, se caen, se replican y cambian de IP constantemente.</p>
+            <div class="grid2">
+                <div class="card">
+                    <div class="icon problem">!</div>
+                    <h3>El problema</h3>
+                    <p>Si el cliente tiene que conocer de antemano la URL exacta de cada microservicio, el sistema se vuelve frágil: cualquier cambio de puerto o IP rompe todo, y no hay forma simple de balancear carga entre instancias.</p>
+                </div>
+                <div class="card">
+                    <div class="icon solution">✓</div>
+                    <h3>La solución</h3>
+                    <p><strong>Eureka</strong> actúa como una libreta de direcciones viva: cada microservicio se registra al levantar y se da de baja al caer. <strong>Spring Cloud Gateway</strong> es el único punto de entrada, que consulta esa libreta y enruta cada petición al servicio correcto.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- OBJETIVOS -->
+        <section id="objetivos">
+            <div class="sec-head"><h2>Objetivos de aprendizaje</h2></div>
+            <p>Al terminar esta actividad deberías poder responder, con tu propio proyecto como evidencia, las siguientes preguntas:</p>
+            <ul class="obj-list">
+                <li><span class="mark">01</span><span class="txt">¿Cómo se levanta un Eureka Server y por qué los microservicios necesitan registrarse en él?</span></li>
+                <li><span class="mark">02</span><span class="txt">¿Cómo configura Spring Cloud Gateway las rutas hacia distintos microservicios usando el nombre del servicio en lugar de su IP?</span></li>
+                <li><span class="mark">03</span><span class="txt">¿Cómo se traduce un conjunto de requerimientos de negocio en una arquitectura de microservicios separados por responsabilidad?</span></li>
+                <li><span class="mark">04</span><span class="txt">¿Cómo se integran estos conceptos nuevos con lo que ya dominas: capas, DTOs, persistencia, Docker?</span></li>
+            </ul>
+        </section>
+
+        <!-- DINAMICA -->
+        <section id="dinamica">
+            <div class="sec-head"><h2>Dinámica de la clase</h2></div>
+            <p>La actividad se desarrolla completa durante el bloque de clases, en dos momentos bien diferenciados:</p>
+            <div class="steps">
+                <div class="step timed">
+                    <div class="step-num">1</div>
+                    <div class="step-body">
+                        <h3>Inventa tu caso y levanta requerimientos <span class="step-time">5 min</span></h3>
+                        <p>Define de qué trata tu sistema, qué entidades maneja y qué necesita resolver cada microservicio. No es momento de codear: es momento de decidir el qué, no el cómo. Deja por escrito tus requerimientos, aunque sea en una lista simple — los vas a necesitar para <code>docs/</code>.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-body">
+                        <h3>Implementa la arquitectura</h3>
+                        <p>Con los requerimientos definidos, construye tu Eureka Server, tu Gateway y al menos tres microservicios que le den vida al caso que inventaste. Aplica todo lo que ya sabes: capas, persistencia, configuración, control de versiones.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-body">
+                        <h3>Documenta y sube tu trabajo</h3>
+                        <p>Arma el <code>README.md</code> de la raíz y la documentación en <code>docs/</code>, sube todo a GitHub y entrega el enlace del repositorio en el AVA antes del cierre de la clase.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- REQUISITOS -->
+        <section id="requisitos">
+            <div class="sec-head"><h2>Requisitos del proyecto</h2></div>
+
+            <div class="req-block">
+                <h3>Caso de negocio</h3>
+                <p>El tema es <strong>libre</strong>: tú lo inventas. Tiene que tener sentido como sistema dividido en al menos tres dominios de responsabilidad distintos. Algunas ideas, si necesitas un punto de partida:</p>
+                <div class="case-chips">
+                    <span class="chip">Delivery de comida</span>
+                    <span class="chip">Reserva de canchas deportivas</span>
+                    <span class="chip">Tienda de tecnología</span>
+                    <span class="chip">Eventos universitarios</span>
+                    <span class="chip">Biblioteca</span>
+                    <span class="chip">Plataforma de cursos online</span>
+                    <span class="chip">Arriendo de equipamiento</span>
+                </div>
+            </div>
+
+            <div class="req-block">
+                <h3>Arquitectura mínima obligatoria</h3>
+                <ul class="req-list">
+                    <li><strong>1 Eureka Server</strong> funcionando como registro de servicios.</li>
+                    <li><strong>1 API Gateway</strong> (Spring Cloud Gateway) como punto de entrada único, enrutando por nombre de servicio.</li>
+                    <li><strong>3 o más microservicios</strong>, cada uno registrado en Eureka, con lógica de negocio real (no solo un "Hello World").</li>
+                    <li>Cada microservicio expone <strong>al menos un endpoint REST</strong> coherente con el caso que inventaste.</li>
+                </ul>
+            </div>
+
+            <div class="req-block">
+                <h3>Conceptos previos que debes aplicar</h3>
+                <p>Esta actividad no reemplaza lo aprendido, lo integra. Marca lo que vas aplicando en tu proyecto:</p>
+                <div class="checklist-wrap">
+                    <div class="checklist-head">
+                        <span style="font-family:var(--font-mono); font-size:12.5px; color:var(--text-secondary);">Autoevaluación rápida</span>
+                        <span id="checkCounter">0 / 8</span>
+                    </div>
+                    <div id="checklist">
+                        <div class="check-item"><div class="box"></div><span class="lbl">Arquitectura en capas (controller · service · repository)</span></div>
+                        <div class="check-item"><div class="box"></div><span class="lbl">Uso de DTOs para separar el modelo de dominio de lo expuesto por la API</span></div>
+                        <div class="check-item"><div class="box"></div><span class="lbl">Persistencia con Spring Data JPA</span></div>
+                        <div class="check-item"><div class="box"></div><span class="lbl">Configuración externalizada en application.yml</span></div>
+                        <div class="check-item"><div class="box"></div><span class="lbl">Manejo de excepciones y validación de datos de entrada</span></div>
+                        <div class="check-item"><div class="box"></div><span class="lbl">Eureka Client configurado en cada microservicio</span></div>
+                        <div class="check-item"><div class="box"></div><span class="lbl">Rutas de Gateway apuntando al nombre lógico del servicio, no a IP:puerto</span></div>
+                        <div class="check-item"><div class="box"></div><span class="lbl">Repositorio versionado en Git con historial de commits real</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ARQUITECTURA -->
+        <section id="arquitectura">
+            <div class="sec-head"><h2>Arquitectura esperada</h2></div>
+            <p>Independiente del caso que inventes, el esqueleto de comunicación entre tus componentes debería verse así:</p>
+            <div class="diagram-wrap">
+        <pre class="mermaid">
+flowchart TB
+    Client["Cliente / Postman"]
+    GW["API Gateway<br/>Spring Cloud Gateway"]
+    EU["Eureka Server<br/>Service Registry"]
+    MS1["Microservicio 1"]
+    MS2["Microservicio 2"]
+    MS3["Microservicio 3"]
+    DB1[("BD")]
+    DB2[("BD")]
+    DB3[("BD")]
+
+    Client --> GW
+    GW -. consulta registro .-> EU
+    MS1 -. se registra .-> EU
+    MS2 -. se registra .-> EU
+    MS3 -. se registra .-> EU
+    GW --> MS1
+    GW --> MS2
+    GW --> MS3
+    MS1 --- DB1
+    MS2 --- DB2
+    MS3 --- DB3
+        </pre>
+                <div class="legend">
+                    <div class="li"><span class="sw" style="background:var(--blue)"></span>Flujo de petición del cliente</div>
+                    <div class="li"><span class="sw" style="background:var(--purple)"></span>Registro / descubrimiento en Eureka</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- REPOSITORIO -->
+        <section id="repositorio">
+            <div class="sec-head"><h2>Estructura del repositorio</h2></div>
+            <p>El repositorio que entregues debe organizarse de forma clara. Como mínimo:</p>
+            <div class="tree-wrap">
+                <span class="d">tu-proyecto/</span><br>
+                ├── <span class="req f">README.md</span> <span class="muted">← obligatorio en la raíz</span><br>
+                ├── <span class="d">docs/</span> <span class="muted">← documentación en markdown</span><br>
+                │&nbsp;&nbsp;&nbsp;├── <span class="f">requerimientos.md</span><br>
+                │&nbsp;&nbsp;&nbsp;├── <span class="f">arquitectura.md</span><br>
+                │&nbsp;&nbsp;&nbsp;└── <span class="f">api.md</span><br>
+                ├── <span class="d">eureka-server/</span><br>
+                ├── <span class="d">api-gateway/</span><br>
+                ├── <span class="d">microservicio-1/</span><br>
+                ├── <span class="d">microservicio-2/</span><br>
+                └── <span class="d">microservicio-3/</span>
+            </div>
+            <div class="req-block" style="margin-top:22px;">
+                <h3>¿Qué debe contener el README.md de la raíz?</h3>
+                <ul class="req-list">
+                    <li>Nombre y breve descripción del caso que inventaste.</li>
+                    <li>Listado de los microservicios y qué resuelve cada uno.</li>
+                    <li>Instrucciones para levantar el proyecto (orden de arranque: Eureka → microservicios → Gateway).</li>
+                    <li>Puertos utilizados y, si corresponde, enlace a la carpeta <code>docs/</code>.</li>
+                </ul>
+            </div>
+            <div class="req-block">
+                <h3>¿Qué va en docs/?</h3>
+                <ul class="req-list">
+                    <li><strong>requerimientos.md:</strong> lo que levantaste en los primeros 5 minutos de la clase.</li>
+                    <li><strong>arquitectura.md:</strong> descripción de cada componente y cómo se comunican entre sí.</li>
+                    <li><strong>api.md:</strong> endpoints expuestos por cada microservicio, con método, ruta y un ejemplo de respuesta.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- ENTREGA -->
+        <section id="entrega">
+            <div class="sec-head"><h2>Entrega</h2></div>
+            <div class="deliver-grid">
+                <div class="deliver-card">
+                    <span class="n">01</span>
+                    <h3>Sube tu trabajo a GitHub</h3>
+                    <p>Repositorio público o con acceso para el docente, con historial de commits que refleje tu avance real durante la clase.</p>
+                </div>
+                <div class="deliver-card">
+                    <span class="n">02</span>
+                    <h3>Entrega el enlace en el AVA</h3>
+                    <p>Pega la URL del repositorio en la tarea correspondiente antes del cierre del bloque. Sin enlace en AVA, no hay evidencia de entrega.</p>
+                </div>
+                <div class="deliver-card">
+                    <span class="n">03</span>
+                    <h3>Verifica antes de entregar</h3>
+                    <p>README en la raíz, carpeta <code>docs/</code> con markdown, y los tres servicios + Gateway + Eureka presentes en el repo.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- RUBRICA -->
+        <section id="rubrica">
+            <div class="sec-head"><h2>Rúbrica — 5 décimas (0,5 pts) para nota 3</h2></div>
+            <table>
+                <thead>
+                <tr><th>Criterio</th><th>Décimas</th></tr>
+                </thead>
+                <tbody>
+                <tr><td>Caso definido con requerimientos claros, registrados en <code>docs/requerimientos.md</code></td><td class="pts">0,1</td></tr>
+                <tr><td>Eureka Server funcional, con los servicios registrándose correctamente</td><td class="pts">0,1</td></tr>
+                <tr><td>API Gateway enrutando peticiones hacia los microservicios por nombre lógico</td><td class="pts">0,1</td></tr>
+                <tr><td>Mínimo 3 microservicios con lógica de negocio coherente y conceptos previos aplicados</td><td class="pts">0,1</td></tr>
+                <tr><td>Repositorio completo: README en la raíz, <code>docs/</code> en markdown, enlace entregado en el AVA</td><td class="pts">0,1</td></tr>
+                <tr class="total"><td>Total</td><td class="pts">0,5</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- RECURSOS -->
+        <section id="recursos">
+            <div class="sec-head"><h2>Recursos</h2></div>
+            <ul class="res-list">
+                <li><code>start.spring.io</code> Spring Initializr — para generar Eureka Server, Gateway y cada microservicio con sus dependencias.</li>
+                <li><code>spring.io/projects/spring-cloud-gateway</code> Documentación oficial de Spring Cloud Gateway.</li>
+                <li><code>spring.io/projects/spring-cloud-netflix</code> Documentación oficial de Eureka (Spring Cloud Netflix).</li>
+            </ul>
+        </section>
+
+        <footer>
+            Fullstack I Backend · Actividad en clases · Spring Cloud Gateway + Eureka
+        </footer>
+
+    </main>
+</div>
+
+<script>
+    // ---- Splash terminal boot sequence (typewriter) ----
+    const lines = [
+        [{t:'$ ', c:'ok'}, {t:'iniciando entorno de microservicios...'}],
+        [{t:'⠋ ', c:'warn'}, {t:'levantando '}, {t:'eureka-server', c:'svc'}],
+        [{t:'✓ ', c:'ok'}, {t:'eureka-server', c:'svc'}, {t:' UP — puerto 8761'}],
+        [{t:'⠋ ', c:'warn'}, {t:'registrando '}, {t:'api-gateway', c:'svc'}, {t:' en Eureka...'}],
+        [{t:'✓ ', c:'ok'}, {t:'api-gateway', c:'svc'}, {t:' registrado'}],
+        [{t:'⠋ ', c:'warn'}, {t:'esperando microservicios del alumno...'}],
+        [{t:'✓ ', c:'ok'}, {t:'3 instancias detectadas — listo para enrutar'}],
+    ];
+    const termBody = document.getElementById('termBody');
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const rand = (min, max) => Math.random() * (max - min) + min;
+
+    async function typeLines(){
+        for(const segs of lines){
+            const lineEl = document.createElement('span');
+            lineEl.className = 'term-line';
+            lineEl.style.opacity = 1;
+            termBody.appendChild(lineEl);
+
+            const lineCursor = document.createElement('span');
+            lineCursor.className = 'cursor';
+            lineEl.appendChild(lineCursor);
+
+            for(const seg of segs){
+                const segEl = document.createElement('span');
+                if(seg.c) segEl.className = seg.c;
+                lineEl.insertBefore(segEl, lineCursor);
+                for(const ch of seg.t){
+                    segEl.textContent += ch;
+                    await sleep(rand(14, 32));
+                }
+            }
+            lineCursor.remove();
+            await sleep(rand(180, 320));
+        }
+        const finalCursor = document.createElement('span');
+        finalCursor.className = 'cursor';
+        termBody.appendChild(finalCursor);
+        document.getElementById('splashCta').classList.add('show');
+    }
+    typeLines();
+
+    function closeSplash(){
+        document.getElementById('splash').classList.add('hidden');
+    }
+    // allow click-anywhere fallback after sequence
+    document.getElementById('splash').addEventListener('click', (e) => {
+        if(document.getElementById('splashCta').classList.contains('show')) closeSplash();
+    });
+
+    // ---- Mermaid ----
+    mermaid.initialize({
+        startOnLoad:true,
+        theme:'base',
+        themeVariables:{
+            background:'#1c2128',
+            primaryColor:'#21262d',
+            primaryBorderColor:'#30363d',
+            primaryTextColor:'#e6edf3',
+            lineColor:'#58a6ff',
+            secondaryColor:'#161b22',
+            tertiaryColor:'#161b22',
+            fontFamily:'JetBrains Mono, monospace',
+            fontSize:'13px'
+        }
+    });
+
+    // ---- Progress bar ----
+    window.addEventListener('scroll', () => {
+        const h = document.documentElement;
+        const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+        document.getElementById('progress').style.width = scrolled + '%';
+    });
+
+    // ---- Scrollspy nav ----
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = [...navLinks].map(l => document.querySelector(l.getAttribute('href')));
+    const spy = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if(entry.isIntersecting){
+                navLinks.forEach(l => l.classList.remove('active'));
+                const link = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+                if(link) link.classList.add('active');
+            }
+        });
+    }, {rootMargin:'-15% 0px -70% 0px'});
+    sections.forEach(s => s && spy.observe(s));
+
+    // close mobile sidebar on link click
+    navLinks.forEach(l => l.addEventListener('click', () => {
+        document.querySelector('.sidebar').classList.remove('open');
+    }));
+
+    // ---- Checklist ----
+    const items = document.querySelectorAll('.check-item');
+    const counter = document.getElementById('checkCounter');
+    function updateCounter(){
+        const checked = document.querySelectorAll('.check-item.checked').length;
+        counter.textContent = `${checked} / ${items.length}`;
+    }
+    items.forEach(it => {
+        it.addEventListener('click', () => {
+            it.classList.toggle('checked');
+            const box = it.querySelector('.box');
+            box.textContent = it.classList.contains('checked') ? '✓' : '';
+            updateCounter();
+        });
+    });
+    updateCounter();
+</script>
+</body>
+</html>
