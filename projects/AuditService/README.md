@@ -2,7 +2,16 @@
 
 Microservicio de **registro de auditoría**. Guarda un historial de eventos ocurridos sobre entidades del sistema (creación, cambios de estado, asignaciones), permitiendo trazabilidad de todas las acciones.
 
-Forma parte del ecosistema educativo DSY1103. La aplicación Tickets lo consume via FeignClient (lección 14).
+Forma parte del ecosistema educativo DSY1103 y de la implementación de pruebas de la lección 22.
+
+## Arquitectura
+
+```text
+AuditController -> AuditService -> almacenamiento in-memory
+```
+
+- `AuditController` administra las rutas HTTP.
+- `AuditService` contiene el registro, listado y filtrado de eventos.
 
 ---
 
@@ -36,9 +45,26 @@ docker run --rm -p 8082:8082 dsy1103-audit-service
 Ejecutarlo junto a Tickets y los demas servicios:
 
 ```bash
-cd ../Tickets-20
+cd ../Tickets-22
 docker compose up --build audit-service
 ```
+
+---
+
+## Pruebas y cobertura
+
+Incluye pruebas aisladas de controller con MockMvc y pruebas unitarias de service.
+
+```bash
+../Tickets-22/mvnw clean verify
+```
+
+Resultado verificado:
+
+- 6 pruebas aprobadas
+- 90.00% de cobertura de líneas
+- JaCoCo exige un mínimo de 85%
+- reporte: `target/site/jacoco/index.html`
 
 ---
 

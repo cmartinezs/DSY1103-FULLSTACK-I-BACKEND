@@ -4,7 +4,18 @@
       "Bash(./mvnw.cmd package *)",
       "Bash(cp *)",
       "Bash(./mvnw compile *)",
-      "Bash(chmod +x /home/carlos/projects/DSY1103-FULLSTACK-I-BACKEND/projects/Tickets-21/mvnw)"
+      "Bash(chmod +x /home/carlos/projects/DSY1103-FULLSTACK-I-BACKEND/projects/Tickets-21/mvnw)",
+      "Bash(node scripts/generate-content.mjs)",
+      "Bash(npm run *)",
+      "Bash(git -C /home/carlos/projects/DSY1103-FULLSTACK-I-BACKEND status)",
+      "Bash(git -C /home/carlos/projects/DSY1103-FULLSTACK-I-BACKEND diff --stat)",
+      "Bash(git -C /home/carlos/projects/DSY1103-FULLSTACK-I-BACKEND status --short projects/)",
+      "Bash(git -C /home/carlos/projects/DSY1103-FULLSTACK-I-BACKEND log --oneline -3)",
+      "Bash(git -C /home/carlos/projects/DSY1103-FULLSTACK-I-BACKEND check-ignore -v projects/Tickets-21)",
+      "Bash(git -C /home/carlos/projects/DSY1103-FULLSTACK-I-BACKEND status -uall)",
+      "Bash(git -C /home/carlos/projects/DSY1103-FULLSTACK-I-BACKEND ls-files --others --exclude-standard projects/Tickets-21/)",
+      "Bash(git -C /home/carlos/projects/DSY1103-FULLSTACK-I-BACKEND show --stat c190061)",
+      "Bash(git *)"
     ]
   }
 }

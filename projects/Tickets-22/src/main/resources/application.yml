@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: Tickets
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: "/ticket-app"
+
+notification:
+  service:
+    url: ${NOTIFICATION_SERVICE_URL:http://localhost:8081}
+  feign:
+    url: ${NOTIFICATION_SERVICE_URL:http://localhost:8081}
+  rest:
+    url: ${NOTIFICATION_SERVICE_URL:http://localhost:8081}
+
+audit:
+  service:
+    url: ${AUDIT_SERVICE_URL:http://localhost:8082}
+
+search:
+  service:
+    url: ${SEARCH_SERVICE_URL:http://localhost:8084}
+
+sla:
+  service:
+    url: ${SLA_SERVICE_URL:http://localhost:8085}
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+
+logging:
+  level:
+    root: INFO
+    cl.duoc.fullstack: DEBUG

@@ -24,6 +24,7 @@ const projectNames = [
   'Tickets-19',
   'Tickets-20',
   'Tickets-21',
+  'Tickets-22',
   'NotificationService',
   'AuditService',
   'SearchService',

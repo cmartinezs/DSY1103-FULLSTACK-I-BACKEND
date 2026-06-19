@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker — Responsabilidades</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface2: #21262d;
+            --border: #30363d;
+            --docker: #2496ed;
+            --green: #39d353;
+            --yellow: #e3b341;
+            --orange: #db6d28;
+            --purple: #bc8cff;
+            --red: #f85149;
+            --text: #f0f6fc;
+            --muted: #8b949e;
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-body: 'Inter', sans-serif;
+        }
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-body);
+            line-height: 1.6;
+        }
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(13,17,23,.92);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+        }
+        .nav-inner {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 12px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+        .brand {
+            margin-right: auto;
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: .86rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .nav-btn {
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 6px 10px;
+            color: var(--muted);
+            background: var(--surface);
+            font-family: var(--font-mono);
+            font-size: .72rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .nav-btn.active, .nav-btn:hover { border-color: var(--docker); color: var(--text); }
+        .wrap {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 42px 20px 72px;
+        }
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+        .section-num {
+            color: var(--docker);
+            font-family: var(--font-mono);
+            font-size: .8rem;
+            font-weight: 700;
+        }
+        h1, h2, h3 { font-family: var(--font-mono); letter-spacing: 0; }
+        h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.15; }
+        .section-line { flex: 1; height: 1px; background: var(--border); }
+        .alert {
+            margin-bottom: 24px;
+            padding: 14px 16px;
+            border: 1px solid rgba(36,150,237,.28);
+            border-radius: 8px;
+            background: rgba(36,150,237,.08);
+            color: var(--muted);
+            font-size: .9rem;
+        }
+        .alert strong { color: var(--text); }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+        .card {
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent, var(--docker));
+            border-radius: 8px;
+            background: var(--surface);
+            padding: 18px;
+        }
+        .card.wide { grid-column: 1 / -1; }
+        .card h2 {
+            margin-bottom: 11px;
+            color: var(--accent, var(--docker));
+            font-size: .88rem;
+            text-transform: uppercase;
+        }
+        ul {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-left: 18px;
+            color: var(--muted);
+            font-size: .88rem;
+        }
+        li strong { color: var(--text); }
+        code {
+            border-radius: 4px;
+            background: var(--surface2);
+            padding: 1px 5px;
+            color: var(--docker);
+            font-family: var(--font-mono);
+            font-size: .84em;
+        }
+        .split {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 10px;
+        }
+        .mini-title {
+            margin-bottom: 8px;
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: .76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        @media (max-width: 760px) {
+            .grid, .split { grid-template-columns: 1fr; }
+            .brand { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<nav class="top-nav">
+    <div class="nav-inner">
+        <a class="brand" href="index.html">Docker & Compose — Fullstack I</a>
+        <a class="nav-btn" href="index.html">Guía</a>
+        <a class="nav-btn active" href="responsabilidades.html">Responsabilidades</a>
+        <a class="nav-btn" href="stack.html">Capas tecnológicas</a>
+    </div>
+</nav>
+
+<main class="wrap">
+    <div class="section-title">
+        <span class="section-num">// 01</span>
+        <h1>Responsabilidades en Docker</h1>
+        <div class="section-line"></div>
+    </div>
+
+    <div class="alert">
+        <strong>Propósito:</strong> esta página separa qué debe resolver cada pieza cuando dockerizas los proyectos del curso. No reemplaza la guía paso a paso; sirve como mapa de responsabilidades para revisar una entrega.
+    </div>
+
+    <section class="grid">
+        <article class="card" style="--accent:var(--docker)">
+            <h2>Dockerfile</h2>
+            <ul>
+                <li>Define <strong>cómo se construye una imagen</strong> reproducible para cada microservicio.</li>
+                <li>Compila el proyecto en una etapa de build y copia solo el artefacto final a la imagen de runtime.</li>
+                <li>Declara <code>WORKDIR</code>, <code>COPY</code>, <code>RUN</code>, <code>EXPOSE</code> y <code>ENTRYPOINT</code> sin mezclar configuración de despliegue.</li>
+                <li>Ordena capas pensando en cache: dependencias primero, código fuente después.</li>
+                <li>No contiene credenciales, URLs reales de producción ni variables específicas de una máquina.</li>
+            </ul>
+        </article>
+
+        <article class="card" style="--accent:var(--green)">
+            <h2>Imagen</h2>
+            <ul>
+                <li>Empaqueta la aplicación, runtime y dependencias con una versión identificable.</li>
+                <li>Debe poder ejecutarse igual en la máquina del equipo, CI o plataforma de despliegue.</li>
+                <li>Debe ser lo más liviana posible para el contexto: JRE slim, Alpine o Distroless cuando corresponda.</li>
+                <li>No guarda datos persistentes; los datos viven en volúmenes o servicios externos.</li>
+                <li>Se reconstruye cuando cambia el código, el <code>pom.xml</code> o la imagen base.</li>
+            </ul>
+        </article>
+
+        <article class="card" style="--accent:var(--yellow)">
+            <h2>Contenedor</h2>
+            <ul>
+                <li>Es la instancia en ejecución de una imagen: un proceso aislado con red y filesystem propios.</li>
+                <li>Recibe configuración por <code>environment</code>, perfiles Spring y variables externas.</li>
+                <li>Expone logs por stdout/stderr para que <code>docker logs</code> y Compose puedan leerlos.</li>
+                <li>Debe poder reiniciarse sin perder datos críticos de base de datos.</li>
+                <li>No se edita manualmente por dentro; si algo falta, se corrige la imagen o Compose.</li>
+            </ul>
+        </article>
+
+        <article class="card" style="--accent:var(--orange)">
+            <h2>Docker Compose</h2>
+            <ul>
+                <li>Orquesta el sistema completo: microservicios, bases de datos, redes, volúmenes y variables.</li>
+                <li>Define nombres de servicio estables para comunicación interna: <code>http://orders-service:8080</code>.</li>
+                <li>Mapea solo los puertos que deben ser accesibles desde el host.</li>
+                <li>Centraliza configuración local con <code>.env</code> y valores seguros de ejemplo en <code>.env.example</code>.</li>
+                <li>Permite levantar y bajar todo con <code>docker compose up</code> y <code>docker compose down</code>.</li>
+            </ul>
+        </article>
+
+        <article class="card wide" style="--accent:var(--purple)">
+            <h2>Responsabilidades entre aplicación e infraestructura</h2>
+            <div class="split">
+                <div>
+                    <div class="mini-title">Aplicación Spring Boot</div>
+                    <ul>
+                        <li>Lee configuración desde variables de entorno o perfiles.</li>
+                        <li>Expone endpoints y healthchecks consistentes.</li>
+                        <li>Registra logs útiles con contexto de servicio, puerto y operación.</li>
+                        <li>No hardcodea hosts como <code>localhost</code> para hablar con otros contenedores.</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="mini-title">Infraestructura Docker</div>
+                    <ul>
+                        <li>Entrega runtime, red, almacenamiento y arranque ordenado.</li>
+                        <li>Configura variables, perfiles, puertos y dependencias entre servicios.</li>
+                        <li>Persiste datos con volúmenes y evita que el estado dependa del contenedor.</li>
+                        <li>Permite reproducir el entorno sin pasos manuales extra.</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <article class="card" style="--accent:var(--red)">
+            <h2>Errores de responsabilidad</h2>
+            <ul>
+                <li>Usar <code>localhost</code> entre contenedores en vez del nombre del servicio.</li>
+                <li>Poner contraseñas reales en <code>Dockerfile</code>, <code>docker-compose.yml</code> o el código Java.</li>
+                <li>Depender de comandos manuales dentro del contenedor después de levantarlo.</li>
+                <li>Construir una imagen distinta para cada instancia cuando solo cambia la configuración.</li>
+                <li>Guardar datos importantes dentro del filesystem efímero del contenedor.</li>
+            </ul>
+        </article>
+
+        <article class="card" style="--accent:var(--docker)">
+            <h2>Checklist de revisión</h2>
+            <ul>
+                <li>Cada microservicio tiene su <code>Dockerfile</code> multistage.</li>
+                <li>Compose levanta todo el sistema desde la raíz del proyecto.</li>
+                <li>Los servicios se comunican por nombres de Compose, no por IPs ni <code>localhost</code>.</li>
+                <li>Las bases de datos usan volúmenes nombrados.</li>
+                <li>Las credenciales reales quedan fuera del repositorio.</li>
+            </ul>
+        </article>
+    </section>
+</main>
+</body>
+</html>

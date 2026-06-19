@@ -2,7 +2,16 @@
 
 Microservicio de **control de tiempos de resolución (Service Level Agreement)**. Registra cuándo se abrió un ticket y calcula automáticamente el plazo de resolución según su prioridad. Permite consultar el estado del SLA y cerrarlo cuando el ticket se resuelve.
 
-Forma parte del ecosistema educativo DSY1103. Los alumnos deben implementar el cliente en su aplicación Tickets (lección 14).
+Forma parte del ecosistema educativo DSY1103 y de la implementación de pruebas de la lección 22.
+
+## Arquitectura
+
+```text
+SlaController -> SlaService -> almacenamiento in-memory
+```
+
+- `SlaController` administra las rutas HTTP.
+- `SlaService` calcula plazos y controla apertura y cierre de SLA.
 
 ---
 
@@ -36,9 +45,26 @@ docker run --rm -p 8085:8085 dsy1103-sla-service
 Ejecutarlo junto a Tickets y los demas servicios:
 
 ```bash
-cd ../Tickets-20
+cd ../Tickets-22
 docker compose up --build sla-service
 ```
+
+---
+
+## Pruebas y cobertura
+
+Incluye pruebas aisladas de controller con MockMvc y pruebas unitarias de service.
+
+```bash
+../Tickets-22/mvnw clean verify
+```
+
+Resultado verificado:
+
+- 9 pruebas aprobadas
+- 94.00% de cobertura de líneas
+- JaCoCo exige un mínimo de 85%
+- reporte: `target/site/jacoco/index.html`
 
 ---
 

@@ -2,7 +2,16 @@
 
 Microservicio de **envío de notificaciones**. Recibe solicitudes de notificación desde otros servicios y las almacena, simulando un sistema de mensajería (email, push, etc.).
 
-Forma parte del ecosistema educativo DSY1103. La aplicación Tickets lo consume via RestClient (lección 14).
+Forma parte del ecosistema educativo DSY1103 y de la implementación de pruebas de la lección 22.
+
+## Arquitectura
+
+```text
+NotificationController -> NotificationService -> almacenamiento in-memory
+```
+
+- `NotificationController` administra las rutas HTTP.
+- `NotificationService` contiene la creación y consulta de notificaciones.
 
 ---
 
@@ -36,9 +45,26 @@ docker run --rm -p 8081:8081 dsy1103-notification-service
 Ejecutarlo junto a Tickets y los demas servicios:
 
 ```bash
-cd ../Tickets-20
+cd ../Tickets-22
 docker compose up --build notification-service
 ```
+
+---
+
+## Pruebas y cobertura
+
+Incluye pruebas aisladas de controller con MockMvc y pruebas unitarias de service.
+
+```bash
+../Tickets-22/mvnw clean verify
+```
+
+Resultado verificado:
+
+- 7 pruebas aprobadas
+- 89.66% de cobertura de líneas
+- JaCoCo exige un mínimo de 85%
+- reporte: `target/site/jacoco/index.html`
 
 ---
 

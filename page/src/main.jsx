@@ -355,12 +355,21 @@ function HomePortal({ onOpenLessons, onOpenChallenges, onOpenProjects, onOpenDoc
     'docs/lessons/06-crud/README.md',
     'docs/lessons/10-jpa-intro/README.md',
     'docs/lessons/14-microservices/README.md',
-    'docs/lessons/19-openapi-oas/README.md',
+    'docs/lessons/22-unit-testing-microservices/README.md',
   ]
     .map((path) => allDocs.find((doc) => doc.path === path))
     .filter(Boolean);
   const featuredChallenge = challengeSites[0];
-  const featuredProjects = content.projects.slice(0, 6);
+  const featuredProjects = [
+    'Tickets-22',
+    'NotificationService',
+    'AuditService',
+    'SearchService',
+    'SLAService',
+    'Tickets-21',
+  ]
+    .map((id) => content.projects.find((project) => project.id === id))
+    .filter(Boolean);
 
   return (
     <main>
@@ -531,8 +540,8 @@ function HomePortal({ onOpenLessons, onOpenChallenges, onOpenProjects, onOpenDoc
             <p className="portal-eyebrow">Snapshots Java</p>
             <h2 className="section-title">Proyectos del ramo</h2>
             <p className="section-copy">
-              El código se mantiene separado por lección para comparar evolución: in-memory, JPA, bases de datos y
-              microservicios auxiliares.
+              El snapshot actual incorpora pruebas de controller y service, JaCoCo con umbral de 85% y
+              microservicios auxiliares organizados por capas.
             </p>
           </div>
 

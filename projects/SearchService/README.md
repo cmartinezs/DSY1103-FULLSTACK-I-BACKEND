@@ -2,7 +2,16 @@
 
 Microservicio de **indexación y búsqueda full-text de tickets**. Mantiene un índice en memoria con el contenido de cada ticket, permitiendo búsquedas por texto libre sobre título y descripción.
 
-Forma parte del ecosistema educativo DSY1103. Los alumnos deben implementar el cliente en su aplicación Tickets (lección 14).
+Forma parte del ecosistema educativo DSY1103 y de la implementación de pruebas de la lección 22.
+
+## Arquitectura
+
+```text
+SearchController -> SearchService -> índice in-memory
+```
+
+- `SearchController` administra indexación y consultas HTTP.
+- `SearchService` contiene reindexación, búsqueda y recuperación por ticket.
 
 ---
 
@@ -36,9 +45,26 @@ docker run --rm -p 8084:8084 dsy1103-search-service
 Ejecutarlo junto a Tickets y los demas servicios:
 
 ```bash
-cd ../Tickets-20
+cd ../Tickets-22
 docker compose up --build search-service
 ```
+
+---
+
+## Pruebas y cobertura
+
+Incluye pruebas aisladas de controller con MockMvc y pruebas unitarias de service.
+
+```bash
+../Tickets-22/mvnw clean verify
+```
+
+Resultado verificado:
+
+- 8 pruebas aprobadas
+- 93.33% de cobertura de líneas
+- JaCoCo exige un mínimo de 85%
+- reporte: `target/site/jacoco/index.html`
 
 ---
 
