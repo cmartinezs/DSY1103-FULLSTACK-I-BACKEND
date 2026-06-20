@@ -1139,32 +1139,6 @@ function MarkdownViewer({ doc, onNavigate }) {
   );
 }
 
-function HtmlPageViewer({ page }) {
-  if (!page) return <EmptyState text="No hay pagina seleccionada." />;
-
-  return (
-    <article className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-panel">
-      <ViewerHeader icon={ExternalLink} title={page.title} subtitle={page.path} />
-      <div className="border-b border-zinc-200 bg-stone-50 px-5 py-3">
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-emerald-500 hover:text-emerald-700"
-          onClick={() => openHtmlPageInNewTab(page)}
-        >
-          <ExternalLink size={16} />
-          Abrir en pestaña
-        </button>
-      </div>
-      <iframe
-        key={page.publicPath}
-        title={page.title}
-        srcDoc={htmlStandaloneDocument(page)}
-        className="html-page-frame"
-      />
-    </article>
-  );
-}
-
 function ProjectViewer({ project, file, onNavigateDoc, setMode }) {
   if (!project || !file) return <EmptyState text="No hay archivo seleccionado." />;
 
@@ -1538,11 +1512,6 @@ function htmlPreviewDocument(page) {
   <\/script>`);
 }
 
-function htmlStandaloneDocument(page) {
-  if (!page?.content) return '';
-  return injectHtmlHead(page.content, page);
-}
-
 function injectHtmlHead(content, page, extraHead = '') {
   const basePath = page.publicPath.includes('/')
     ? page.publicPath.slice(0, page.publicPath.lastIndexOf('/') + 1)
@@ -1553,15 +1522,8 @@ function injectHtmlHead(content, page, extraHead = '') {
 }
 
 function openHtmlPageInNewTab(page) {
-  if (!page?.content) return;
-  const blob = new Blob([htmlStandaloneDocument(page)], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const opened = window.open(url, '_blank', 'noopener,noreferrer');
-  if (!opened) {
-    URL.revokeObjectURL(url);
-    return;
-  }
-  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  if (!page?.publicPath) return;
+  window.open(staticAssetPath(page.publicPath), '_blank', 'noopener,noreferrer');
 }
 
 function escapeHtmlAttribute(value) {
