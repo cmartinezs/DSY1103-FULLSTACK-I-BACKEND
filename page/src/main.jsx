@@ -78,10 +78,6 @@ const firstProject = content.projects[0];
 const htmlPages = content.htmlPages ?? [];
 const guidePages = content.guides ?? [];
 const challengeSites = buildChallengeSites(htmlPages);
-const firstHtmlPage =
-  htmlPages.find((page) => page.path === 'docs/challenges/tic-tac-toe/index.html') ??
-  htmlPages.find((page) => page.path.endsWith('/index.html')) ??
-  htmlPages[0];
 const firstProjectFile =
   firstProject?.files.find((file) => file.path === 'README.md') ??
   firstProject?.files.find((file) => file.path === 'pom.xml') ??
@@ -91,8 +87,8 @@ function App() {
   const [mode, setMode] = useState(window.location.hash ? 'lessons' : 'home');
   const [query, setQuery] = useState('');
   const [selectedDocId, setSelectedDocId] = useState(docFromHash()?.id ?? firstDoc?.id ?? '');
-  const [selectedHtmlPageId, setSelectedHtmlPageId] = useState(htmlPageFromHash()?.id ?? firstHtmlPage?.id ?? '');
-  const [selectedGuideId, setSelectedGuideId] = useState(guidePages[0]?.id ?? '');
+  const [selectedHtmlPageId, setSelectedHtmlPageId] = useState(htmlPageFromHash()?.id ?? '');
+  const [selectedGuideId, setSelectedGuideId] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(firstProject?.id ?? '');
   const [selectedFileId, setSelectedFileId] = useState(firstProjectFile?.id ?? '');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -181,10 +177,13 @@ function App() {
     selectedProject?.files.find((file) => file.path === 'pom.xml') ??
     selectedProject?.files[0];
 
-  const selectedHtmlPage =
-    htmlPages.find((page) => page.id === selectedHtmlPageId) ??
-    filteredChallengeSites[0]?.entry ??
-    htmlPages[0];
+  const selectedHtmlPage = selectedHtmlPageId
+    ? (htmlPages.find((page) => page.id === selectedHtmlPageId) ?? null)
+    : null;
+
+  const selectedGuide = selectedGuideId
+    ? (guidePages.find((g) => g.id === selectedGuideId) ?? null)
+    : null;
 
   function selectProject(project) {
     const nextFile =
@@ -224,11 +223,18 @@ function App() {
 
   function openChallenges() {
     setMode('challenges');
-    replaceRoute(selectedHtmlPage?.path ?? firstHtmlPage?.path ?? 'docs/challenges/README.md');
+    setSelectedHtmlPageId('');
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
   }
 
   function openGuides() {
     setMode('guides');
+    setSelectedGuideId('');
+  }
+
+  function clearSelectedHtmlPage() {
+    setSelectedHtmlPageId('');
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
   }
 
   return (
