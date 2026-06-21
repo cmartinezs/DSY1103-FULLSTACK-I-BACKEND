@@ -341,6 +341,7 @@ function App() {
               sites={filteredChallengeSites}
               selectedPage={selectedHtmlPage}
               onSelectPage={navigateToHtmlPage}
+              onBack={clearSelectedHtmlPage}
             />
           ) : mode === 'guides' ? (
             <GuidesGallery guides={filteredGuides} />
@@ -762,8 +763,23 @@ function HtmlViewer({ page, site, onBack, onSelectPage, backLabel }) {
   );
 }
 
-function ChallengeGallery({ sites, selectedPage, onSelectPage }) {
+function ChallengeGallery({ sites, selectedPage, onSelectPage, onBack }) {
   if (sites.length === 0) return <EmptyState text="No hay challenges para la busqueda actual." />;
+
+  if (selectedPage) {
+    const site = sites.find(
+      (s) => s.entry.id === selectedPage.id || s.pages.some((p) => p.id === selectedPage.id),
+    );
+    return (
+      <HtmlViewer
+        page={selectedPage}
+        site={site}
+        onBack={onBack}
+        onSelectPage={onSelectPage}
+        backLabel="Challenges"
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -785,28 +801,20 @@ function ChallengeGallery({ sites, selectedPage, onSelectPage }) {
 
       <div className="grid gap-4 xl:grid-cols-2">
         {sites.map((site) => (
-          <ChallengeCard
-            key={site.id}
-            site={site}
-            selectedPage={selectedPage}
-            onSelectPage={onSelectPage}
-          />
+          <ChallengeCard key={site.id} site={site} onSelectPage={onSelectPage} />
         ))}
       </div>
     </div>
   );
 }
 
-function ChallengeCard({ site, selectedPage, onSelectPage }) {
-  const activePage = site.pages.find((page) => page.id === selectedPage?.id);
-  const previewPage = activePage ?? site.entry;
-
+function ChallengeCard({ site, onSelectPage }) {
   return (
     <article className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-panel">
       <div className="aspect-[16/9] border-b border-zinc-200 bg-zinc-950">
         <iframe
           title={`Preview ${site.title}`}
-          srcDoc={htmlPreviewDocument(previewPage)}
+          srcDoc={htmlPreviewDocument(site.entry)}
           className="challenge-preview-frame"
           tabIndex={-1}
         />
@@ -818,41 +826,39 @@ function ChallengeCard({ site, selectedPage, onSelectPage }) {
           <p className="mt-3 line-clamp-3 text-sm leading-6 text-zinc-700">{site.summary}</p>
         </div>
 
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Secciones</p>
-          <div className="flex flex-wrap gap-2">
-            {site.pages.map((page) => (
-              <button
-                key={page.id}
-                type="button"
-                onClick={() => onSelectPage(page.id)}
-                className={`rounded-md border px-2.5 py-1.5 text-xs font-semibold transition ${
-                  selectedPage?.id === page.id
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                    : 'border-zinc-200 bg-white text-zinc-600 hover:border-emerald-400 hover:text-emerald-700'
-                }`}
-              >
-                {shortHtmlPageTitle(page)}
-              </button>
-            ))}
+        {site.pages.length > 0 && (
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Secciones</p>
+            <div className="flex flex-wrap gap-2">
+              {site.pages.map((page) => (
+                <button
+                  key={page.id}
+                  type="button"
+                  onClick={() => onSelectPage(page.id)}
+                  className="rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-zinc-600 transition hover:border-emerald-400 hover:text-emerald-700"
+                >
+                  {shortHtmlPageTitle(page)}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-200 pt-3">
+        <div className="flex flex-wrap items-center gap-2 border-t border-zinc-200 pt-3">
           <button
             type="button"
             onClick={() => onSelectPage(site.entry.id)}
             className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
           >
             <ExternalLink size={16} />
-            Previsualizar inicio
+            Abrir en portal
           </button>
           <button
             type="button"
+            onClick={() => openHtmlPageInNewTab(site.entry)}
             className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-emerald-500 hover:text-emerald-700"
-            onClick={() => openHtmlPageInNewTab(activePage ?? site.entry)}
           >
-            Abrir en pestaña
+            Nueva pestaña
           </button>
         </div>
       </div>
