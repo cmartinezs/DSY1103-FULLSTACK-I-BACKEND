@@ -344,7 +344,11 @@ function App() {
               onBack={clearSelectedHtmlPage}
             />
           ) : mode === 'guides' ? (
-            <GuidesGallery guides={filteredGuides} />
+            <GuidesGallery
+              guides={filteredGuides}
+              selectedGuide={selectedGuide}
+              onSelectGuide={setSelectedGuideId}
+            />
           ) : (
             <ProjectViewer project={selectedProject} file={selectedFile} onNavigateDoc={navigateToDoc} setMode={setMode} />
           )}
@@ -866,8 +870,20 @@ function ChallengeCard({ site, onSelectPage }) {
   );
 }
 
-function GuidesGallery({ guides }) {
+function GuidesGallery({ guides, selectedGuide, onSelectGuide }) {
   if (guides.length === 0) return <EmptyState text="No hay guías disponibles." />;
+
+  if (selectedGuide) {
+    return (
+      <HtmlViewer
+        page={selectedGuide}
+        site={null}
+        onBack={() => onSelectGuide('')}
+        onSelectPage={() => {}}
+        backLabel="Guías"
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -887,14 +903,14 @@ function GuidesGallery({ guides }) {
       </section>
       <div className="grid gap-4 xl:grid-cols-2">
         {guides.map((guide) => (
-          <GuideCard key={guide.id} guide={guide} />
+          <GuideCard key={guide.id} guide={guide} onOpen={() => onSelectGuide(guide.id)} />
         ))}
       </div>
     </div>
   );
 }
 
-function GuideCard({ guide }) {
+function GuideCard({ guide, onOpen }) {
   return (
     <article className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-panel">
       <div className="aspect-[16/9] border-b border-zinc-200 bg-zinc-950">
@@ -911,14 +927,21 @@ function GuideCard({ guide }) {
           <p className="mt-1 break-all text-xs text-zinc-500">{guide.path}</p>
           <p className="mt-3 line-clamp-3 text-sm leading-6 text-zinc-700">{guide.summary}</p>
         </div>
-        <div className="flex items-center gap-2 border-t border-zinc-200 pt-3">
+        <div className="flex flex-wrap items-center gap-2 border-t border-zinc-200 pt-3">
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-emerald-500 hover:text-emerald-700"
-            onClick={() => openHtmlPageInNewTab(guide)}
+            onClick={onOpen}
+            className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
           >
             <ExternalLink size={16} />
-            Abrir en pestaña
+            Abrir en portal
+          </button>
+          <button
+            type="button"
+            onClick={() => openHtmlPageInNewTab(guide)}
+            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-emerald-500 hover:text-emerald-700"
+          >
+            Nueva pestaña
           </button>
         </div>
       </div>
