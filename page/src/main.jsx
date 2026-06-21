@@ -712,6 +712,56 @@ function DocsTree({ docs, selectedDoc, onSelect }) {
   );
 }
 
+function HtmlViewer({ page, site, onBack, onSelectPage, backLabel }) {
+  return (
+    <div
+      className="flex flex-col overflow-hidden rounded-md border border-zinc-200 bg-white shadow-panel"
+      style={{ height: 'calc(100vh - 160px)' }}
+    >
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-zinc-200 px-4 py-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:border-emerald-500 hover:text-emerald-700"
+        >
+          ← {backLabel}
+        </button>
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-zinc-900">{page.title}</span>
+        <div className="flex flex-wrap items-center gap-2">
+          {site?.pages.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => onSelectPage(p.id)}
+              className={`rounded-md border px-2.5 py-1 text-xs font-semibold transition ${
+                p.id === page.id
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                  : 'border-zinc-200 bg-white text-zinc-600 hover:border-emerald-400 hover:text-emerald-700'
+              }`}
+            >
+              {shortHtmlPageTitle(p)}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => openHtmlPageInNewTab(page)}
+            className="flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:border-emerald-500 hover:text-emerald-700"
+          >
+            <ExternalLink size={15} />
+            Nueva pestaña
+          </button>
+        </div>
+      </div>
+      <iframe
+        key={page.publicPath}
+        src={staticAssetPath(page.publicPath)}
+        title={page.title}
+        className="min-h-0 w-full flex-1 border-0"
+      />
+    </div>
+  );
+}
+
 function ChallengeGallery({ sites, selectedPage, onSelectPage }) {
   if (sites.length === 0) return <EmptyState text="No hay challenges para la busqueda actual." />;
 
