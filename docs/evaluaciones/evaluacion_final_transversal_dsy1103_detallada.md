@@ -102,7 +102,7 @@ Cada equipo debe aplicar los mismos aprendizajes técnicos a su propio contexto,
 - documentación;
 - pruebas;
 - Docker o ejecución reproducible;
-- API Gateway y registro de servicios si fue trabajado en la sección final.
+- API Gateway y registro de servicios (Eureka o equivalente), obligatorios para el ecosistema completo.
 
 ### 2.3 Levantamiento y actualización de requerimientos
 
@@ -149,8 +149,8 @@ Debe incluir:
 
 - servicio principal del dominio;
 - microservicios de apoyo;
-- API Gateway, si corresponde al alcance trabajado;
-- Eureka Server o mecanismo de discovery, si corresponde;
+- API Gateway, obligatorio;
+- Eureka Server o mecanismo de discovery, obligatorio;
 - archivos `pom.xml`;
 - archivos `application.yml`;
 - scripts SQL o migraciones Flyway;
@@ -158,7 +158,7 @@ Debe incluir:
 - `docker-compose.yml` cuando aplique;
 - archivo `.env.example` sin credenciales reales;
 - colección Postman, archivo `.http` o equivalente;
-- configuración necesaria para despliegue remoto en Render cuando aplique.
+- configuración necesaria y documentada para el despliegue remoto en Render, obligatoria para todos los servicios.
 
 La entrega técnica debe permitir que el docente pueda:
 
@@ -166,6 +166,7 @@ La entrega técnica debe permitir que el docente pueda:
 - instalar dependencias;
 - configurar variables de entorno;
 - levantar base de datos y servicios desde terminal;
+- usar perfiles de configuración para local, Docker, Render u otros entornos equivalentes; debe existir configuración propia para cada tipo de entorno, considerando las variables de entorno correspondientes;
 - ejecutar la aplicación sin abrir un IDE;
 - ejecutar servicios con `./mvnw spring-boot:run`, `mvnw.cmd spring-boot:run` o comandos equivalentes documentados;
 - ejecutar infraestructura con `docker compose up` cuando corresponda;
@@ -173,7 +174,7 @@ La entrega técnica debe permitir que el docente pueda:
 - probar endpoints;
 - verificar Swagger/OpenAPI;
 - revisar logs;
-- validar despliegue remoto en Render cuando corresponda.
+- validar el despliegue remoto en Render, obligatorio para todos los servicios, Gateway y Eureka.
 
 ### 4.2 Documentación técnica y funcional
 
@@ -204,7 +205,7 @@ Debe existir un `README.md` en la raíz del repositorio con:
 - rutas principales del Gateway;
 - usuarios de prueba y roles;
 - comandos para correr pruebas;
-- URL pública de cada servicio desplegado en Render cuando aplique;
+- URL pública de cada servicio desplegado en Render;
 - explicación de despliegue en Render por microservicio;
 - enlace a tablero Trello, GitHub Projects u otra herramienta de gestión.
 
@@ -354,7 +355,7 @@ Si el equipo usa otra estructura, debe explicar claramente dónde están:
 - configuración de perfiles;
 - archivos Docker Compose;
 - scripts o comandos de ejecución;
-- Gateway y discovery, si aplican.
+- Gateway y discovery.
 
 La documentación técnica debe incluir una sección obligatoria llamada `Ejecución desde cero`, pensada para que otra persona pueda clonar el repositorio y ejecutar el sistema sin usar IntelliJ IDEA, VS Code ni configuraciones guardadas en el computador del equipo.
 
@@ -440,7 +441,7 @@ La presentación debe incluir:
 - seguridad y roles;
 - pruebas realizadas;
 - Swagger/OpenAPI;
-- despliegue local y remoto, incluyendo URL de cada servicio en Render cuando aplique;
+- despliegue local y remoto, incluyendo URL de cada servicio en Render;
 - principales dificultades técnicas y cómo se resolvieron;
 - distribución de trabajo del equipo.
 
@@ -674,7 +675,7 @@ El estudiante debe poder explicar:
 
 El proyecto debe tener separación real de responsabilidades entre servicios.
 
-El mínimo esperado debe ajustarse al dominio de cada equipo. Una arquitectura válida puede incluir servicios como:
+El mínimo exigido es de 10 microservicios en total (incluyendo el servicio principal, los microservicios de apoyo, el API Gateway y el Eureka Server), y los tipos de servicio deben ajustarse al dominio de cada equipo. Una arquitectura válida puede incluir servicios como:
 
 | Tipo de servicio | Responsabilidad esperada |
 |------------------|--------------------------|
@@ -684,15 +685,16 @@ El mínimo esperado debe ajustarse al dominio de cada equipo. Una arquitectura v
 | Servicio de auditoría | Registrar eventos importantes y trazabilidad |
 | Servicio de búsqueda | Exponer búsquedas, filtros o indexación de datos |
 | Servicio de indicadores, plazos o reglas complementarias | Calcular métricas, vencimientos, estados derivados o reglas de apoyo |
-| Eureka Server o discovery equivalente | Registrar servicios, si se incluye discovery |
-| API Gateway | Centralizar rutas y entrada al ecosistema, si se incluye Gateway |
+| Eureka Server o discovery equivalente | Registrar todos los microservicios, obligatorio |
+| API Gateway | Centralizar rutas y entrada única al ecosistema, obligatorio |
 | Base de datos o servicios de infraestructura | Soportar persistencia y ejecución reproducible |
 
-Si un equipo declaró más servicios en su propio proyecto, debe implementarlos o justificar formalmente el cambio de alcance en la matriz de requerimientos.
+El mínimo de 10 microservicios corresponde a todos los microservicios efectivamente realizados por el equipo, no solo a los declarados originalmente. Si un equipo declaró más servicios en su propio proyecto, debe implementarlos todos o justificar formalmente el cambio de alcance en la matriz de requerimientos; en ningún caso el número final puede quedar por debajo de 10.
 
-La comunicación entre microservicios debe usar:
+La comunicación entre microservicios debe usar `RestClient` y Feign Client: al menos una comunicación implementada con `RestClient` y al menos otra implementada con Feign Client.
 
-- `RestClient`, Feign Client, `WebClient` o `RestTemplate`;
+Además:
+
 - DTOs específicos para datos remotos;
 - manejo de errores remotos;
 - timeouts cuando corresponda;
@@ -702,12 +704,12 @@ No se considera comunicación entre microservicios si el equipo solo copia datos
 
 ### 5.10 API Gateway y Service Discovery
 
-Si la evaluación incluye la última etapa de infraestructura, el sistema debe tener:
+API Gateway y Eureka Server son obligatorios para todos los equipos. El sistema debe tener:
 
 - Eureka Server levantando correctamente;
 - microservicios registrados con nombre lógico;
 - Gateway con rutas configuradas;
-- rutas usando `lb://NOMBRE-SERVICIO` cuando aplique discovery;
+- rutas usando `lb://NOMBRE-SERVICIO`;
 - filtros básicos de trazabilidad, por ejemplo `X-Request-Id`;
 - pruebas de endpoints a través del Gateway.
 
@@ -819,14 +821,15 @@ Cobertura mínima esperada: 80% de la lógica de negocio relevante. Si no se usa
 
 El proyecto debe poder ejecutarse localmente desde una copia limpia del repositorio. La ejecución no debe depender del IDE, de configuraciones personales, de variables guardadas solo en el computador de un integrante ni de pasos no documentados.
 
-Se espera uno de los siguientes mecanismos:
+Se espera para la ejecución local uno de los siguientes mecanismos:
 
 - ejecución documentada con Maven por servicio;
 - `docker-compose.yml` para bases de datos;
-- `docker-compose.yml` para servicios y bases de datos;
-- despliegue remoto en Render si fue parte del alcance.
+- `docker-compose.yml` para servicios y bases de datos.
 
-Cuando exista despliegue en Render, la documentación debe explicar la estrategia usada. Cada microservicio debe desplegarse como un servicio independiente de Render. No corresponde indicar que se sube un único `docker-compose.yml` con todos los microservicios dentro de un solo servicio Render.
+Además, el despliegue remoto en Render es obligatorio para todos los servicios, incluyendo Gateway y Eureka; no es una alternativa a la ejecución local, sino un requisito adicional.
+
+La documentación debe explicar la estrategia de despliegue usada. Cada microservicio debe desplegarse como un servicio independiente de Render. No corresponde indicar que se sube un único `docker-compose.yml` con todos los microservicios dentro de un solo servicio Render.
 
 Para Render se debe documentar, como mínimo:
 
@@ -851,7 +854,7 @@ El README y la documentación técnica deben indicar:
 - comandos de prueba con `./mvnw test` y/o `mvnw.cmd test`;
 - comandos Docker Compose cuando aplique;
 - cómo verificar que todo está arriba.
-- URL pública de cada servicio desplegado en Render cuando exista despliegue remoto.
+- URL pública de cada servicio desplegado en Render.
 
 Ejemplo de nivel de detalle esperado:
 
@@ -912,7 +915,7 @@ La evaluación es transversal. El proyecto debe evidenciar aprendizajes de todo 
 | 20 | Docker/Compose | Ejecución reproducible de BD y servicios |
 | 21 | HATEOAS | Links navegables cuando aplique |
 | 22 | Testing | JUnit, Mockito, asserts, casos de negocio |
-| 23 | Gateway y Eureka | Punto de entrada único y service discovery, si fue trabajado |
+| 23 | Gateway y Eureka | Punto de entrada único y service discovery, obligatorio |
 
 ---
 

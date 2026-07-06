@@ -270,11 +270,11 @@ const evaluationChecklistItems = [
     id: 'microservices',
     label: 'Microservicios',
     detailTitle: 'Microservicios y separación',
-    detailSummary: 'Cuando el dominio lo exige, el sistema debe mostrar separación real entre servicios.',
+    detailSummary: 'Mínimo obligatorio de 10 microservicios (incluyendo Gateway y Eureka), con separación real de responsabilidades.',
     relatedSection: 'Alcance técnico obligatorio',
     checks: [
       'Cada servicio tiene responsabilidad clara.',
-      'No se mezclan todos los componentes en un solo módulo si el alcance pide separación.',
+      'El total de microservicios no baja de 10, incluyendo Gateway y Eureka.',
       'La comunicación remota está documentada.',
     ],
     evidence: ['Servicios', 'Clients', 'Gateway o discovery'],
@@ -296,7 +296,7 @@ const evaluationChecklistItems = [
     id: 'gateway',
     label: 'Gateway y discovery',
     detailTitle: 'Gateway y discovery',
-    detailSummary: 'Si el proyecto lo incluye, el Gateway y el registro de servicios deben quedar claros y funcionales.',
+    detailSummary: 'API Gateway y Eureka (o discovery equivalente) son obligatorios: deben quedar claros y funcionales para todos los equipos.',
     relatedSection: 'API Gateway y registro de servicios',
     checks: [
       'Gateway enruta como punto único de entrada.',
@@ -309,12 +309,12 @@ const evaluationChecklistItems = [
     id: 'render',
     label: 'Deploy en Render',
     detailTitle: 'Despliegue en Render',
-    detailSummary: 'Cuando el proyecto se despliega, cada microservicio debe explicarse como servicio independiente en Render.',
+    detailSummary: 'El despliegue en Render es obligatorio para todos los servicios, Gateway y Eureka; cada microservicio debe explicarse como servicio independiente y su configuración debe quedar documentada.',
     relatedSection: 'Despliegue local y remoto',
     checks: [
-      'Se documenta un servicio Render por microservicio.',
+      'Se documenta un servicio Render por microservicio (incluyendo Gateway y Eureka).',
       'No se sube todo el `docker-compose.yml` a un solo servicio Render.',
-      'Cada servicio tiene su build y start.',
+      'Cada servicio tiene su build, start y variables de entorno documentadas.',
     ],
     evidence: ['URL pública', 'Variables por servicio', 'Comandos de despliegue'],
   },
@@ -1660,6 +1660,7 @@ function EvaluationViewer({ doc, sections, selectedSectionId, onSelectSection, o
   const contentRef = useRef(null);
   const [checklistState, setChecklistState] = useState(() => loadChecklistState());
   const [selectedChecklistId, setSelectedChecklistId] = useState(null);
+  const [sidebarTab, setSidebarTab] = useState('sections');
 
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0, left: 0 });
@@ -1728,60 +1729,87 @@ function EvaluationViewer({ doc, sections, selectedSectionId, onSelectSection, o
           ) : null}
         </div>
 
-        <section className="evaluation-progress-panel" aria-label="Panel de progreso personal">
-          <div className="evaluation-progress-header">
-            <div>
-              <span className="material-kicker">Mi avance</span>
-              <h3>Checklist local</h3>
-            </div>
-            <button type="button" className="evaluation-reset" onClick={resetChecklist} title="Reiniciar checklist">
-              <RotateCcw size={15} />
-            </button>
-          </div>
-
-          <div className="evaluation-progress-meter" aria-hidden="true">
-            <div style={{ width: `${checklistStats.percent}%` }} />
-          </div>
-
-          <div className="evaluation-progress-summary">
-            <strong>{checklistStats.percent}%</strong>
-            <span>{checklistStats.done} listos</span>
-            <span>{checklistStats.progress} en progreso</span>
-            <span>{checklistStats.missing} faltan</span>
-          </div>
-
-          <div className="evaluation-progress-list">
-            {evaluationChecklistItems.map((item) => {
-              const status = checklistState[item.id] ?? 'missing';
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`evaluation-progress-summary-item ${item.id === selectedChecklistId ? 'active' : ''}`}
-                  onClick={() => setSelectedChecklistId(item.id)}
-                >
-                  <span className={`evaluation-progress-dot ${status}`} aria-hidden="true" />
-                  <strong>{item.label}</strong>
-                  <span className={`evaluation-progress-badge ${checklistStatusMeta[status].tone}`}>{checklistStatusMeta[status].label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <nav className="evaluation-section-list" aria-label="Secciones de la evaluación transversal">
-          {sections.map((section) => (
+        <div className="evaluation-tabs-container">
+          <div className="evaluation-tabs" role="tablist" aria-label="Panel lateral de la evaluación">
             <button
-              key={section.id}
               type="button"
-              onClick={() => onSelectSection(section.id)}
-              className={section.id === selectedSection.id ? 'active' : ''}
+              role="tab"
+              aria-selected={sidebarTab === 'sections'}
+              className={sidebarTab === 'sections' ? 'active' : ''}
+              onClick={() => setSidebarTab('sections')}
             >
-              <span>{section.number}</span>
-              <strong>{section.title.replace(/^\d+\.\s*/, '')}</strong>
+              <Layers3 size={14} />
+              Secciones
             </button>
-          ))}
-        </nav>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={sidebarTab === 'checklist'}
+              className={sidebarTab === 'checklist' ? 'active' : ''}
+              onClick={() => setSidebarTab('checklist')}
+            >
+              <ClipboardList size={14} />
+              Checklist local
+            </button>
+          </div>
+
+          {sidebarTab === 'checklist' ? (
+            <section className="evaluation-progress-panel" aria-label="Panel de progreso personal">
+              <div className="evaluation-progress-header">
+                <div>
+                  <span className="material-kicker">Mi avance</span>
+                  <h3>Checklist local</h3>
+                </div>
+                <button type="button" className="evaluation-reset" onClick={resetChecklist} title="Reiniciar checklist">
+                  <RotateCcw size={15} />
+                </button>
+              </div>
+
+              <div className="evaluation-progress-meter" aria-hidden="true">
+                <div style={{ width: `${checklistStats.percent}%` }} />
+              </div>
+
+              <div className="evaluation-progress-summary">
+                <strong>{checklistStats.percent}%</strong>
+                <span>{checklistStats.done} listos</span>
+                <span>{checklistStats.progress} en progreso</span>
+                <span>{checklistStats.missing} faltan</span>
+              </div>
+
+              <div className="evaluation-progress-list">
+                {evaluationChecklistItems.map((item) => {
+                  const status = checklistState[item.id] ?? 'missing';
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`evaluation-progress-summary-item ${item.id === selectedChecklistId ? 'active' : ''}`}
+                      onClick={() => setSelectedChecklistId(item.id)}
+                    >
+                      <span className={`evaluation-progress-dot ${status}`} aria-hidden="true" />
+                      <strong>{item.label}</strong>
+                      <span className={`evaluation-progress-badge ${checklistStatusMeta[status].tone}`}>{checklistStatusMeta[status].label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ) : (
+            <nav className="evaluation-section-list" aria-label="Secciones de la evaluación transversal">
+              {sections.map((section) => (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => onSelectSection(section.id)}
+                  className={section.id === selectedSection.id ? 'active' : ''}
+                >
+                  <span>{section.number}</span>
+                  <strong>{section.title.replace(/^\d+\.\s*/, '')}</strong>
+                </button>
+              ))}
+            </nav>
+          )}
+        </div>
       </aside>
 
       <article className="evaluation-content rounded-md border border-zinc-200 bg-white shadow-panel">
