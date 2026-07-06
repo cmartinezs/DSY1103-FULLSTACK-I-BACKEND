@@ -12,7 +12,10 @@ import {
   Braces,
   ChevronDown,
   ChevronRight,
+  ClipboardList,
+  Clock3,
   Code2,
+  CircleDashed,
   Database,
   ExternalLink,
   FileCode2,
@@ -28,6 +31,8 @@ import {
   PanelLeftClose,
   Search,
   Server,
+  Trophy,
+  RotateCcw,
   Workflow,
 } from 'lucide-react';
 import content from './generated/content.json';
@@ -74,6 +79,342 @@ const firstDoc =
   allDocs.find((doc) => doc.path === 'docs/README.md') ??
   allDocs.find((doc) => doc.path.endsWith('/README.md')) ??
   allDocs[0];
+const evaluationDoc = allDocs.find(
+  (doc) => doc.path === 'docs/evaluaciones/evaluacion_final_transversal_dsy1103_detallada.md',
+);
+const evaluationSections = buildEvaluationSections(evaluationDoc);
+const evaluationChecklistItems = [
+  {
+    id: 'repo-access',
+    label: 'Repositorio y evidencia real',
+    detailTitle: 'Repositorio y evidencia real',
+    detailSummary: 'El primer filtro es simple: el docente debe poder entrar al repositorio y encontrar evidencia verificable del trabajo del equipo.',
+    relatedSection: 'Entregables y AVA',
+    checks: [
+      'El repositorio es accesible para el docente.',
+      'El equipo no entregó solo capturas o archivos sueltos fuera del repositorio.',
+      'Hay archivos, commits y documentación que se pueden contrastar entre sí.',
+    ],
+    evidence: ['Enlaces en AVA', 'Commits visibles', 'Archivos dentro del repo'],
+  },
+  {
+    id: 'scope-alignment',
+    label: 'Alcance del proyecto',
+    detailTitle: 'Alcance del proyecto semestral',
+    detailSummary: 'La entrega debe representar el proyecto del equipo, no una idea nueva desconectada de lo trabajado durante el semestre.',
+    relatedSection: 'Contexto del encargo',
+    checks: [
+      'El sistema corresponde al dominio que el equipo levantó al inicio del curso.',
+      'Los cambios de alcance están justificados.',
+      'No se reemplazó el proyecto por otro distinto sin trazabilidad.',
+    ],
+    evidence: ['Levantamiento inicial', 'Levantamiento actualizado', 'Matriz de requerimientos'],
+  },
+  {
+    id: 'compile-clean',
+    label: 'Compilación limpia',
+    detailTitle: 'Compilación desde una copia limpia',
+    detailSummary: 'La aplicación debe poder compilar sin depender de configuraciones locales del integrante que la construyó.',
+    relatedSection: 'Ejecución desde cero',
+    checks: [
+      'El proyecto compila después de un clon limpio.',
+      'No depende de archivos no versionados para compilar.',
+      'El comando está documentado para Linux/macOS y Windows.',
+    ],
+    evidence: ['`./mvnw test`', '`mvnw.cmd test`', 'README de ejecución'],
+  },
+  {
+    id: 'main-service',
+    label: 'Servicio principal',
+    detailTitle: 'Servicio principal funcional',
+    detailSummary: 'El núcleo del sistema debe levantar, responder y reflejar la lógica real del dominio.',
+    relatedSection: 'Entrega técnica',
+    checks: [
+      'El servicio principal levanta sin IDE.',
+      'Los endpoints principales responden.',
+      'La lógica de negocio no está enterrada en el controller.',
+    ],
+    evidence: ['Controller', 'Service', 'Tests unitarios'],
+  },
+  {
+    id: 'execution-doc',
+    label: 'Ejecución desde cero',
+    detailTitle: 'Ejecución desde cero',
+    detailSummary: 'La documentación debe permitir ejecutar el sistema desde terminal, sin depender del IDE ni de pasos tácitos.',
+    relatedSection: 'Documentación técnica',
+    checks: [
+      'Existe la secuencia de arranque documentada.',
+      'Se indican comandos `./mvnw` y/o `docker compose`.',
+      'Se explica qué servicio se levanta primero y por qué.',
+    ],
+    evidence: ['README', 'documentacion-tecnica.md', 'docker-compose.yml'],
+  },
+  {
+    id: 'env-example',
+    label: 'Variables y `.env.example`',
+    detailTitle: 'Variables de entorno y ejemplo de configuración',
+    detailSummary: 'Las credenciales y parámetros sensibles deben quedar fuera del código.',
+    relatedSection: 'Configuración por perfiles',
+    checks: [
+      'Existe `.env.example` versionado.',
+      'No hay credenciales reales hardcodeadas.',
+      'Los perfiles de configuración están separados.',
+    ],
+    evidence: ['`.env.example`', 'application.yml', '.gitignore'],
+  },
+  {
+    id: 'persistence',
+    label: 'Persistencia JPA',
+    detailTitle: 'Persistencia real con JPA',
+    detailSummary: 'La base debe existir en código y no solo como concepto.',
+    relatedSection: 'Persistencia y base de datos',
+    checks: [
+      'Las entidades tienen `@Entity`, `@Id` y repositorios.',
+      'Hay migraciones o scripts SQL trazables.',
+      'Las relaciones reflejan el dominio.',
+    ],
+    evidence: ['Entidad', 'JpaRepository', 'Migraciones'],
+  },
+  {
+    id: 'relations',
+    label: 'Relaciones y modelo',
+    detailTitle: 'Relaciones y modelo de datos',
+    detailSummary: 'El modelo relacional debe ser explicable y coherente con el dominio del equipo.',
+    relatedSection: 'Relaciones JPA',
+    checks: [
+      'Las relaciones usadas tienen justificación.',
+      'Se entiende por qué no se usó una relación distinta.',
+      'El equipo puede explicar cascadas, lazy/eager y claves foráneas.',
+    ],
+    evidence: ['Diagramas', 'Entidades', 'Explicación en defensa'],
+  },
+  {
+    id: 'business-rules',
+    label: 'Reglas de negocio',
+    detailTitle: 'Reglas de negocio',
+    detailSummary: 'Las reglas declaradas por el equipo deben existir realmente en service o en la lógica de dominio.',
+    relatedSection: 'Requisitos funcionales',
+    checks: [
+      'Las reglas del dominio se aplican en código.',
+      'No dependen solo del frontend o del README.',
+      'Los casos borde están considerados.',
+    ],
+    evidence: ['Service', 'Tests', 'Casos de prueba'],
+  },
+  {
+    id: 'rest-contract',
+    label: 'Contratos REST',
+    detailTitle: 'Contratos REST y DTO',
+    detailSummary: 'La API debe mostrar contratos claros, respuestas correctas y DTOs bien definidos.',
+    relatedSection: 'REST, DTOs y respuestas HTTP',
+    checks: [
+      'Los DTOs no exponen entidades internas innecesariamente.',
+      'Los códigos HTTP son consistentes.',
+      'La entrada y la salida están bien documentadas.',
+    ],
+    evidence: ['Controller', 'DTO', 'Postman o .http'],
+  },
+  {
+    id: 'error-handling',
+    label: 'Errores y logs',
+    detailTitle: 'Errores y logs',
+    detailSummary: 'Los errores deben responder en JSON y el log debe ayudar a diagnosticar el problema.',
+    relatedSection: 'Manejo global de errores',
+    checks: [
+      'Los errores no devuelven HTML por defecto.',
+      'Hay manejo centralizado o uniforme.',
+      'Los logs no son solo `System.out.println`.',
+    ],
+    evidence: ['Exception handler', 'Logback', 'Pruebas de error'],
+  },
+  {
+    id: 'tests-unit',
+    label: 'Pruebas unitarias',
+    detailTitle: 'Pruebas unitarias',
+    detailSummary: 'Cada equipo debe respaldar su lógica importante con pruebas que realmente validen comportamiento.',
+    relatedSection: 'Pruebas',
+    checks: [
+      'Hay pruebas de service o de reglas de negocio.',
+      'Se prueban casos exitosos y casos de error.',
+      'Se usan mocks donde corresponde.',
+    ],
+    evidence: ['`src/test/java`', 'Given/When/Then', 'asserts'],
+  },
+  {
+    id: 'rest-tests',
+    label: 'Pruebas REST',
+    detailTitle: 'Pruebas REST',
+    detailSummary: 'La evidencia debe mostrar cómo se usan los endpoints desde el exterior del sistema.',
+    relatedSection: 'Pruebas REST',
+    checks: [
+      'Hay colección Postman o archivo `.http`.',
+      'Se incluyen casos válidos e inválidos.',
+      'Se muestran respuestas y códigos.',
+    ],
+    evidence: ['Postman', '.http', 'capturas o exportables'],
+  },
+  {
+    id: 'swagger',
+    label: 'Swagger / OpenAPI',
+    detailTitle: 'Swagger / OpenAPI',
+    detailSummary: 'La documentación técnica debe coincidir con la API real.',
+    relatedSection: 'Documentación técnica',
+    checks: [
+      'Swagger abre desde el proyecto ejecutado.',
+      'Las rutas muestran lo que realmente responde el sistema.',
+      'No hay diferencias importantes entre documentación y código.',
+    ],
+    evidence: ['Swagger UI', 'OpenAPI JSON', 'Controllers'],
+  },
+  {
+    id: 'microservices',
+    label: 'Microservicios',
+    detailTitle: 'Microservicios y separación',
+    detailSummary: 'Cuando el dominio lo exige, el sistema debe mostrar separación real entre servicios.',
+    relatedSection: 'Alcance técnico obligatorio',
+    checks: [
+      'Cada servicio tiene responsabilidad clara.',
+      'No se mezclan todos los componentes en un solo módulo si el alcance pide separación.',
+      'La comunicación remota está documentada.',
+    ],
+    evidence: ['Servicios', 'Clients', 'Gateway o discovery'],
+  },
+  {
+    id: 'integration-flow',
+    label: 'Comunicación entre servicios',
+    detailTitle: 'Comunicación entre servicios',
+    detailSummary: 'Si hay más de un servicio, la comunicación tiene que ser HTTP real y rastreable.',
+    relatedSection: 'Microservicios y comunicación',
+    checks: [
+      'No se simulan respuestas manualmente.',
+      'Los DTOs remotos están documentados.',
+      'Se contempla el manejo de fallas.',
+    ],
+    evidence: ['Clientes HTTP', 'Logs', 'Pruebas de integración'],
+  },
+  {
+    id: 'gateway',
+    label: 'Gateway y discovery',
+    detailTitle: 'Gateway y discovery',
+    detailSummary: 'Si el proyecto lo incluye, el Gateway y el registro de servicios deben quedar claros y funcionales.',
+    relatedSection: 'API Gateway y registro de servicios',
+    checks: [
+      'Gateway enruta como punto único de entrada.',
+      'El discovery o equivalente está documentado.',
+      'Los nombres lógicos de servicio se entienden.',
+    ],
+    evidence: ['Gateway', 'Discovery server', 'URLs y rutas'],
+  },
+  {
+    id: 'render',
+    label: 'Deploy en Render',
+    detailTitle: 'Despliegue en Render',
+    detailSummary: 'Cuando el proyecto se despliega, cada microservicio debe explicarse como servicio independiente en Render.',
+    relatedSection: 'Despliegue local y remoto',
+    checks: [
+      'Se documenta un servicio Render por microservicio.',
+      'No se sube todo el `docker-compose.yml` a un solo servicio Render.',
+      'Cada servicio tiene su build y start.',
+    ],
+    evidence: ['URL pública', 'Variables por servicio', 'Comandos de despliegue'],
+  },
+  {
+    id: 'functional-docs',
+    label: 'Documentación funcional',
+    detailTitle: 'Documentación funcional',
+    detailSummary: 'La funcional debe explicar el sistema para quien lo usa o lo revisa desde negocio.',
+    relatedSection: 'Documentación técnica y funcional',
+    checks: [
+      'Explica el problema y los actores.',
+      'Incluye reglas, flujos y ejemplos.',
+      'No se confunde con la documentación técnica.',
+    ],
+    evidence: ['documentacion-funcional.md'],
+  },
+  {
+    id: 'technical-docs',
+    label: 'Documentación técnica',
+    detailTitle: 'Documentación técnica',
+    detailSummary: 'La técnica debe explicar construcción, ejecución, configuración y despliegue.',
+    relatedSection: 'Documentación técnica',
+    checks: [
+      'Describe arquitectura y módulos.',
+      'Incluye `Ejecución desde cero`.',
+      'Menciona perfiles, variables y pruebas.',
+    ],
+    evidence: ['documentacion-tecnica.md', 'README', 'mvnw / docker compose'],
+  },
+  {
+    id: 'requirement-log',
+    label: 'Levantamiento actualizado',
+    detailTitle: 'Levantamiento de requerimientos actualizado',
+    detailSummary: 'El levantamiento inicial se actualiza con lo que realmente cambió durante el semestre.',
+    relatedSection: 'Levantamiento y actualización de requerimientos',
+    checks: [
+      'Muestra requerimientos originales.',
+      'Incluye cambios, eliminaciones y reemplazos.',
+      'Contrasta con lo codificado al cierre del semestre.',
+    ],
+    evidence: ['levantamiento-requerimientos-actualizado.md', 'matriz-requerimientos.md'],
+  },
+  {
+    id: 'matrix',
+    label: 'Matriz de requerimientos',
+    detailTitle: 'Matriz de requerimientos',
+    detailSummary: 'La matriz conecta lo prometido con lo implementado y lo probado.',
+    relatedSection: 'Matriz de requerimientos',
+    checks: [
+      'Cada requerimiento tiene estado final.',
+      'Hay prueba o evidencia asociada.',
+      'Lo implementado puede rastrearse en el repositorio.',
+    ],
+    evidence: ['matriz-requerimientos.md', 'pruebas', 'endpoints'],
+  },
+  {
+    id: 'feedback',
+    label: 'Plan de cierre',
+    detailTitle: 'Plan de cierre y feedback',
+    detailSummary: 'El cierre debe mostrar qué observaciones se corrigieron y cuáles no, con razón técnica.',
+    relatedSection: 'Plan de cierre y feedback',
+    checks: [
+      'Se listan observaciones de la evaluación anterior.',
+      'Se explica la corrección o la decisión de no corregir.',
+      'Hay evidencia concreta de la corrección.',
+    ],
+    evidence: ['plan-cierre-feedback.md', 'commits', 'pruebas'],
+  },
+  {
+    id: 'individual-doc',
+    label: 'Documento individual',
+    detailTitle: 'Documento de defensa técnica individual',
+    detailSummary: 'Cada integrante debe dejar su propia trazabilidad de participación.',
+    relatedSection: 'Documento de defensa técnica individual',
+    checks: [
+      'El documento está por integrante.',
+      'Se conecta con commits, archivos y pruebas.',
+      'La evidencia coincide con el trabajo real.',
+    ],
+    evidence: ['docs/defensa-individual/*.md', 'commits', 'archivos modificados'],
+  },
+  {
+    id: 'group-defense',
+    label: 'Defensa grupal',
+    detailTitle: 'Presentación de defensa técnica grupal',
+    detailSummary: 'La defensa grupal resume el proyecto completo y prepara al equipo para explicar lo entregado.',
+    relatedSection: 'Presentación de defensa técnica grupal',
+    checks: [
+      'Resume el problema, alcance y arquitectura.',
+      'Expone pruebas y despliegue.',
+      'Incluye feedback y cierre técnico.',
+    ],
+    evidence: ['presentacion-defensa-grupal', 'slides', 'pdf o markdown'],
+  },
+];
+const checklistStatusMeta = {
+  missing: { label: 'Falta', score: 0, icon: CircleDashed, tone: 'danger' },
+  progress: { label: 'En progreso', score: 0.5, icon: Clock3, tone: 'warning' },
+  done: { label: 'Listo', score: 1, icon: Trophy, tone: 'success' },
+};
 const firstProject = content.projects[0];
 const htmlPages = content.htmlPages ?? [];
 const guidePages = content.guides ?? [];
@@ -84,9 +425,12 @@ const firstProjectFile =
   firstProject?.files[0];
 
 function App() {
-  const [mode, setMode] = useState(window.location.hash ? 'lessons' : 'home');
+  const [mode, setMode] = useState(evaluationFromHash() ? 'evaluation' : window.location.hash ? 'lessons' : 'home');
   const [query, setQuery] = useState('');
   const [selectedDocId, setSelectedDocId] = useState(docFromHash()?.id ?? firstDoc?.id ?? '');
+  const [selectedEvaluationSectionId, setSelectedEvaluationSectionId] = useState(
+    evaluationSectionFromHash()?.id ?? evaluationSections[0]?.id ?? '',
+  );
   const [selectedHtmlPageId, setSelectedHtmlPageId] = useState(htmlPageFromHash()?.id ?? '');
   const [selectedGuideId, setSelectedGuideId] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(firstProject?.id ?? '');
@@ -99,6 +443,13 @@ function App() {
     }
 
     function syncFromHash() {
+      const evaluationSection = evaluationSectionFromHash();
+      if (evaluationSection) {
+        setMode('evaluation');
+        setSelectedEvaluationSectionId(evaluationSection.id);
+        return;
+      }
+
       const doc = docFromHash();
       if (doc) {
         setMode('lessons');
@@ -232,6 +583,22 @@ function App() {
     setSelectedGuideId('');
   }
 
+  function openEvaluation() {
+    const section = evaluationSections.find((item) => item.id === selectedEvaluationSectionId) ?? evaluationSections[0];
+    if (!section || !evaluationDoc) return;
+    setMode('evaluation');
+    setSelectedEvaluationSectionId(section.id);
+    replaceRoute(evaluationDoc.path, section.id);
+  }
+
+  function selectEvaluationSection(sectionId) {
+    const section = evaluationSections.find((item) => item.id === sectionId);
+    if (!section || !evaluationDoc) return;
+    setMode('evaluation');
+    setSelectedEvaluationSectionId(section.id);
+    pushRoute(evaluationDoc.path, section.id);
+  }
+
   function clearSelectedHtmlPage() {
     setSelectedHtmlPageId('');
     window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
@@ -264,7 +631,7 @@ function App() {
                 placeholder="Buscar en documentos, challenges y codigo"
               />
             </div>
-            <div className="grid w-full grid-cols-3 rounded-md border border-zinc-300 bg-zinc-100 p-1 sm:w-auto sm:grid-cols-5">
+            <div className="grid w-full grid-cols-3 rounded-md border border-zinc-300 bg-zinc-100 p-1 sm:w-auto sm:grid-cols-6">
               <ModeButton active={mode === 'home'} icon={Home} onClick={navigateHome}>
                 Inicio
               </ModeButton>
@@ -276,6 +643,9 @@ function App() {
               </ModeButton>
               <ModeButton active={mode === 'guides'} icon={BookMarked} onClick={openGuides}>
                 Guías
+              </ModeButton>
+              <ModeButton active={mode === 'evaluation'} icon={ClipboardList} onClick={openEvaluation}>
+                ET
               </ModeButton>
               <ModeButton active={mode === 'projects'} icon={Code2} onClick={() => setMode('projects')}>
                 Proyectos
@@ -292,10 +662,11 @@ function App() {
           onOpenProjects={() => setMode('projects')}
           onOpenDoc={navigateToDoc}
           onOpenChallenge={navigateToHtmlPage}
+          onOpenEvaluation={openEvaluation}
         />
       ) : (
       <main className="mx-auto grid max-w-[1600px] gap-4 px-4 py-4 lg:grid-cols-[minmax(280px,380px)_1fr]">
-        {mode !== 'challenges' && mode !== 'guides' && sidebarOpen ? (
+        {mode !== 'challenges' && mode !== 'guides' && mode !== 'evaluation' && sidebarOpen ? (
           <aside className="min-h-[calc(100vh-130px)] overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
               <div className="flex items-center gap-2 text-sm font-semibold">
@@ -323,7 +694,7 @@ function App() {
               />
             )}
           </aside>
-        ) : mode !== 'challenges' && mode !== 'guides' ? (
+        ) : mode !== 'challenges' && mode !== 'guides' && mode !== 'evaluation' ? (
           <button
             className="flex h-12 items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white text-sm font-medium shadow-sm lg:col-span-1"
             onClick={() => setSidebarOpen(true)}
@@ -333,9 +704,17 @@ function App() {
           </button>
         ) : null}
 
-        <section className={mode === 'challenges' || mode === 'guides' || !sidebarOpen ? 'min-w-0 lg:col-span-2' : 'min-w-0'}>
+        <section className={mode === 'challenges' || mode === 'guides' || mode === 'evaluation' || !sidebarOpen ? 'min-w-0 lg:col-span-2' : 'min-w-0'}>
           {mode === 'lessons' ? (
             <MarkdownViewer doc={selectedDoc} onNavigate={navigateToDoc} />
+          ) : mode === 'evaluation' ? (
+            <EvaluationViewer
+              doc={evaluationDoc}
+              sections={evaluationSections}
+              selectedSectionId={selectedEvaluationSectionId}
+              onSelectSection={selectEvaluationSection}
+              onNavigateDoc={navigateToDoc}
+            />
           ) : mode === 'challenges' ? (
             <ChallengeGallery
               sites={filteredChallengeSites}
@@ -359,7 +738,7 @@ function App() {
   );
 }
 
-function HomePortal({ onOpenLessons, onOpenChallenges, onOpenProjects, onOpenDoc, onOpenChallenge }) {
+function HomePortal({ onOpenLessons, onOpenChallenges, onOpenProjects, onOpenDoc, onOpenChallenge, onOpenEvaluation }) {
   const featuredLessons = [
     'docs/lessons/00-git-github/README.md',
     'docs/lessons/03-first-api/README.md',
@@ -397,6 +776,10 @@ function HomePortal({ onOpenLessons, onOpenChallenges, onOpenProjects, onOpenDoc
               <button type="button" className="portal-btn portal-btn-main" onClick={onOpenLessons}>
                 <Rocket size={18} />
                 Entrar a las lecciones
+              </button>
+              <button type="button" className="portal-btn portal-btn-ghost" onClick={onOpenEvaluation}>
+                <ClipboardList size={18} />
+                Ver ET
               </button>
               <button type="button" className="portal-btn portal-btn-ghost" onClick={onOpenChallenges}>
                 <Presentation size={18} />
@@ -457,6 +840,15 @@ function HomePortal({ onOpenLessons, onOpenChallenges, onOpenProjects, onOpenDoc
               tags={['mini sitios', 'evaluación', 'HTML']}
               action="Abrir challenges"
               onClick={onOpenChallenges}
+            />
+            <PortalCard
+              icon={ClipboardList}
+              tone="amber"
+              title="Evaluación transversal"
+              text="Enunciado Técnico de la evaluación final transversal, organizado por entregables, evidencias y rúbrica."
+              tags={['ET', 'rúbrica', 'defensa']}
+              action="Abrir ET"
+              onClick={onOpenEvaluation}
             />
             <PortalCard
               icon={Code2}
@@ -620,6 +1012,46 @@ function cleanPortalTitle(title) {
     .replace(/^LECCIÓN\s+\d+\s*[—-]\s*/i, '')
     .replace(/^Lección\s+\d+\s*[—-]\s*/i, '')
     .replace(/^#\s*/, '');
+}
+
+function buildEvaluationSections(doc) {
+  if (!doc?.content) return [];
+
+  const lines = doc.content.split('\n');
+  const sections = [];
+  let current = null;
+
+  for (const line of lines) {
+    const match = line.match(/^##\s+(\d+)\.\s+(.+)$/);
+    if (match) {
+      if (current) sections.push(current);
+      const title = `${match[1]}. ${match[2].trim()}`;
+      current = {
+        id: slugifyHeading(title),
+        number: match[1],
+        title,
+        content: `${line}\n`,
+        subsections: [],
+      };
+      continue;
+    }
+
+    if (!current) continue;
+
+    const subsectionMatch = line.match(/^###\s+(.+)$/);
+    if (subsectionMatch) {
+      const title = subsectionMatch[1].trim();
+      current.subsections.push({
+        id: slugifyHeading(title),
+        title,
+      });
+    }
+
+    current.content += `${line}\n`;
+  }
+
+  if (current) sections.push(current);
+  return sections;
 }
 
 function ModeButton({ active, icon: Icon, children, onClick }) {
@@ -1224,6 +1656,252 @@ function MarkdownViewer({ doc, onNavigate }) {
   );
 }
 
+function EvaluationViewer({ doc, sections, selectedSectionId, onSelectSection, onNavigateDoc }) {
+  const contentRef = useRef(null);
+  const [checklistState, setChecklistState] = useState(() => loadChecklistState());
+  const [selectedChecklistId, setSelectedChecklistId] = useState(null);
+
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0, left: 0 });
+  }, [selectedSectionId]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('dsy1103.et.checklist.v1', JSON.stringify(checklistState));
+    } catch {
+      // Ignore storage failures in private mode or blocked storage.
+    }
+  }, [checklistState]);
+
+  if (!doc) return <EmptyState text="No se encontró el documento de Evaluación Transversal." />;
+  if (!sections.length) return <EmptyState text="La Evaluación Transversal no tiene secciones navegables." />;
+
+  const selectedSection = sections.find((section) => section.id === selectedSectionId) ?? sections[0];
+  const deliverables = sections.find((section) => section.number === '4');
+  const rubric = sections.find((section) => section.number === '10');
+  const selectedChecklistItem = evaluationChecklistItems.find((item) => item.id === selectedChecklistId) ?? null;
+  const checklistStats = useMemo(() => {
+    const values = evaluationChecklistItems.map((item) => checklistState[item.id] ?? 'missing');
+    const done = values.filter((value) => value === 'done').length;
+    const progress = values.filter((value) => value === 'progress').length;
+    const missing = values.filter((value) => value === 'missing').length;
+    const percent = Math.round(((done + progress * 0.5) / evaluationChecklistItems.length) * 100);
+
+    return {
+      done,
+      progress,
+      missing,
+      percent,
+    };
+  }, [checklistState]);
+
+  function setItemStatus(itemId, status) {
+    setChecklistState((current) => ({
+      ...current,
+      [itemId]: status,
+    }));
+  }
+
+  function resetChecklist() {
+    setChecklistState(createChecklistState());
+  }
+
+  return (
+    <div className="evaluation-layout">
+      <aside className="evaluation-nav">
+        <div className="evaluation-nav-header">
+          <span className="material-kicker">Evaluación transversal</span>
+          <h2>ET DSY1103</h2>
+          <p>Enunciado Técnico de la evaluación final transversal DSY1103, organizado por entregables, evidencias, documentación y rúbrica.</p>
+        </div>
+
+        <div className="evaluation-quick">
+          {deliverables ? (
+            <button type="button" onClick={() => onSelectSection(deliverables.id)}>
+              Entregables
+            </button>
+          ) : null}
+          {rubric ? (
+            <button type="button" onClick={() => onSelectSection(rubric.id)}>
+              Rúbrica
+            </button>
+          ) : null}
+        </div>
+
+        <section className="evaluation-progress-panel" aria-label="Panel de progreso personal">
+          <div className="evaluation-progress-header">
+            <div>
+              <span className="material-kicker">Mi avance</span>
+              <h3>Checklist local</h3>
+            </div>
+            <button type="button" className="evaluation-reset" onClick={resetChecklist} title="Reiniciar checklist">
+              <RotateCcw size={15} />
+            </button>
+          </div>
+
+          <div className="evaluation-progress-meter" aria-hidden="true">
+            <div style={{ width: `${checklistStats.percent}%` }} />
+          </div>
+
+          <div className="evaluation-progress-summary">
+            <strong>{checklistStats.percent}%</strong>
+            <span>{checklistStats.done} listos</span>
+            <span>{checklistStats.progress} en progreso</span>
+            <span>{checklistStats.missing} faltan</span>
+          </div>
+
+          <div className="evaluation-progress-list">
+            {evaluationChecklistItems.map((item) => {
+              const status = checklistState[item.id] ?? 'missing';
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`evaluation-progress-summary-item ${item.id === selectedChecklistId ? 'active' : ''}`}
+                  onClick={() => setSelectedChecklistId(item.id)}
+                >
+                  <span className={`evaluation-progress-dot ${status}`} aria-hidden="true" />
+                  <strong>{item.label}</strong>
+                  <span className={`evaluation-progress-badge ${checklistStatusMeta[status].tone}`}>{checklistStatusMeta[status].label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <nav className="evaluation-section-list" aria-label="Secciones de la evaluación transversal">
+          {sections.map((section) => (
+            <button
+              key={section.id}
+              type="button"
+              onClick={() => onSelectSection(section.id)}
+              className={section.id === selectedSection.id ? 'active' : ''}
+            >
+              <span>{section.number}</span>
+              <strong>{section.title.replace(/^\d+\.\s*/, '')}</strong>
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      <article className="evaluation-content rounded-md border border-zinc-200 bg-white shadow-panel">
+        {selectedChecklistItem ? (
+          <ChecklistDetailViewer
+            item={selectedChecklistItem}
+            status={checklistState[selectedChecklistItem.id] ?? 'missing'}
+            onChangeStatus={(nextStatus) => setItemStatus(selectedChecklistItem.id, nextStatus)}
+            onBackToSection={() => setSelectedChecklistId(null)}
+          />
+        ) : (
+          <>
+            <ViewerHeader icon={ClipboardList} title={selectedSection.title} subtitle={doc.path} />
+            <MarkdownContent
+              ref={contentRef}
+              content={selectedSection.content}
+              currentPath={doc.path}
+              onNavigate={onNavigateDoc}
+            />
+          </>
+        )}
+      </article>
+    </div>
+  );
+}
+
+function ChecklistDetailViewer({ item, status, onChangeStatus, onBackToSection }) {
+  const statusMeta = checklistStatusMeta[status] ?? checklistStatusMeta.missing;
+  const statusOrder = ['missing', 'progress', 'done'];
+
+  return (
+    <div className="checklist-detail">
+      <ViewerHeader icon={ClipboardList} title={item.detailTitle} subtitle={item.relatedSection} />
+
+      <div className="checklist-detail-hero">
+        <div>
+          <span className="material-kicker">Detalle del punto</span>
+          <h3>{item.label}</h3>
+          <p>{item.detailSummary}</p>
+        </div>
+        <button type="button" className="checklist-back" onClick={onBackToSection}>
+          Volver al resumen
+        </button>
+      </div>
+
+      <div className="checklist-detail-grid">
+        <section className="checklist-detail-card">
+          <span className="material-kicker">Qué debe existir</span>
+          <ul>
+            {item.checks.map((check) => (
+              <li key={check}>{check}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="checklist-detail-card">
+          <span className="material-kicker">Evidencia esperada</span>
+          <ul className="checklist-evidence">
+            {item.evidence.map((evidence) => (
+              <li key={evidence}>{evidence}</li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <section className="checklist-status-panel">
+        <div className="checklist-status-head">
+          <div>
+            <span className="material-kicker">Estado local</span>
+            <strong>{statusMeta.label}</strong>
+          </div>
+          <div className="checklist-status-note">{statusMeta.score === 1 ? 'Listo para revisión' : statusMeta.score === 0.5 ? 'En desarrollo' : 'Pendiente'}</div>
+        </div>
+        <div className="evaluation-status-group checklist-status-group" role="group" aria-label={`Estado de ${item.label}`}>
+          {statusOrder.map((nextStatus) => {
+            const meta = checklistStatusMeta[nextStatus];
+            const Icon = meta.icon;
+            return (
+              <button
+                key={nextStatus}
+                type="button"
+                className={`${meta.tone} ${status === nextStatus ? 'active' : ''}`}
+                onClick={() => onChangeStatus(nextStatus)}
+              >
+                <Icon size={14} />
+                <span>{meta.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+    </div>
+  );
+}
+
+function createChecklistState() {
+  return Object.fromEntries(evaluationChecklistItems.map((item) => [item.id, 'missing']));
+}
+
+function loadChecklistState() {
+  if (typeof window === 'undefined') return createChecklistState();
+
+  try {
+    const raw = window.localStorage.getItem('dsy1103.et.checklist.v1');
+    if (!raw) return createChecklistState();
+
+    const parsed = JSON.parse(raw);
+    const next = createChecklistState();
+    for (const item of evaluationChecklistItems) {
+      if (parsed?.[item.id] && checklistStatusMeta[parsed[item.id]]) {
+        next[item.id] = parsed[item.id];
+      }
+    }
+    return next;
+  } catch {
+    return createChecklistState();
+  }
+}
+
 function ProjectViewer({ project, file, onNavigateDoc, setMode }) {
   if (!project || !file) return <EmptyState text="No hay archivo seleccionado." />;
 
@@ -1330,7 +2008,10 @@ function CodeViewer({ file }) {
   );
 }
 
-function MarkdownContent({ content, currentPath, onNavigate, compact = false }) {
+const MarkdownContent = React.forwardRef(function MarkdownContent(
+  { content, currentPath, onNavigate, compact = false },
+  ref,
+) {
   const components = useMemo(
     () => createMarkdownComponents(currentPath, onNavigate),
     [currentPath, onNavigate],
@@ -1338,6 +2019,7 @@ function MarkdownContent({ content, currentPath, onNavigate, compact = false }) 
 
   return (
     <div
+      ref={ref}
       className={`markdown-body max-h-[calc(100vh-190px)] overflow-y-auto px-5 py-5 ${
         compact ? 'bg-white' : 'lg:px-8'
       }`}
@@ -1347,7 +2029,7 @@ function MarkdownContent({ content, currentPath, onNavigate, compact = false }) 
       </ReactMarkdown>
     </div>
   );
-}
+});
 
 function MermaidDiagram({ chart }) {
   const rawId = useId();
@@ -1680,6 +2362,24 @@ function docFromHash() {
   const { path } = routeFromHash();
   const candidates = candidateDocPaths(path);
   return allDocs.find((doc) => candidates.includes(doc.path)) ?? null;
+}
+
+function evaluationFromHash() {
+  if (!evaluationDoc) return null;
+  const { path } = routeFromHash();
+  const candidates = candidateDocPaths(path);
+  return candidates.includes(evaluationDoc.path) ? evaluationDoc : null;
+}
+
+function evaluationSectionFromHash() {
+  if (!evaluationFromHash()) return null;
+  const anchor = anchorFromHash();
+  if (anchor) {
+    const decodedAnchor = decodeURIComponent(anchor);
+    const section = evaluationSections.find((item) => item.id === decodedAnchor);
+    if (section) return section;
+  }
+  return evaluationSections[0] ?? null;
 }
 
 function htmlPageFromHash() {
